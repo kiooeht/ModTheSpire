@@ -1,5 +1,7 @@
 package com.evacipated.cardcrawl.modthespire;
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -11,13 +13,9 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.awt.EventQueue;
 import java.util.Scanner;
-import javax.swing.*;
 
 public class Loader extends JFrame {
     public static int MTS_VERSION_NUM = 1;
@@ -27,7 +25,7 @@ public class Loader extends JFrame {
         File[] mod_jars = getAllModFiles();
 
         EventQueue.invokeLater(() -> {
-            ModSelectWindow ex = new ModSelectWindow(mod_jars, args);
+           ModSelectWindow ex = new ModSelectWindow(mod_jars, args);
             ex.setVisible(true);
         });
     }

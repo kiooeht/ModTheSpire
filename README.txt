@@ -13,6 +13,11 @@ ModTheSpire automatically sets the Settings.isModded flag to true, so there is n
 When making your mod .jar, you do not have to include the base game .jar, even if it is a dependency.
 If you include a file called `ModTheSpireVersion` at the root of your .jar, ModTheSpire will use its contents as your mod name in the version string. Leaving the file empty will remove ModTheSpire from the version string completely.
 
+For collaborators:
+compile with maven
+`mvn clean package` will put a modthespire-dev.jar into `target/`
+if you do not have maven install it or use the maven wrapper (./mvnw or mvnw.cmd)
+
 Changelog
 =========
 
