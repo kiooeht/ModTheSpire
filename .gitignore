@@ -28,4 +28,15 @@ ModTheSpire.iml
 
 # maven build target
 target/
+
+# Custom
+_archive/
+backup/
+bin/
+decompiled/
 mods/
+preferences/
+tools/
+_decompile.bat
+_runJ9.bat
+*.displayconfig
