@@ -1,5 +1,7 @@
 package com.evacipated.cardcrawl.modthespire;
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -11,26 +13,22 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.awt.EventQueue;
 import java.util.Scanner;
-import javax.swing.*;
 
 public class Loader extends JFrame {
     public static String MTS_VERSION = "1.1";
     private static String MOD_DIR = "mods/";
     private static String STS_JAR = "desktop-1.0.jar";
-    
+
     private static Object ARGS;
-    
+
     public static void main(String[] args) {
         ARGS = args;
-        
+
         EventQueue.invokeLater(() -> {
-            ModSelectWindow ex = new ModSelectWindow(getAllModFiles());
+           ModSelectWindow ex = new ModSelectWindow(getAllModFiles());
             ex.setVisible(true);
         });
     }
@@ -40,7 +38,7 @@ public class Loader extends JFrame {
         try {
             // Construct ClassLoader
             URL[] modUrls = buildUrlArray(modJars);
-            URLClassLoader loader = new URLClassLoader(modUrls, ClassLoader.getSystemClassLoader());            
+            URLClassLoader loader = new URLClassLoader(modUrls, ClassLoader.getSystemClassLoader());
 
             // Set Settings.isModded = true
             Class<?> Settings = loader.loadClass("com.megacrit.cardcrawl.core.Settings");
@@ -52,7 +50,7 @@ public class Loader extends JFrame {
             Field VERSION_NUM = CardCrawlGame.getDeclaredField("VERSION_NUM");
             String oldVersion = (String) VERSION_NUM.get(null);
             VERSION_NUM.set(null, oldVersion + " [ModTheSpire " + MTS_VERSION + "]");
-            
+
             // Initialize any mods which declare an initialization function
             for (int i = 0; i < modUrls.length - 1; i++) {
                 String modUrl = modUrls[i].toString();
@@ -65,7 +63,7 @@ public class Loader extends JFrame {
                     continue;
                 }
             }
-            
+
             // Launch the game
             Class<?> DesktopLauncher = loader.loadClass("com.megacrit.cardcrawl.desktop.DesktopLauncher");
             Method method = DesktopLauncher.getDeclaredMethod("main", String[].class);
@@ -81,11 +79,11 @@ public class Loader extends JFrame {
         for (int i = 0; i < modJars.length; i++) {
             urls[i] = modJars[i].toURI().toURL();
         }
-        
+
         urls[modJars.length] = new File(STS_JAR).toURI().toURL();
         return urls;
     }
-    
+
     // getAllModFiles - returns a File array containing all of the JAR files in the mods directory
     private static File[] getAllModFiles() {
         File file = new File(MOD_DIR);
@@ -97,7 +95,7 @@ public class Loader extends JFrame {
                 return name.toLowerCase().endsWith(".jar");
             }
         });
-        
+
         if (files.length > 0) return files;
         return null;
     }

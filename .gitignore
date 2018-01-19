@@ -26,6 +26,9 @@ hs_err_pid*
 out/
 ModTheSpire.iml
 
+# maven build target
+target/
+
 # Custom
 _archive/
 backup/
