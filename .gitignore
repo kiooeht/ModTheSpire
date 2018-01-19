@@ -26,4 +26,9 @@ hs_err_pid*
 out/
 ModTheSpire.iml
 
+# Custom
+backup/
+bin/
 mods/
+preferences/
+*.displayconfig
