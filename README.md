@@ -2,7 +2,12 @@
 ModTheSpire is a tool to load external mods for Slay the Spire without modifying the base game files.
 
 ## Requirements ##
+#### General Use ####
 Java 8+
+
+#### Development ####
+Java 8+
+Maven
 
 ## Building ##
 Run `mvn package`
@@ -20,16 +25,21 @@ Run `mvn package`
 * Initialization: in `modname.ModName` implement `public static void initialize()`.
 
 ## Changelog ##
-#### v1 ####
-* Initial release
+#### v1.0.0 ####
+* Initial release (kiooeht)
 
-#### v1.1 ####
-* Change buttons to multi-select list
-* Add support for loading multiple mods at the same time
-* Add support for mod initialization
-* General code cleanup
+#### v1.1.0 ####
+* Change buttons to multi-select list (t-larson)
+* Add support for loading multiple mods at the same time (t-larson)
+* Add support for mod initialization (t-larson)
+* General code cleanup (t-larson)
+
+#### v1.1.1 ####
+* Fix support for mods that do not contain `modname.ModName` (FlipskiZ)
+* Switch build to Maven (reckter)
 
 ## Contributors ##
 * kiooeht - Original author
 * t-larson - Multi-loading, mod initialization, some UI work
-* reckter - maven setup
+* reckter - Maven setup
+* FlipskiZ - Mod initialization

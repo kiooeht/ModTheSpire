@@ -1,3 +1,3 @@
 @echo off
-java -jar "ModTheSpire.jar"
+java -jar "ModTheSpire-1.1.1.jar"
 pause

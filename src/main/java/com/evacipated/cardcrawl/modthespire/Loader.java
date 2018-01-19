@@ -18,7 +18,7 @@ import java.util.Arrays;
 import java.util.Scanner;
 
 public class Loader extends JFrame {
-    public static String MTS_VERSION = "1.1";
+    public static String MTS_VERSION = "1.1.1";
     private static String MOD_DIR = "mods/";
     private static String STS_JAR = "desktop-1.0.jar";
 
@@ -55,10 +55,13 @@ public class Loader extends JFrame {
             for (int i = 0; i < modUrls.length - 1; i++) {
                 String modUrl = modUrls[i].toString();
                 String modName = modUrl.substring(modUrl.lastIndexOf('/') + 1, modUrl.length() - 4);
-                Class<?> modMainClass = loader.loadClass(modName.toLowerCase() + "." + modName);
+                
                 try {
+                    Class<?> modMainClass = loader.loadClass(modName.toLowerCase() + "." + modName);
                     Method initialize = modMainClass.getDeclaredMethod("initialize");
                     initialize.invoke(null);
+                } catch (ClassNotFoundException e) {
+                    continue;
                 } catch (NoSuchMethodException e) {
                     continue;
                 }
