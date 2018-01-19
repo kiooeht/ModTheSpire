@@ -10,7 +10,7 @@ Java 8+
 
 ## Installation ##
 1. Copy `ModTheSpire.jar` to your Slay the Spire install directory.
-2. Create a `mods` directory. Place mod JAR files into the `./mods/` directory.
+2. Create a `mods` directory. Place mod JAR files into the `mods` directory.
 3. Run `ModTheSpire.jar` or run `_run.bat` to get logger output.
 
 ## For Modders ##
