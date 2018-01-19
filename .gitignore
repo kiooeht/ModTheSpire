@@ -35,4 +35,5 @@ mods/
 preferences/
 tools/
 _decompile.bat
+_runJ9.bat
 *.displayconfig
