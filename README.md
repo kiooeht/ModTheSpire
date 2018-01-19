@@ -20,3 +20,4 @@ If you include a file called `ModTheSpireVersion` at the root of your .jar, ModT
 
 ## Contributors ##
 * kiooeht - Original author
+* t-larson - Multi-loading, mod initialization, some UI work
