@@ -27,8 +27,12 @@ out/
 ModTheSpire.iml
 
 # Custom
+_archive/
 backup/
 bin/
+decompiled/
 mods/
 preferences/
+tools/
+_decompile.bat
 *.displayconfig

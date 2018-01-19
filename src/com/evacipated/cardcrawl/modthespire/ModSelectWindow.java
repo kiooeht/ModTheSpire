@@ -8,25 +8,20 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class ModSelectWindow extends JFrame
-{
+public class ModSelectWindow extends JFrame {
     private File[] mods;
-    private String[] main_args;
 
-    public ModSelectWindow(File[] mod_jars, String[] args)
-    {
-        mods = mod_jars;
-        main_args = args;
+    public ModSelectWindow(File[] modJars) {
+        mods = modJars;
         initUI();
     }
 
-    private void initUI()
-    {
-        setTitle("Mod The Spire");
+    private void initUI() {
+        setTitle("Mod The Spire " + Loader.MTS_VERSION);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setResizable(false);
 
-        rootPane.setBorder(new EmptyBorder(10, 10, 10, 10));
+        rootPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 
         GridBagLayout layout = new GridBagLayout();
         setLayout(layout);
@@ -36,31 +31,38 @@ public class ModSelectWindow extends JFrame
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weighty = 1;
-
-        JButton vanillaBtn = new JButton("Vanilla");
-        vanillaBtn.addActionListener((ActionEvent event) -> {
-            Loader.runMod(null, main_args);
-        });
-
-        add(vanillaBtn, gbc);
-        add(new JLabel("", SwingConstants.CENTER), gbc);
-
-        if (mods != null) {
-            add(new JLabel("Mods:", SwingConstants.CENTER), gbc);
-
-            for (File mod : mods) {
-                String mod_name = mod.getName();
-                mod_name = mod_name.substring(0, mod_name.length() - 4);
-                JButton btn = new JButton(mod_name);
-                btn.addActionListener((ActionEvent event) -> {
-                    Loader.runMod(mod, main_args);
-                });
-                add(btn, gbc);
-            }
-        } else {
-            add(new JLabel("No mods found", SwingConstants.CENTER), gbc);
+        
+        // Remove the .jar from mod names to display in modList
+        String[] modNames = new String[mods.length];
+        for (int i = 0; i < mods.length; i++) {
+            String modName = mods[i].getName();
+            modNames[i] = modName.substring(0, modName.length() - 4);
         }
+        
+        // Mod List
+        JList modList = new JList(modNames);
+        modList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        modList.setLayoutOrientation(JList.VERTICAL);
+        modList.setVisibleRowCount(-1);
+        
+        JScrollPane modScroller = new JScrollPane(modList);
+        modScroller.setPreferredSize(new Dimension(300, 200));
+        add(modScroller, gbc);  
 
+        // Play button
+        JButton playBtn = new JButton("Play");
+        playBtn.addActionListener((ActionEvent event) -> {
+            // Build array of selected mods
+            int[] selectedIndices = modList.getSelectedIndices();
+            File[] selectedMods = new File[selectedIndices.length];
+            for (int i = 0; i < selectedIndices.length; i++) {
+                selectedMods[i] = mods[selectedIndices[i]];
+            }
+            
+            Loader.runMods(selectedMods);
+        });
+        add(playBtn, gbc);
+        
         pack();
         setLocationRelativeTo(null);
     }
