@@ -2,7 +2,7 @@
 ModTheSpire is a tool to load external mods for Slay the Spire without modifying the base game files.
 
 ## Requirements ##
-Java 9
+Java 8+
 
 ## Installation ##
 1.	Extract the ModTheSpire archive into your Slay the Spire installation directory.
