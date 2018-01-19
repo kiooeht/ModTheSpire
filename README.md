@@ -4,10 +4,14 @@ ModTheSpire is a tool to load external mods for Slay the Spire without modifying
 ## Requirements ##
 Java 8+
 
+## Building ##
+1. Run `_compile.bat`.
+2. Run `_package.bat`.
+
 ## Installation ##
-1.	Extract the ModTheSpire archive into your Slay the Spire installation directory.
-2.	Create a `mods` directory. Place mod JAR files into the `./mods/` directory.
-3.	Run `ModTheSpire.jar`
+1. Extract the ModTheSpire archive into your Slay the Spire installation directory.
+2. Create a `mods` directory. Place mod JAR files into the `./mods/` directory.
+3. Run `ModTheSpire.jar` or run `_run.bat` to get logger output.
 
 ## For Modders ##
 * ModTheSpire automatically sets the Settings.isModded flag to true, so there is no need to do that yourself.
