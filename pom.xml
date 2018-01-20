@@ -2,12 +2,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.evacipated.cardcrawl</groupId>
-    <artifactId>modthespire</artifactId>
+    <artifactId>ModTheSpire</artifactId>
     <version>dev</version>
     <packaging>jar</packaging>
 
-    <name>modthespire</name>
-    <description>Mod loader for SlayTheSpire</description>
+    <name>ModTheSpire</name>
+    <description>Mod loader for Slay The Spire</description>
 
     <dependencies>
     </dependencies>
@@ -39,7 +39,7 @@
                     <transformers>
                         <transformer
                                 implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                            <mainClass>com.evacipated.cardcrawl.modthespire</mainClass>
+                            <mainClass>com.evacipated.cardcrawl.modthespire.Loader</mainClass>
                         </transformer>
                     </transformers>
                 </configuration>
