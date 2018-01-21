@@ -10,6 +10,11 @@
     <description>Mod loader for Slay The Spire</description>
 
     <dependencies>
+        <dependency>
+            <groupId>org.javassist</groupId>
+            <artifactId>javassist</artifactId>
+            <version>3.22.0-GA</version>
+        </dependency>
     </dependencies>
 
     <build>

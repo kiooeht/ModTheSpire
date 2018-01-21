@@ -15,10 +15,12 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Properties;
 import java.util.Scanner;
+import javassist.*;
 
 public class Loader extends JFrame {
-    public static int MTS_VERSION_NUM = 1;
+    public static int MTS_VERSION_NUM = 2;
     private static String MOD_DIR = "mods/";
 
     public static void main(String[] args) {
@@ -40,6 +42,7 @@ public class Loader extends JFrame {
             File slaythespire_jar = new File("SlayTheSpire.jar");
 
             String mod_name = "";
+            String mod_author = "";
             if (mod_jar != null) {
                 System.out.println(mod_jar.getName());
                 mod_name = mod_jar.getName();
@@ -61,18 +64,50 @@ public class Loader extends JFrame {
             URLClassLoader loader = URLClassLoader.newInstance(urls_arr, ClassLoader.getSystemClassLoader());
 
             if (mod_jar != null) {
+                // Read ModTheSpireInfo
+                Properties prop = new Properties();
+                InputStream inProp = loader.getResourceAsStream("ModTheSpire.config");
+                if (inProp != null) {
+                    try {
+                        prop.load(inProp);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    mod_name = prop.getProperty("name", mod_name);
+                    mod_author = prop.getProperty("author");
+                }
+
                 // Set Settings.isModded = true
                 Class<?> Settings = loader.loadClass("com.megacrit.cardcrawl.core.Settings");
                 Field isModded = Settings.getDeclaredField("isModded");
                 isModded.set(null, true);
 
+                // Use javassist to add ourselves to the credits
+                ClassPool pool = ClassPool.getDefault();
+                pool.insertClassPath(new ClassClassPath(Settings));
+                CtClass ctCreditsScreen = pool.get("com.megacrit.cardcrawl.credits.CreditsScreen");
+                if (ctCreditsScreen != null) {
+                    CtConstructor ctConstructor = ctCreditsScreen.getDeclaredConstructors()[0];
+                    String src = "{" +
+                            "this.lines.add(new com.megacrit.cardcrawl.credits.CreditLine(\"ModTheSpire\", tmpY -= 150.0F, true));" +
+                            "this.lines.add(new com.megacrit.cardcrawl.credits.CreditLine(\"kiooeht\", tmpY -= 45.0F, false));";
+                    if (!mod_author.isEmpty()) {
+                        src += "this.lines.add(new com.megacrit.cardcrawl.credits.CreditLine(\"" + mod_name + " Mod\", tmpY -= 150.0F, true));";
+                        String[] mod_authors = mod_author.split(",");
+                        for (String author : mod_authors) {
+                            src += "this.lines.add(new com.megacrit.cardcrawl.credits.CreditLine(\"" + author + "\", tmpY -= 45.0F, false));";
+                        }
+                    }
+                    src += "}";
+                    ctConstructor.insertAt(66, src);
+                    ctCreditsScreen.toClass(loader);
+                }
+
                 // Add "[ModTheSpire: MOD_NAME]" to version text
                 InputStream in = loader.getResourceAsStream("ModTheSpireVersion");
-                System.out.println(mod_name);
                 if (in != null) {
                     Scanner s = new Scanner(in).useDelimiter("\\A");
                     mod_name = s.hasNext() ? s.next() : "";
-                    System.out.println(mod_name);
                     try {
                         in.close();
                     } catch (IOException e) {
@@ -103,6 +138,10 @@ public class Loader extends JFrame {
         } catch (NoSuchFieldException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (CannotCompileException e) {
+            e.printStackTrace();
+        } catch (NotFoundException e) {
             e.printStackTrace();
         }
     }

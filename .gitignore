@@ -29,3 +29,6 @@ ModTheSpire.iml
 # maven build target
 target/
 mods/
+
+# maven other
+dependency-reduced-pom.xml
