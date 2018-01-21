@@ -11,7 +11,12 @@ Installing:
 For Modders:
 ModTheSpire automatically sets the Settings.isModded flag to true, so there is no need to do that yourself.
 When making your mod .jar, you do not have to include the base game .jar, even if it is a dependency.
-If you include a file called `ModTheSpireVersion` at the root of your .jar, ModTheSpire will use its contents as your mod name in the version string. Leaving the file empty will remove ModTheSpire from the version string completely.
+If you include a file called `ModTheSpire.config` at the root of your mod's .jar, ModTheSpire will use it to determine the mod's name and author.
+Example:
+```
+name=Example Mod Name
+author=kiooeht
+```
 
 For collaborators:
 compile with maven
@@ -20,6 +25,9 @@ if you do not have maven install it or use the maven wrapper (./mvnw or mvnw.cmd
 
 Changelog
 =========
+
+v2:
++ Credits injection
 
 v1:
 + Initial release
