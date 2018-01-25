@@ -38,6 +38,9 @@ ModTheSpire is a tool to load external mods for Slay the Spire without modifying
 * Fix support for mods that do not contain `modname.ModName` (FlipskiZ)
 * Switch build to Maven (reckter)
 
+#### v1.1.2 ####
+* Fix exception that occured when mods folder is either not found or empty
+
 ## Contributors ##
 * kiooeht - Original author
 * t-larson - Multi-loading, mod initialization, some UI work

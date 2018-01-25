@@ -18,7 +18,7 @@ import java.util.Arrays;
 import java.util.Scanner;
 
 public class Loader extends JFrame {
-    public static String MTS_VERSION = "1.1.1";
+    public static String MTS_VERSION = "1.1.2";
     private static String MOD_DIR = "mods/";
     private static String STS_JAR = "desktop-1.0.jar";
 

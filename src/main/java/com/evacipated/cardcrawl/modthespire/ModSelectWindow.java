@@ -31,8 +31,9 @@ public class ModSelectWindow extends JFrame {
         gbc.weighty = 1;
         
         // Remove the .jar from mod names to display in modList
-        String[] modNames = new String[mods.length];
-        for (int i = 0; i < mods.length; i++) {
+        int modsLength = mods != null ? mods.length : 0;
+        String[] modNames = new String[modsLength];
+        for (int i = 0; i < modsLength; i++) {
             String modName = mods[i].getName();
             modNames[i] = modName.substring(0, modName.length() - 4);
         }

@@ -33,9 +33,11 @@ target/
 _archive/
 backup/
 bin/
+crashlogs/
 decompiled/
 mods/
 preferences/
+saves/
 tools/
 _build.bat
 _decompile.bat
