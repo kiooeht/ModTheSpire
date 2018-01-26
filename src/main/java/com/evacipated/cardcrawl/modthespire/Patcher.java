@@ -13,6 +13,26 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class Patcher {
+    public static void patchCredits(ClassLoader loader, ClassPool pool, String mod_name, String mod_author) throws NotFoundException, CannotCompileException {
+        CtClass ctCreditsScreen = pool.get("com.megacrit.cardcrawl.credits.CreditsScreen");
+        if (ctCreditsScreen != null) {
+            CtConstructor ctConstructor = ctCreditsScreen.getDeclaredConstructors()[0];
+            String src = "{" +
+                    "this.lines.add(new com.megacrit.cardcrawl.credits.CreditLine(\"ModTheSpire\", tmpY -= 150.0F, true));" +
+                    "this.lines.add(new com.megacrit.cardcrawl.credits.CreditLine(\"kiooeht\", tmpY -= 45.0F, false));";
+            if (!mod_author.isEmpty()) {
+                src += "this.lines.add(new com.megacrit.cardcrawl.credits.CreditLine(\"" + mod_name + " Mod\", tmpY -= 150.0F, true));";
+                String[] mod_authors = mod_author.split(",");
+                for (String author : mod_authors) {
+                    src += "this.lines.add(new com.megacrit.cardcrawl.credits.CreditLine(\"" + author + "\", tmpY -= 45.0F, false));";
+                }
+            }
+            src += "}";
+            ctConstructor.insertAt(66, src);
+            ctCreditsScreen.toClass(loader, null);
+        }
+    }
+
     public static Set<String> findPatches(File jar) throws IOException
     {
         System.out.println("Finding patches...");

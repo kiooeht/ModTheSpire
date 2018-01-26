@@ -85,24 +85,7 @@ public class Loader extends JFrame {
                 Field isModded = Settings.getDeclaredField("isModded");
                 isModded.set(null, true);
 
-                // Use javassist to add ourselves to the credits
-                CtClass ctCreditsScreen = pool.get("com.megacrit.cardcrawl.credits.CreditsScreen");
-                if (ctCreditsScreen != null) {
-                    CtConstructor ctConstructor = ctCreditsScreen.getDeclaredConstructors()[0];
-                    String src = "{" +
-                            "this.lines.add(new com.megacrit.cardcrawl.credits.CreditLine(\"ModTheSpire\", tmpY -= 150.0F, true));" +
-                            "this.lines.add(new com.megacrit.cardcrawl.credits.CreditLine(\"kiooeht\", tmpY -= 45.0F, false));";
-                    if (!mod_author.isEmpty()) {
-                        src += "this.lines.add(new com.megacrit.cardcrawl.credits.CreditLine(\"" + mod_name + " Mod\", tmpY -= 150.0F, true));";
-                        String[] mod_authors = mod_author.split(",");
-                        for (String author : mod_authors) {
-                            src += "this.lines.add(new com.megacrit.cardcrawl.credits.CreditLine(\"" + author + "\", tmpY -= 45.0F, false));";
-                        }
-                    }
-                    src += "}";
-                    ctConstructor.insertAt(66, src);
-                    ctCreditsScreen.toClass(loader, null);
-                }
+                Patcher.patchCredits(loader, pool, mod_name, mod_author);
 
                 // Add "[ModTheSpire: MOD_NAME]" to version text
                 InputStream in = loader.getResourceAsStream("ModTheSpireVersion");
