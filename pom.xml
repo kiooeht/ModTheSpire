@@ -15,6 +15,16 @@
             <artifactId>javassist</artifactId>
             <version>3.22.0-GA</version>
         </dependency>
+        <dependency>
+            <groupId>org.scannotation</groupId>
+            <artifactId>scannotation</artifactId>
+            <version>1.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.evacipated.cardcrawl</groupId>
+            <artifactId>ModTheSpireLib</artifactId>
+            <version>1.0</version>
+        </dependency>
     </dependencies>
 
     <build>

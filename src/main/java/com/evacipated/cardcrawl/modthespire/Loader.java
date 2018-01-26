@@ -1,5 +1,7 @@
 package com.evacipated.cardcrawl.modthespire;
 
+import javassist.*;
+
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
@@ -13,11 +15,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Properties;
-import java.util.Scanner;
-import javassist.*;
+import java.util.*;
 
 public class Loader extends JFrame {
     public static int MTS_VERSION_NUM = 2;
@@ -64,6 +62,19 @@ public class Loader extends JFrame {
             URLClassLoader loader = URLClassLoader.newInstance(urls_arr, ClassLoader.getSystemClassLoader());
 
             if (mod_jar != null) {
+                ClassPool pool = ClassPool.getDefault();
+                pool.insertClassPath(new LoaderClassPath(loader));
+                // Find and inject mod patches
+                try {
+                    Patcher.injectPatches(loader, pool, Patcher.findPatches(mod_jar));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                } catch (NotFoundException e) {
+                    e.printStackTrace();
+                }
+
                 // Read ModTheSpireInfo
                 Properties prop = new Properties();
                 InputStream inProp = loader.getResourceAsStream("ModTheSpire.config");
@@ -83,8 +94,6 @@ public class Loader extends JFrame {
                 isModded.set(null, true);
 
                 // Use javassist to add ourselves to the credits
-                ClassPool pool = ClassPool.getDefault();
-                pool.insertClassPath(new ClassClassPath(Settings));
                 CtClass ctCreditsScreen = pool.get("com.megacrit.cardcrawl.credits.CreditsScreen");
                 if (ctCreditsScreen != null) {
                     CtConstructor ctConstructor = ctCreditsScreen.getDeclaredConstructors()[0];
@@ -100,7 +109,7 @@ public class Loader extends JFrame {
                     }
                     src += "}";
                     ctConstructor.insertAt(66, src);
-                    ctCreditsScreen.toClass(loader);
+                    ctCreditsScreen.toClass(loader, null);
                 }
 
                 // Add "[ModTheSpire: MOD_NAME]" to version text
@@ -127,21 +136,21 @@ public class Loader extends JFrame {
             method.invoke(null, (Object) args);
         } catch (URISyntaxException e) {
             e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
         } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
             e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
         } catch (NoSuchFieldException e) {
             e.printStackTrace();
-        } catch (ClassNotFoundException e) {
+        } catch (NotFoundException e) {
             e.printStackTrace();
         } catch (CannotCompileException e) {
             e.printStackTrace();
-        } catch (NotFoundException e) {
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
             e.printStackTrace();
         }
     }
