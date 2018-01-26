@@ -44,6 +44,9 @@ public class Patcher {
     }
 
     public static void injectPatches(ClassLoader loader, ClassPool pool, Iterable<String> class_names) throws ClassNotFoundException, NotFoundException, CannotCompileException {
+        if (class_names == null)
+            return;
+
         HashSet<CtClass> ctClasses = new HashSet<CtClass>();
         for (String cls_name : class_names) {
             System.out.println("Patch [" + cls_name + "]");
