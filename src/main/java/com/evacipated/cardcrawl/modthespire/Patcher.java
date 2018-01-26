@@ -23,7 +23,7 @@ public class Patcher {
         return db.getAnnotationIndex().get(SpirePatch.class.getName());
     }
 
-    public static void injectPatches(ClassLoader loader, ClassPool pool, Iterable<String> class_names) throws ClassNotFoundException, NotFoundException {
+    public static void injectPatches(ClassLoader loader, ClassPool pool, Iterable<String> class_names) throws ClassNotFoundException, NotFoundException, CannotCompileException {
         HashSet<CtClass> ctClasses = new HashSet<CtClass>();
         for (String cls_name : class_names) {
             System.out.println("Patch [" + cls_name + "]");
@@ -69,12 +69,8 @@ public class Patcher {
 
         System.out.println("Compiling patched classes...");
         for (CtClass cls : ctClasses) {
-            try {
-                System.out.println("  " + cls.getName());
-                cls.toClass(loader, null);
-            } catch (CannotCompileException e) {
-                e.printStackTrace();
-            }
+            System.out.println("  " + cls.getName());
+            cls.toClass(loader, null);
         }
     }
 
@@ -96,8 +92,7 @@ public class Patcher {
         }
     }
 
-    private static void addPostfix(CtBehavior ctMethodToPatch, CtMethod postfix) throws NotFoundException
-    {
+    private static void addPostfix(CtBehavior ctMethodToPatch, CtMethod postfix) throws NotFoundException, CannotCompileException {
         CtClass returnType = postfix.getReturnType();
         CtClass[] parameters = postfix.getParameterTypes();
 
@@ -131,11 +126,7 @@ public class Patcher {
         }
         src += "$$);";
         System.out.println("      " + src);
-        try {
-            ctMethodToPatch.insertAfter(src);
-        } catch (CannotCompileException e) {
-            e.printStackTrace();
-        }
+        ctMethodToPatch.insertAfter(src);
     }
 
     private static CtClass[] patchParamTypes(ClassPool pool, SpirePatch patch) throws NotFoundException {

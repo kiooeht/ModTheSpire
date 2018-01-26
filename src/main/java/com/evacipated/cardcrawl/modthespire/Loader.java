@@ -65,15 +65,7 @@ public class Loader extends JFrame {
                 ClassPool pool = ClassPool.getDefault();
                 pool.insertClassPath(new LoaderClassPath(loader));
                 // Find and inject mod patches
-                try {
-                    Patcher.injectPatches(loader, pool, Patcher.findPatches(mod_jar));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
-                } catch (NotFoundException e) {
-                    e.printStackTrace();
-                }
+                Patcher.injectPatches(loader, pool, Patcher.findPatches(mod_jar));
 
                 // Read ModTheSpireInfo
                 Properties prop = new Properties();
@@ -151,6 +143,8 @@ public class Loader extends JFrame {
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
         } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
