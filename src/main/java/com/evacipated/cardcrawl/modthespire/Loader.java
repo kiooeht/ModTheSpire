@@ -40,32 +40,26 @@ public class Loader extends JFrame {
             URL[] modUrls = buildUrlArray(modJars);
             URLClassLoader loader = new URLClassLoader(modUrls, ClassLoader.getSystemClassLoader());
 
-            String mod_name = "";
-            String mod_author = "";
-            if (mod_jar != null) {
-                System.out.println(mod_jar.getName());
-                mod_name = mod_jar.getName();
-                mod_name = mod_name.substring(0, mod_name.length() - 4);
-            }
-
-            if (mod_jar != null) {
+            if (modJars.length > 0) {
                 ClassPool pool = ClassPool.getDefault();
                 pool.insertClassPath(new LoaderClassPath(loader));
                 // Find and inject mod patches
-                Patcher.injectPatches(loader, pool, Patcher.findPatches(mod_jar));
+                Patcher.injectPatches(loader, pool, Patcher.findPatches(modUrls));
 
-                // Read ModTheSpireInfo
-                Properties prop = new Properties();
-                InputStream inProp = loader.getResourceAsStream("ModTheSpire.config");
-                if (inProp != null) {
-                    try {
-                        prop.load(inProp);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    mod_name = prop.getProperty("name", mod_name);
-                    mod_author = prop.getProperty("author");
-                }
+                ModInfo[] modInfos = buildInfoArray(modJars);
+
+                // Set Settings.isModded = true
+                Class<?> Settings = loader.loadClass("com.megacrit.cardcrawl.core.Settings");
+                Field isModded = Settings.getDeclaredField("isModded");
+                isModded.set(null, true);
+
+                Patcher.patchCredits(loader, pool, modInfos);
+
+                // Add ModTheSpire section to CardCrawlGame.VERSION_NUM
+                Class<?> CardCrawlGame = loader.loadClass("com.megacrit.cardcrawl.core.CardCrawlGame");
+                Field VERSION_NUM = CardCrawlGame.getDeclaredField("VERSION_NUM");
+                String oldVersion = (String) VERSION_NUM.get(null);
+                VERSION_NUM.set(null, oldVersion + " [ModTheSpire " + MTS_VERSION + "]");
 
                 // Initialize any mods which declare an initialization function
                 for (int i = 0; i < modUrls.length - 1; i++) {
@@ -82,26 +76,13 @@ public class Loader extends JFrame {
                         continue;
                     }
                 }
-
-                // Set Settings.isModded = true
-                Class<?> Settings = loader.loadClass("com.megacrit.cardcrawl.core.Settings");
-                Field isModded = Settings.getDeclaredField("isModded");
-                isModded.set(null, true);
-
-                Patcher.patchCredits(loader, pool, mod_name, mod_author);
-
-                // Add ModTheSpire section to CardCrawlGame.VERSION_NUM
-                Class<?> CardCrawlGame = loader.loadClass("com.megacrit.cardcrawl.core.CardCrawlGame");
-                Field VERSION_NUM = CardCrawlGame.getDeclaredField("VERSION_NUM");
-                String oldVersion = (String) VERSION_NUM.get(null);
-                VERSION_NUM.set(null, oldVersion + " [ModTheSpire " + MTS_VERSION + "]");
             }
 
             Class<?> cls = loader.loadClass("com.megacrit.cardcrawl.desktop.DesktopLauncher");
             Method method = cls.getDeclaredMethod("main", String[].class);
-            method.invoke(null, (Object) args);
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
+            method.invoke(null, (Object) ARGS);
+        //} catch (URISyntaxException e) {
+        //    e.printStackTrace();
         } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (IllegalAccessException e) {
@@ -132,6 +113,14 @@ public class Loader extends JFrame {
 
         urls[modJars.length] = new File(STS_JAR).toURI().toURL();
         return urls;
+    }
+
+    private static ModInfo[] buildInfoArray(File[] modJars) {
+        ModInfo[] infos = new ModInfo[modJars.length];
+        for (int i = 0; i < modJars.length; ++i) {
+            infos[i] = ModInfo.ReadModInfo(modJars[i]);
+        }
+        return infos;
     }
 
     // getAllModFiles - returns a File array containing all of the JAR files in the mods directory
