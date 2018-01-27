@@ -3,7 +3,7 @@
 
     <groupId>com.evacipated.cardcrawl</groupId>
     <artifactId>ModTheSpire</artifactId>
-    <version>dev</version>
+    <version>1.1.2</version>
     <packaging>jar</packaging>
 
     <name>ModTheSpire</name>
@@ -28,6 +28,7 @@
     </dependencies>
 
     <build>
+        <finalName>ModTheSpire</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

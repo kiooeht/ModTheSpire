@@ -18,26 +18,27 @@ import java.net.URLClassLoader;
 import java.util.*;
 
 public class Loader extends JFrame {
-    public static int MTS_VERSION_NUM = 2;
+    public static String MTS_VERSION = "1.1.2";
     private static String MOD_DIR = "mods/";
+    private static String STS_JAR = "desktop-1.0.jar";
+
+    private static Object ARGS;
 
     public static void main(String[] args) {
-        File[] mod_jars = getAllModFiles();
+        ARGS = args;
 
         EventQueue.invokeLater(() -> {
-           ModSelectWindow ex = new ModSelectWindow(mod_jars, args);
+           ModSelectWindow ex = new ModSelectWindow(getAllModFiles());
             ex.setVisible(true);
         });
     }
 
-    public static void runMod(File mod_jar, String[] args)
-    {
+    // runMods - sets up the ClassLoader, sets the isModded flag and launches the game
+    public static void runMods(File[] modJars) {
         try {
-            String this_jar_name = new File(Loader.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath()).getName();
-            //System.out.println(this_jar_name);
-
-            File desktop_jar = new File("desktop-1.0.jar");
-            File slaythespire_jar = new File("SlayTheSpire.jar");
+            // Construct ClassLoader
+            URL[] modUrls = buildUrlArray(modJars);
+            URLClassLoader loader = new URLClassLoader(modUrls, ClassLoader.getSystemClassLoader());
 
             String mod_name = "";
             String mod_author = "";
@@ -46,20 +47,6 @@ public class Loader extends JFrame {
                 mod_name = mod_jar.getName();
                 mod_name = mod_name.substring(0, mod_name.length() - 4);
             }
-
-            ArrayList<URL> urls = new ArrayList<>();
-            // Add mod jar, if found
-            if (mod_jar != null) {
-                urls.add(mod_jar.toURI().toURL());
-            }
-            urls.add(slaythespire_jar.toURI().toURL());
-            // Don't add desktop-1.0.jar if we're desktop-1.0.jar
-            if (!this_jar_name.equals("desktop-1.0.jar")) {
-                urls.add(desktop_jar.toURI().toURL());
-            }
-            URL[] urls_arr = new URL[urls.size()];
-            urls.toArray(urls_arr);
-            URLClassLoader loader = URLClassLoader.newInstance(urls_arr, ClassLoader.getSystemClassLoader());
 
             if (mod_jar != null) {
                 ClassPool pool = ClassPool.getDefault();
@@ -80,6 +67,22 @@ public class Loader extends JFrame {
                     mod_author = prop.getProperty("author");
                 }
 
+                // Initialize any mods which declare an initialization function
+                for (int i = 0; i < modUrls.length - 1; i++) {
+                    String modUrl = modUrls[i].toString();
+                    String modName = modUrl.substring(modUrl.lastIndexOf('/') + 1, modUrl.length() - 4);
+
+                    try {
+                        Class<?> modMainClass = loader.loadClass(modName.toLowerCase() + "." + modName);
+                        Method initialize = modMainClass.getDeclaredMethod("initialize");
+                        initialize.invoke(null);
+                    } catch (ClassNotFoundException e) {
+                        continue;
+                    } catch (NoSuchMethodException e) {
+                        continue;
+                    }
+                }
+
                 // Set Settings.isModded = true
                 Class<?> Settings = loader.loadClass("com.megacrit.cardcrawl.core.Settings");
                 Field isModded = Settings.getDeclaredField("isModded");
@@ -87,23 +90,11 @@ public class Loader extends JFrame {
 
                 Patcher.patchCredits(loader, pool, mod_name, mod_author);
 
-                // Add "[ModTheSpire: MOD_NAME]" to version text
-                InputStream in = loader.getResourceAsStream("ModTheSpireVersion");
-                if (in != null) {
-                    Scanner s = new Scanner(in).useDelimiter("\\A");
-                    mod_name = s.hasNext() ? s.next() : "";
-                    try {
-                        in.close();
-                    } catch (IOException e) {
-                    }
-                }
-                if (!mod_name.isEmpty()) {
-                    System.out.println(mod_name);
-                    Class<?> CardCrawlGame = loader.loadClass("com.megacrit.cardcrawl.core.CardCrawlGame");
-                    Field VERSION_NUM = CardCrawlGame.getDeclaredField("VERSION_NUM");
-                    String oldversion = (String) VERSION_NUM.get(null);
-                    VERSION_NUM.set(null, "[ModTheSpire: " + mod_name + "] " + oldversion);
-                }
+                // Add ModTheSpire section to CardCrawlGame.VERSION_NUM
+                Class<?> CardCrawlGame = loader.loadClass("com.megacrit.cardcrawl.core.CardCrawlGame");
+                Field VERSION_NUM = CardCrawlGame.getDeclaredField("VERSION_NUM");
+                String oldVersion = (String) VERSION_NUM.get(null);
+                VERSION_NUM.set(null, oldVersion + " [ModTheSpire " + MTS_VERSION + "]");
             }
 
             Class<?> cls = loader.loadClass("com.megacrit.cardcrawl.desktop.DesktopLauncher");
@@ -132,26 +123,30 @@ public class Loader extends JFrame {
         }
     }
 
-    private static String[] ignored_jars = {"desktop-1.0.jar", "SlayTheSpire.jar", "ModTheSpire.jar"};
+    // buildUrlArray - builds the URL array to pass to the ClassLoader
+    private static URL[] buildUrlArray(File[] modJars) throws MalformedURLException {
+        URL[] urls = new URL[modJars.length + 1];
+        for (int i = 0; i < modJars.length; i++) {
+            urls[i] = modJars[i].toURI().toURL();
+        }
 
-    private static File[] getAllModFiles()
-    {
+        urls[modJars.length] = new File(STS_JAR).toURI().toURL();
+        return urls;
+    }
+
+    // getAllModFiles - returns a File array containing all of the JAR files in the mods directory
+    private static File[] getAllModFiles() {
         File file = new File(MOD_DIR);
-        if (!file.exists() || !file.isDirectory())
-            return null;
+        if (!file.exists() || !file.isDirectory()) return null;
 
         File[] files = file.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
-                if (name.toLowerCase().endsWith(".jar") && !Arrays.asList(ignored_jars).contains(name)) {
-                    return true;
-                } else {
-                    return false;
-                }
+                return name.toLowerCase().endsWith(".jar");
             }
         });
-        if (files.length > 0)
-            return files;
+
+        if (files.length > 0) return files;
         return null;
     }
 }

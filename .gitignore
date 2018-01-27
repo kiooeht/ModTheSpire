@@ -28,7 +28,21 @@ ModTheSpire.iml
 
 # maven build target
 target/
+
+# Custom
+_archive/
+backup/
+bin/
+crashlogs/
+decompiled/
 mods/
+preferences/
+saves/
+tools/
+_build.bat
+_decompile.bat
+_runJ9.bat
+*.displayconfig
 
 # maven other
 dependency-reduced-pom.xml
