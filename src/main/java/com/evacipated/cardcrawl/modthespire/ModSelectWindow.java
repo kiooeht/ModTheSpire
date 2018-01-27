@@ -39,10 +39,11 @@ public class ModSelectWindow extends JFrame {
         }
         
         // Mod List
-        JList modList = new JList(modNames);
-        modList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        modList.setLayoutOrientation(JList.VERTICAL);
-        modList.setVisibleRowCount(-1);
+        DefaultListModel<JCheckBox> model = new DefaultListModel<>();
+        JCheckBoxList modList = new JCheckBoxList(model);
+        for (String name : modNames) {
+            model.addElement(new JCheckBox(name));
+        }
         
         JScrollPane modScroller = new JScrollPane(modList);
         modScroller.setPreferredSize(new Dimension(300, 200));
@@ -52,7 +53,7 @@ public class ModSelectWindow extends JFrame {
         JButton playBtn = new JButton("Play");
         playBtn.addActionListener((ActionEvent event) -> {
             // Build array of selected mods
-            int[] selectedIndices = modList.getSelectedIndices();
+            int[] selectedIndices = modList.getCheckedIndices();
             File[] selectedMods = new File[selectedIndices.length];
             for (int i = 0; i < selectedIndices.length; i++) {
                 selectedMods[i] = mods[selectedIndices[i]];

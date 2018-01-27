@@ -32,14 +32,15 @@ author=kiooeht
 
 ## Changelog ##
 #### v2.0.0 ####
-* Credits injection
-* Mod code injection
+* Credits injection (kiooeht)
+* Mod code injection (kiooeht)
   * Prefix
   * Postfix
 * Merge t-larson's changes
+* Add checkboxes to mod select list (kiooeht)
 
 #### v1.1.2 ####
-* Fix exception that occured when mods folder is either not found or empty
+* Fix exception that occured when mods folder is either not found or empty (t-larson)
 
 #### v1.1.1 ####
 * Fix support for mods that do not contain `modname.ModName` (FlipskiZ)
