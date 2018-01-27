@@ -18,7 +18,7 @@ import java.net.URLClassLoader;
 import java.util.*;
 
 public class Loader extends JFrame {
-    public static String MTS_VERSION = "1.1.2";
+    public static String MTS_VERSION = "2.0.0";
     private static String MOD_DIR = "mods/";
     private static String STS_JAR = "desktop-1.0.jar";
 
