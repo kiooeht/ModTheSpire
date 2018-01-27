@@ -1,21 +1,21 @@
 package com.evacipated.cardcrawl.modthespire;
 
-import javassist.*;
+import javassist.CannotCompileException;
+import javassist.ClassPool;
+import javassist.LoaderClassPath;
+import javassist.NotFoundException;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.*;
 
 public class Loader extends JFrame {
     public static String MTS_VERSION = "2.0.0";

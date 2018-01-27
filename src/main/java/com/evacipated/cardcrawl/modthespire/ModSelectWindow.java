@@ -37,7 +37,7 @@ public class ModSelectWindow extends JFrame {
             String modName = mods[i].getName();
             modNames[i] = modName.substring(0, modName.length() - 4);
         }
-        
+
         // Mod List
         DefaultListModel<JCheckBox> model = new DefaultListModel<>();
         JCheckBoxList modList = new JCheckBoxList(model);
@@ -47,7 +47,7 @@ public class ModSelectWindow extends JFrame {
         
         JScrollPane modScroller = new JScrollPane(modList);
         modScroller.setPreferredSize(new Dimension(300, 200));
-        add(modScroller, gbc);  
+        add(modScroller, gbc);
 
         // Play button
         JButton playBtn = new JButton("Play");
