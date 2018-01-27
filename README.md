@@ -20,7 +20,7 @@ ModTheSpire is a tool to load external mods for Slay the Spire without modifying
 ## Usage ##
 1. Run `ModTheSpire.jar` or run `_run.bat` to get logger output.
 2. Select the mod(s) you want to use.
-3. Press 'Play'
+3. Press 'Play'.
 
 ## For Modders ##
 * ModTheSpire automatically sets the Settings.isModded flag to true, so there is no need to do that yourself.
@@ -31,7 +31,7 @@ Example:
 name=Example Mod Name
 author=kiooeht
 ```
-* For mod code injected, see [ModTheSpireLib](https://github.com/kiooeht/ModTheSpireLib).
+* For mod code injection, see [ModTheSpireLib](https://github.com/kiooeht/ModTheSpireLib).
 
 ## Changelog ##
 #### v2.0.0 ####
