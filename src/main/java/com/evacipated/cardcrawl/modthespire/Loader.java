@@ -36,6 +36,13 @@ public class Loader extends JFrame {
     // runMods - sets up the ClassLoader, sets the isModded flag and launches the game
     public static void runMods(File[] modJars) {
         try {
+            // Check that desktop-1.0.jar exists
+            File tmp = new File(STS_JAR);
+            if (!tmp.exists()) {
+                JOptionPane.showMessageDialog(null, "Unable to find 'desktop-1.0.jar'");
+                return;
+            }
+
             // Construct ClassLoader
             URL[] modUrls = buildUrlArray(modJars);
             URLClassLoader loader = new URLClassLoader(modUrls, ClassLoader.getSystemClassLoader());
