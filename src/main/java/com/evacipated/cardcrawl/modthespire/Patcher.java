@@ -45,8 +45,12 @@ public class Patcher {
     {
         System.out.println("Finding patches...");
 
+        // Remove the base game jar from the search path
+        URL[] urls_cpy = new URL[urls.length - 1];
+        System.arraycopy(urls, 0, urls_cpy, 0, urls_cpy.length);
+
         AnnotationDB db = new AnnotationDB();
-        db.scanArchives(urls);
+        db.scanArchives(urls_cpy);
         return db.getAnnotationIndex().get(SpirePatch.class.getName());
     }
 
