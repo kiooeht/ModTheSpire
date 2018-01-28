@@ -41,6 +41,35 @@ public class Patcher {
         }
     }
 
+    public static void patchMainMenu(ClassLoader loader, ClassPool pool, ModInfo[] modInfos) throws NotFoundException, CannotCompileException {
+        CtClass ctMainMenuScreen = pool.get("com.megacrit.cardcrawl.screens.mainMenu.MainMenuScreen");
+        CtMethod ctRender = ctMainMenuScreen.getDeclaredMethod("render");
+        String src = "{";
+        float tmpy = 30.0F;
+        for (int i = modInfos.length-1; i >= 0; --i) {
+            src += "com.megacrit.cardcrawl.helpers.FontHelper.renderFontRightTopAligned($1," +
+                    "com.megacrit.cardcrawl.helpers.FontHelper.cardDescFont_N," +
+                    "\"" + modInfos[i].Name + "\", " +
+                    "com.megacrit.cardcrawl.core.Settings.WIDTH - 16.0F * com.megacrit.cardcrawl.core.Settings.scale + 100.0F * $0.bg.slider," +
+                    tmpy + "F * com.megacrit.cardcrawl.core.Settings.scale," +
+                    "new com.badlogic.gdx.graphics.Color(1.0F, 1.0F, 1.0F, 0.3F)" +
+                    ");";
+            tmpy += 30.0F;
+        }
+        src += "com.badlogic.gdx.graphics.Color gold = com.megacrit.cardcrawl.core.Settings.GOLD_COLOR.cpy();" +
+                "gold.a = 0.3F;";
+        src += "com.megacrit.cardcrawl.helpers.FontHelper.renderFontRightTopAligned($1," +
+                "com.megacrit.cardcrawl.helpers.FontHelper.cardDescFont_N," +
+                "\"Mod" + (modInfos.length > 1 ? "s" : "") + ":\", " +
+                "com.megacrit.cardcrawl.core.Settings.WIDTH - 16.0F * com.megacrit.cardcrawl.core.Settings.scale + 100.0F * $0.bg.slider," +
+                tmpy + "F * com.megacrit.cardcrawl.core.Settings.scale," +
+                "gold" +
+                ");";
+        src += "}";
+        ctRender.insertAfter(src);
+        ctMainMenuScreen.toClass(loader, null);
+    }
+
     public static Set<String> findPatches(URL[] urls) throws IOException
     {
         System.out.println("Finding patches...");

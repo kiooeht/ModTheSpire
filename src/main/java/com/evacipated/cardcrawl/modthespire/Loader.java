@@ -54,6 +54,7 @@ public class Loader extends JFrame {
                 isModded.set(null, true);
 
                 Patcher.patchCredits(loader, pool, modInfos);
+                Patcher.patchMainMenu(loader, pool, modInfos);
 
                 // Add ModTheSpire section to CardCrawlGame.VERSION_NUM
                 Class<?> CardCrawlGame = loader.loadClass("com.megacrit.cardcrawl.core.CardCrawlGame");
