@@ -14,18 +14,30 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Enumeration;
 
-public class Loader extends JFrame {
+public class Loader {
     public static String MTS_VERSION = "2.0.0";
     private static String MOD_DIR = "mods/";
     private static String STS_JAR = "desktop-1.0.jar";
+    private static String STS_JAR2 = "SlayTheSpire.jar";
 
     private static Object ARGS;
 
     public static void main(String[] args) {
         ARGS = args;
+
+        try {
+            String thisJarName = new File(Loader.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath()).getName();
+            if (thisJarName.equals(STS_JAR)) {
+                STS_JAR = STS_JAR2;
+            }
+        } catch (URISyntaxException e) {
+            // NOP
+        }
 
         EventQueue.invokeLater(() -> {
            ModSelectWindow ex = new ModSelectWindow(getAllModFiles());
@@ -39,13 +51,13 @@ public class Loader extends JFrame {
             // Check that desktop-1.0.jar exists
             File tmp = new File(STS_JAR);
             if (!tmp.exists()) {
-                JOptionPane.showMessageDialog(null, "Unable to find 'desktop-1.0.jar'");
+                JOptionPane.showMessageDialog(null, "Unable to find '" + STS_JAR + "'");
                 return;
             }
 
             // Construct ClassLoader
             URL[] modUrls = buildUrlArray(modJars);
-            URLClassLoader loader = new URLClassLoader(modUrls, ClassLoader.getSystemClassLoader());
+            MTSClassLoader loader = new MTSClassLoader(modUrls, ClassLoader.getSystemClassLoader());
 
             if (modJars.length > 0) {
                 ClassPool pool = ClassPool.getDefault();
