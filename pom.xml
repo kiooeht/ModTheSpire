@@ -25,6 +25,13 @@
             <artifactId>ModTheSpireLib</artifactId>
             <version>1.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.megacrit.cardcrawl</groupId>
+            <artifactId>slaythespire</artifactId>
+            <version>013</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/desktop-1.0.jar</systemPath>
+        </dependency>
     </dependencies>
 
     <build>
@@ -45,20 +52,57 @@
                 <version>2.4.2</version>
                 <executions>
                     <execution>
+                        <id>ModTheSpire-corepatches</id>
                         <phase>package</phase>
                         <goals>
                             <goal>shade</goal>
                         </goals>
+                        <configuration>
+                            <outputFile>target/${project.artifactId}-corepatches.jar</outputFile>
+                            <artifactSet>
+                                <includes>
+                                    <include>com.evacipated.cardcrawl:ModTheSpire:jar</include>
+                                </includes>
+                            </artifactSet>
+                            <filters>
+                                <filter>
+                                    <artifact>com.evacipated.cardcrawl:ModTheSpire</artifact>
+                                    <includes>
+                                        <include>com/evacipated/cardcrawl/modthespire/patches/**</include>
+                                    </includes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>ModTheSpire</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>com.evacipated.cardcrawl.modthespire.Loader</mainClass>
+                                </transformer>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+                                    <resource>corepatches.jar</resource>
+                                    <file>target/${project.artifactId}-corepatches.jar</file>
+                                </transformer>
+                            </transformers>
+                            <filters>
+                                <filter>
+                                    <artifact>com.evacipated.cardcrawl:ModTheSpire</artifact>
+                                    <excludes>
+                                        <exclude>com/evacipated/cardcrawl/modthespire/patches/**</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <transformers>
-                        <transformer
-                                implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                            <mainClass>com.evacipated.cardcrawl.modthespire.Loader</mainClass>
-                        </transformer>
-                    </transformers>
-                </configuration>
             </plugin>
         </plugins>
     </build>

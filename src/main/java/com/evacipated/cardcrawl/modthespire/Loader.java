@@ -1,27 +1,26 @@
 package com.evacipated.cardcrawl.modthespire;
 
-import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.LoaderClassPath;
-import javassist.NotFoundException;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.*;
+import java.io.File;
+import java.io.FilenameFilter;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.Enumeration;
 
 public class Loader {
     public static String MTS_VERSION = "2.0.0";
     private static String MOD_DIR = "mods/";
     private static String STS_JAR = "desktop-1.0.jar";
     private static String STS_JAR2 = "SlayTheSpire.jar";
+    public static String COREPATCHES_JAR = "corepatches.jar";
 
     private static Object ARGS;
 
@@ -55,11 +54,14 @@ public class Loader {
 
             // Construct ClassLoader
             URL[] modUrls = buildUrlArray(modJars);
-            MTSClassLoader loader = new MTSClassLoader(modUrls, ClassLoader.getSystemClassLoader());
+            MTSClassLoader loader = new MTSClassLoader(ClassLoader.getSystemResourceAsStream(COREPATCHES_JAR), modUrls, ClassLoader.getSystemClassLoader());
 
             if (modJars.length > 0) {
                 ClassPool pool = ClassPool.getDefault();
                 pool.insertClassPath(new LoaderClassPath(loader));
+                loader.addStreamToClassPool(pool); // Inserts infront of above path
+                // Find and inject core patches
+                Patcher.injectPatches(loader, pool, Patcher.findMTSPatches());
                 // Find and inject mod patches
                 Patcher.injectPatches(loader, pool, Patcher.findPatches(modUrls));
 

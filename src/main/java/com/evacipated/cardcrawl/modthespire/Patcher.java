@@ -4,9 +4,10 @@ import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
 import javassist.*;
 import org.scannotation.AnnotationDB;
 
-import javax.swing.JOptionPane;
+import javax.swing.*;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -69,6 +70,12 @@ public class Patcher {
         src += "}";
         ctRender.insertAfter(src);
         ctMainMenuScreen.toClass(loader, null);
+    }
+
+    public static Set<String> findMTSPatches() throws URISyntaxException, IOException {
+        AnnotationDB db = new AnnotationDB();
+        db.scanArchives(ClassLoader.getSystemResource(Loader.COREPATCHES_JAR));
+        return db.getAnnotationIndex().get(SpirePatch.class.getName());
     }
 
     public static Set<String> findPatches(URL[] urls) throws IOException
