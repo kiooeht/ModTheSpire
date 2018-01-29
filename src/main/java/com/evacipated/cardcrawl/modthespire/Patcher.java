@@ -4,6 +4,7 @@ import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
 import javassist.*;
 import org.scannotation.AnnotationDB;
 
+import javax.swing.JOptionPane;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -92,6 +93,11 @@ public class Patcher {
             System.out.println("Patch [" + cls_name + "]");
 
             Class<?> patchClass = loader.loadClass(cls_name);
+            if (!patchClass.isAnnotationPresent(SpirePatch.class)) {
+                JOptionPane.showMessageDialog(null, "Something went wrong finding SpirePatch on [" + cls_name + "].\n" +
+                        "Most likely the mod was compiled with a different version of ModTheSpireLib.");
+                continue;
+            }
             SpirePatch patch = patchClass.getAnnotation(SpirePatch.class);
 
             CtClass ctClsToPatch = pool.get(patch.cls());
