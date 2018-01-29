@@ -21,6 +21,7 @@ public class Loader {
     private static String STS_JAR = "desktop-1.0.jar";
     private static String STS_JAR2 = "SlayTheSpire.jar";
     public static String COREPATCHES_JAR = "corepatches.jar";
+    public static ModInfo[] MODINFOS;
 
     private static Object ARGS;
 
@@ -66,6 +67,7 @@ public class Loader {
                 Patcher.injectPatches(loader, pool, Patcher.findPatches(modUrls));
 
                 ModInfo[] modInfos = buildInfoArray(modJars);
+                MODINFOS = modInfos;
 
                 // Set Settings.isModded = true
                 Class<?> Settings = loader.loadClass("com.megacrit.cardcrawl.core.Settings");
@@ -73,7 +75,6 @@ public class Loader {
                 isModded.set(null, true);
 
                 Patcher.patchCredits(loader, pool, modInfos);
-                Patcher.patchMainMenu(loader, pool, modInfos);
 
                 // Add ModTheSpire section to CardCrawlGame.VERSION_NUM
                 Class<?> CardCrawlGame = loader.loadClass("com.megacrit.cardcrawl.core.CardCrawlGame");
