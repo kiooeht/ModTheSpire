@@ -1,5 +1,7 @@
 package com.evacipated.cardcrawl.modthespire;
 
+import com.evacipated.cardcrawl.modthespire.lib.ByRef;
+import com.evacipated.cardcrawl.modthespire.lib.SpireInsertPatch;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
 import javassist.*;
 import org.scannotation.AnnotationDB;
@@ -110,6 +112,14 @@ public class Patcher {
                 } else if (m.getName().equals("Postfix")) {
                     System.out.println("    Adding Postfix...");
                     addPostfix(ctMethodToPatch, pool.getMethod(patchClass.getName(), m.getName()));
+                } else if (m.getName().equals("Insert")) {
+                    SpireInsertPatch insertPatch = m.getAnnotation(SpireInsertPatch.class);
+                    if (insertPatch == null) {
+                        System.out.println("    ERROR: Insert missing SpireInsertPatch info!");
+                    } else {
+                        System.out.println("    Adding Insert @ " + insertPatch.loc() + "...");
+                        addInsert(insertPatch, ctMethodToPatch, pool.getMethod(patchClass.getName(), m.getName()));
+                    }
                 }
             }
 
@@ -124,7 +134,7 @@ public class Patcher {
         System.out.println("Done.");
     }
 
-    private static void addPrefix(CtBehavior ctMethodToPatch, Method prefix)
+    private static void addPrefix(CtBehavior ctMethodToPatch, Method prefix) throws CannotCompileException
     {
         String src = prefix.getDeclaringClass().getName() + "." + prefix.getName() + "(";
         if (!Modifier.isStatic(ctMethodToPatch.getModifiers())) {
@@ -135,11 +145,7 @@ public class Patcher {
         }
         src += "$$);";
         System.out.println("      " + src);
-        try {
-            ctMethodToPatch.insertBefore(src);
-        } catch (CannotCompileException e) {
-            e.printStackTrace();
-        }
+        ctMethodToPatch.insertBefore(src);
     }
 
     private static void addPostfix(CtBehavior ctMethodToPatch, CtMethod postfix) throws NotFoundException, CannotCompileException {
@@ -177,6 +183,73 @@ public class Patcher {
         src += "$$);";
         System.out.println("      " + src);
         ctMethodToPatch.insertAfter(src);
+    }
+
+    private static void addInsert(SpireInsertPatch info, CtBehavior ctMethodToPatch, CtMethod insert) throws CannotCompileException, NotFoundException, ClassNotFoundException
+    {
+        CtClass[] insertParamTypes = insert.getParameterTypes();
+        Object[][] insertParamAnnotations = insert.getParameterAnnotations();
+        int insertParamsStartIndex = ctMethodToPatch.getParameterTypes().length;
+        if (!Modifier.isStatic(ctMethodToPatch.getModifiers())) {
+            insertParamsStartIndex += 1;
+        }
+        String[] localVarTypeNames = new String[insertParamAnnotations.length - insertParamsStartIndex];
+        for (int i = insertParamsStartIndex; i < insertParamAnnotations.length; ++i) {
+            if (paramByRef(insertParamAnnotations[i])) {
+                if (!insertParamTypes[i].isArray()) {
+                    System.out.println("      WARNING: ByRef parameter is not array type");
+                } else {
+                    localVarTypeNames[i - insertParamsStartIndex] = insertParamTypes[i].getName();
+                }
+            }
+        }
+
+        String src = "{\n";
+        // Setup array holders for each local variable
+        for (int i = 0; i < info.localvars().length; ++i) {
+            if (localVarTypeNames[i] != null) {
+                src += localVarTypeNames[i] + " __" + info.localvars()[i] + " = new " + localVarTypeNames[i] + "{" + info.localvars()[i] + "};\n";
+            }
+        }
+
+        src += insert.getDeclaringClass().getName() + "." + insert.getName() + "(";
+        if (!Modifier.isStatic(ctMethodToPatch.getModifiers())) {
+            if (src.charAt(src.length()-1) != '(') {
+                src += ", ";
+            }
+            src += "$0";
+        }
+        if (src.charAt(src.length()-1) != '(') {
+            src += ", ";
+        }
+        src += "$$";
+        for (int i = 0; i < info.localvars().length; ++i) {
+            src += ", ";
+            if (localVarTypeNames[i] != null) {
+                src += "__";
+            }
+            src += info.localvars()[i];
+        }
+        src += ");\n";
+
+        // Set local variables to changed values
+        for (int i = 0; i < info.localvars().length; ++i) {
+            if (localVarTypeNames[i] != null) {
+                src += info.localvars()[i] + " = __" + info.localvars()[i] + "[0];\n";
+            }
+        }
+        src += "}";
+        System.out.println(src);
+        ctMethodToPatch.insertAt(info.loc(), src);
+    }
+
+    private static boolean paramByRef(Object[] annotations) {
+        for (Object o : annotations) {
+            if (o instanceof ByRef) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static CtClass[] patchParamTypes(ClassPool pool, SpirePatch patch) throws NotFoundException {
