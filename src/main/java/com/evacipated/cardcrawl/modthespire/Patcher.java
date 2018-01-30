@@ -37,9 +37,19 @@ public class Patcher {
         return db.getAnnotationIndex().get(SpirePatch.class.getName());
     }
 
-    public static void injectPatches(ClassLoader loader, ClassPool pool, Iterable<String> class_names) throws ClassNotFoundException, NotFoundException, CannotCompileException {
+    public static void compilePatches(ClassLoader loader, Set<CtClass> ctClasses) throws CannotCompileException
+    {
+        System.out.println("Compiling patched classes...");
+        for (CtClass cls : ctClasses) {
+            System.out.println("  " + cls.getName());
+            cls.toClass(loader, null);
+        }
+        System.out.println("Done.");
+    }
+
+    public static HashSet<CtClass> injectPatches(ClassLoader loader, ClassPool pool, Iterable<String> class_names) throws ClassNotFoundException, NotFoundException, CannotCompileException {
         if (class_names == null)
-            return;
+            return null;
 
         HashSet<CtClass> ctClasses = new HashSet<CtClass>();
         for (String cls_name : class_names) {
@@ -97,12 +107,7 @@ public class Patcher {
             ctClasses.add(ctClsToPatch);
         }
 
-        System.out.println("Compiling patched classes...");
-        for (CtClass cls : ctClasses) {
-            System.out.println("  " + cls.getName());
-            cls.toClass(loader, null);
-        }
-        System.out.println("Done.");
+        return ctClasses;
     }
 
     private static void addPrefix(CtBehavior ctMethodToPatch, Method prefix) throws CannotCompileException

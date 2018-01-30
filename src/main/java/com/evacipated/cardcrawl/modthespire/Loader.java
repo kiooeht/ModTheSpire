@@ -1,6 +1,7 @@
 package com.evacipated.cardcrawl.modthespire;
 
 import javassist.ClassPool;
+import javassist.CtClass;
 import javassist.LoaderClassPath;
 
 import javax.swing.*;
@@ -14,6 +15,8 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Loader {
     public static String MTS_VERSION = "2.1.0";
@@ -61,10 +64,12 @@ public class Loader {
                 ClassPool pool = ClassPool.getDefault();
                 pool.insertClassPath(new LoaderClassPath(loader));
                 loader.addStreamToClassPool(pool); // Inserts infront of above path
+                Set<CtClass> ctClasses = new HashSet<>();
                 // Find and inject core patches
-                Patcher.injectPatches(loader, pool, Patcher.findMTSPatches());
+                ctClasses.addAll(Patcher.injectPatches(loader, pool, Patcher.findMTSPatches()));
                 // Find and inject mod patches
-                Patcher.injectPatches(loader, pool, Patcher.findPatches(modUrls));
+                ctClasses.addAll(Patcher.injectPatches(loader, pool, Patcher.findPatches(modUrls)));
+                Patcher.compilePatches(loader, ctClasses);
 
                 ModInfo[] modInfos = buildInfoArray(modJars);
                 MODINFOS = modInfos;
