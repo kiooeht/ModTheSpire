@@ -11,9 +11,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class Patcher {
     public static Set<String> findMTSPatches() throws URISyntaxException, IOException {
@@ -24,7 +22,7 @@ public class Patcher {
         return db.getAnnotationIndex().get(SpirePatch.class.getName());
     }
 
-    public static Set<String> findPatches(URL[] urls) throws IOException
+    public static List<Iterable<String>> findPatches(URL[] urls) throws IOException
     {
         System.out.println("Finding patches...");
 
@@ -32,9 +30,13 @@ public class Patcher {
         URL[] urls_cpy = new URL[urls.length - 1];
         System.arraycopy(urls, 0, urls_cpy, 0, urls_cpy.length);
 
-        AnnotationDB db = new AnnotationDB();
-        db.scanArchives(urls_cpy);
-        return db.getAnnotationIndex().get(SpirePatch.class.getName());
+        List<Iterable<String>> patchSetList = new ArrayList<>();
+        for (URL url : urls_cpy) {
+            AnnotationDB db = new AnnotationDB();
+            db.scanArchives(url);
+            patchSetList.add(db.getAnnotationIndex().get(SpirePatch.class.getName()));
+        }
+        return patchSetList;
     }
 
     public static void compilePatches(ClassLoader loader, Set<CtClass> ctClasses) throws CannotCompileException
@@ -45,6 +47,18 @@ public class Patcher {
             cls.toClass(loader, null);
         }
         System.out.println("Done.");
+    }
+
+    public static HashSet<CtClass> injectPatches(ClassLoader loader, ClassPool pool, List<Iterable<String>> class_names) throws CannotCompileException, NotFoundException, ClassNotFoundException
+    {
+        HashSet<CtClass> ctClasses = new HashSet<>();
+        for (Iterable<String> it : class_names) {
+            HashSet<CtClass> tmp = injectPatches(loader, pool, it);
+            if (tmp != null) {
+                ctClasses.addAll(tmp);
+            }
+        }
+        return ctClasses;
     }
 
     public static HashSet<CtClass> injectPatches(ClassLoader loader, ClassPool pool, Iterable<String> class_names) throws ClassNotFoundException, NotFoundException, CannotCompileException {
