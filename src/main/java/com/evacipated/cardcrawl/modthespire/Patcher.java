@@ -16,35 +16,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class Patcher {
-    private static String[] MTS_AUTHORS = new String[] {
-            "kiooeht",
-            "t-larson"
-    };
-
-    public static void patchCredits(ClassLoader loader, ClassPool pool, ModInfo[] modInfos) throws NotFoundException, CannotCompileException {
-        CtClass ctCreditsScreen = pool.get("com.megacrit.cardcrawl.credits.CreditsScreen");
-        if (ctCreditsScreen != null) {
-            CtConstructor ctConstructor = ctCreditsScreen.getDeclaredConstructors()[0];
-            String src = "{" +
-                    "this.lines.add(new com.megacrit.cardcrawl.credits.CreditLine(\"ModTheSpire\", tmpY -= 150.0F, true));";
-            for (String author : MTS_AUTHORS) {
-                src += "this.lines.add(new com.megacrit.cardcrawl.credits.CreditLine(\"" + author + "\", tmpY -= 45.0F, false));";
-            }
-            for (ModInfo info : modInfos) {
-                src += "this.lines.add(new com.megacrit.cardcrawl.credits.CreditLine(\"" + info.Name + " Mod\", tmpY -= 150.0F, true));";
-                if (!info.Author.isEmpty()) {
-                    String[] mod_authors = info.Author.split(",");
-                    for (String author : mod_authors) {
-                        src += "this.lines.add(new com.megacrit.cardcrawl.credits.CreditLine(\"" + author + "\", tmpY -= 45.0F, false));";
-                    }
-                }
-            }
-            src += "}";
-            ctConstructor.insertAt(66, src);
-            ctCreditsScreen.toClass(loader, null);
-        }
-    }
-
     public static Set<String> findMTSPatches() throws URISyntaxException, IOException {
         System.out.println("Finding core patches...");
 

@@ -74,8 +74,6 @@ public class Loader {
                 Field isModded = Settings.getDeclaredField("isModded");
                 isModded.set(null, true);
 
-                Patcher.patchCredits(loader, pool, modInfos);
-
                 // Add ModTheSpire section to CardCrawlGame.VERSION_NUM
                 Class<?> CardCrawlGame = loader.loadClass("com.megacrit.cardcrawl.core.CardCrawlGame");
                 Field VERSION_NUM = CardCrawlGame.getDeclaredField("VERSION_NUM");
