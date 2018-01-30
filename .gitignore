@@ -46,3 +46,6 @@ _runJ9.bat
 
 # maven other
 dependency-reduced-pom.xml
+
+# maven wrapper
+!/.mvn/wrapper/maven-wrapper.jar
