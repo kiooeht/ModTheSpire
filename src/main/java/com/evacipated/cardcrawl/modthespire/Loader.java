@@ -16,7 +16,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 
 public class Loader {
-    public static String MTS_VERSION = "2.0.0";
+    public static String MTS_VERSION = "2.1.0";
     private static String MOD_DIR = "mods/";
     private static String STS_JAR = "desktop-1.0.jar";
     private static String STS_JAR2 = "SlayTheSpire.jar";
