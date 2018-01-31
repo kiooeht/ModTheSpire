@@ -34,6 +34,13 @@ author=kiooeht
 * For mod code injection, see [ModTheSpireLib](https://github.com/kiooeht/ModTheSpireLib).
 
 ## Changelog ##
+#### v2.1.0 ####
+* Display mods on main menu (kiooeht)
+* Insert patches (kiooeht)
+* Warn if unable to find `desktop-1.0.jar` (kiooeht)
+* Popup error messages (kiooeht)
+* Allow running ModTheSpire as `desktop-1.0.jar` (kiooeht)
+
 #### v2.0.0 ####
 * Credits injection (kiooeht)
 * Mod code injection (kiooeht)
