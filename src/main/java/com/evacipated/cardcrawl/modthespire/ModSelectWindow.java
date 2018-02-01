@@ -29,7 +29,7 @@ public class ModSelectWindow extends JFrame {
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weighty = 1;
-        
+
         // Remove the .jar from mod names to display in modList
         int modsLength = mods != null ? mods.length : 0;
         String[] modNames = new String[modsLength];
@@ -52,14 +52,32 @@ public class ModSelectWindow extends JFrame {
         // Play button
         JButton playBtn = new JButton("Play");
         playBtn.addActionListener((ActionEvent event) -> {
-            // Build array of selected mods
-            int[] selectedIndices = modList.getCheckedIndices();
-            File[] selectedMods = new File[selectedIndices.length];
-            for (int i = 0; i < selectedIndices.length; i++) {
-                selectedMods[i] = mods[selectedIndices[i]];
-            }
-            
-            Loader.runMods(selectedMods);
+            playBtn.setEnabled(false);
+
+            getContentPane().removeAll();
+
+            JTextArea textArea = new JTextArea();
+            textArea.setFont(new Font("monospaced", Font.PLAIN, 12));
+            JScrollPane logScroller = new JScrollPane(textArea);
+            logScroller.setPreferredSize(new Dimension(700, 800));
+            add(logScroller, gbc);
+            MessageConsole mc = new MessageConsole(textArea);
+            mc.redirectOut(null, System.out);
+            mc.redirectErr(null, System.err);
+
+            pack();
+            setLocationRelativeTo(null);
+
+            SwingUtilities.invokeLater(new Thread(() -> {
+                // Build array of selected mods
+                int[] selectedIndices = modList.getCheckedIndices();
+                File[] selectedMods = new File[selectedIndices.length];
+                for (int i = 0; i < selectedIndices.length; i++) {
+                    selectedMods[i] = mods[selectedIndices[i]];
+                }
+
+                Loader.runMods(selectedMods);
+            }));
         });
         add(playBtn, gbc);
         
