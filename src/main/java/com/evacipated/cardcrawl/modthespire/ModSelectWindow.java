@@ -56,6 +56,9 @@ public class ModSelectWindow extends JFrame {
 
             getContentPane().removeAll();
 
+            gbc.fill = GridBagConstraints.BOTH;
+            gbc.weightx = 1;
+
             JTextArea textArea = new JTextArea();
             textArea.setFont(new Font("monospaced", Font.PLAIN, 12));
             JScrollPane logScroller = new JScrollPane(textArea);
@@ -65,6 +68,7 @@ public class ModSelectWindow extends JFrame {
             mc.redirectOut(null, System.out);
             mc.redirectErr(null, System.err);
 
+            setResizable(true);
             pack();
             setLocationRelativeTo(null);
 
