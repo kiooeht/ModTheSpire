@@ -26,6 +26,8 @@ public class DisableGdxForceExit
             e.printStackTrace();
         } catch (IllegalAccessException e) {
             e.printStackTrace();
+        } finally {
+            System.out.println("Game closed.");
         }
     }
 }

@@ -75,17 +75,24 @@ public class Loader {
                 MODINFOS = modInfos;
 
                 // Set Settings.isModded = true
+                System.out.printf("Setting isModded = true...");
+                System.out.flush();
                 Class<?> Settings = loader.loadClass("com.megacrit.cardcrawl.core.Settings");
                 Field isModded = Settings.getDeclaredField("isModded");
                 isModded.set(null, true);
+                System.out.println("Done.");
 
                 // Add ModTheSpire section to CardCrawlGame.VERSION_NUM
+                System.out.printf("Adding ModTheSpire to version...");
+                System.out.flush();
                 Class<?> CardCrawlGame = loader.loadClass("com.megacrit.cardcrawl.core.CardCrawlGame");
                 Field VERSION_NUM = CardCrawlGame.getDeclaredField("VERSION_NUM");
                 String oldVersion = (String) VERSION_NUM.get(null);
                 VERSION_NUM.set(null, oldVersion + " [ModTheSpire " + MTS_VERSION + "]");
+                System.out.println("Done.");
 
                 // Initialize any mods which declare an initialization function
+                System.out.println("Initializing mods...");
                 for (int i = 0; i < modUrls.length - 1; i++) {
                     String modUrl = modUrls[i].toString();
                     String modName = modUrl.substring(modUrl.lastIndexOf('/') + 1, modUrl.length() - 4);
@@ -100,8 +107,10 @@ public class Loader {
                         continue;
                     }
                 }
+                System.out.println("Done.");
             }
 
+            System.out.println("Starting game...");
             Class<?> cls = loader.loadClass("com.megacrit.cardcrawl.desktop.DesktopLauncher");
             Method method = cls.getDeclaredMethod("main", String[].class);
             method.invoke(null, (Object) ARGS);
