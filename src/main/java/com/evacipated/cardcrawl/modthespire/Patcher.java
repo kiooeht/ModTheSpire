@@ -110,10 +110,16 @@ public class Patcher {
                 } else if (m.getName().equals("Insert")) {
                     SpireInsertPatch insertPatch = m.getAnnotation(SpireInsertPatch.class);
                     if (insertPatch == null) {
-                        System.out.println("    ERROR: Insert missing SpireInsertPatch info!");
-                    } else {
+                        System.err.println("    ERROR: Insert missing SpireInsertPatch info!");
+                    } else if (insertPatch.loc() == -1 && insertPatch.rloc() == -1) {
+                        System.err.println("    ERROR: SpireInsertPatch missing line number! Must specify either loc or rloc");
+                    } else if (insertPatch.loc() >= 0) {
                         System.out.println("    Adding Insert @ " + insertPatch.loc() + "...");
-                        addInsert(insertPatch, ctMethodToPatch, pool.getMethod(patchClass.getName(), m.getName()));
+                        addInsert(insertPatch, insertPatch.loc(), ctMethodToPatch, pool.getMethod(patchClass.getName(), m.getName()));
+                    } else {
+                        int abs_loc = ctMethodToPatch.getMethodInfo().getLineNumber(0) + insertPatch.rloc();
+                        System.out.println("    Adding Insert @ r" + insertPatch.rloc() + " (abs:" + abs_loc + ")...");
+                        addInsert(insertPatch, abs_loc, ctMethodToPatch, pool.getMethod(patchClass.getName(), m.getName()));
                     }
                 }
             }
@@ -175,7 +181,7 @@ public class Patcher {
         ctMethodToPatch.insertAfter(src);
     }
 
-    private static void addInsert(SpireInsertPatch info, CtBehavior ctMethodToPatch, CtMethod insert) throws CannotCompileException, NotFoundException, ClassNotFoundException
+    private static void addInsert(SpireInsertPatch info, int loc, CtBehavior ctMethodToPatch, CtMethod insert) throws CannotCompileException, NotFoundException, ClassNotFoundException
     {
         CtClass[] insertParamTypes = insert.getParameterTypes();
         Object[][] insertParamAnnotations = insert.getParameterAnnotations();
@@ -230,7 +236,7 @@ public class Patcher {
         }
         src += "}";
         System.out.println(src);
-        ctMethodToPatch.insertAt(info.loc(), src);
+        ctMethodToPatch.insertAt(loc, src);
     }
 
     private static boolean paramByRef(Object[] annotations) {
