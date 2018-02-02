@@ -8,8 +8,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.FilenameFilter;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -115,10 +113,6 @@ public class Loader {
             Method method = cls.getDeclaredMethod("main", String[].class);
             method.invoke(null, (Object) ARGS);
         } catch (Exception e) {
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            e.printStackTrace(pw);
-            JOptionPane.showMessageDialog(null, sw.toString());
             e.printStackTrace();
         }
     }
