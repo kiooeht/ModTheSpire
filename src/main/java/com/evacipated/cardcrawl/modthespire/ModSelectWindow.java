@@ -72,7 +72,7 @@ public class ModSelectWindow extends JFrame {
             pack();
             setLocationRelativeTo(null);
 
-            SwingUtilities.invokeLater(new Thread(() -> {
+            Thread t = new Thread(() -> {
                 // Build array of selected mods
                 int[] selectedIndices = modList.getCheckedIndices();
                 File[] selectedMods = new File[selectedIndices.length];
@@ -81,7 +81,8 @@ public class ModSelectWindow extends JFrame {
                 }
 
                 Loader.runMods(selectedMods);
-            }));
+            });
+            t.start();
         });
         add(playBtn, gbc);
         
