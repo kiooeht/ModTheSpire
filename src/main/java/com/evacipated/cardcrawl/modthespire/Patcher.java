@@ -103,7 +103,7 @@ public class Patcher {
             for (Method m : patchClass.getDeclaredMethods()) {
                 if (m.getName().equals("Prefix")) {
                     System.out.println("    Adding Prefix...");
-                    addPrefix(ctMethodToPatch, m);
+                    addPrefix(ctMethodToPatch, pool.getMethod(patchClass.getName(), m.getName()));
                 } else if (m.getName().equals("Postfix")) {
                     System.out.println("    Adding Postfix...");
                     addPostfix(ctMethodToPatch, pool.getMethod(patchClass.getName(), m.getName()));
@@ -130,18 +130,38 @@ public class Patcher {
         return ctClasses;
     }
 
-    private static void addPrefix(CtBehavior ctMethodToPatch, Method prefix) throws CannotCompileException
+    private static void addPrefix(CtBehavior ctMethodToPatch, CtMethod prefix) throws CannotCompileException, NotFoundException, ClassNotFoundException
     {
-        String src = prefix.getDeclaringClass().getName() + "." + prefix.getName() + "(";
-        if (!Modifier.isStatic(ctMethodToPatch.getModifiers())) {
-            src += "$0";
+        String src = "{\n";
+        String funccall = prefix.getDeclaringClass().getName() + "." + prefix.getName() + "(";
+        String postcallsrc = "";
+
+        int paramOffset = (Modifier.isStatic(ctMethodToPatch.getModifiers()) ? 1 : 0);
+        CtClass[] prefixParamTypes = prefix.getParameterTypes();
+        Object[][] prefixParamAnnotations = prefix.getParameterAnnotations();
+        for (int i = 0; i < prefixParamTypes.length; ++i) {
+            if (paramByRef(prefixParamAnnotations[i])) {
+                src += prefixParamTypes[i].getName() + " __param" + i + " = new " + prefixParamTypes[i].getName() + "{" + "$" + (i + paramOffset) + "};\n";
+                funccall += "__param" + i;
+                postcallsrc += "$" + (i + paramOffset) + " = __param" + i + "[0];\n";
+            } else {
+                funccall += "$" + (i + paramOffset);
+            }
+            if (i < prefixParamTypes.length - 1) {
+                funccall += ", ";
+            }
         }
-        if (src.charAt(src.length()-1) != '(') {
-            src += ", ";
+
+        src += funccall + ");\n";
+        src += postcallsrc;
+        src += "}";
+
+        System.out.println(src);
+        if (ctMethodToPatch instanceof CtConstructor) {
+            ((CtConstructor)ctMethodToPatch).insertBeforeBody(src);
+        } else {
+            ctMethodToPatch.insertBefore(src);
         }
-        src += "$$);";
-        System.out.println("      " + src);
-        ctMethodToPatch.insertBefore(src);
     }
 
     private static void addPostfix(CtBehavior ctMethodToPatch, CtMethod postfix) throws NotFoundException, CannotCompileException {
