@@ -4,10 +4,12 @@ import com.evacipated.cardcrawl.modthespire.lib.ByRef;
 import com.evacipated.cardcrawl.modthespire.lib.SpireInsertPatch;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
 import javassist.*;
+import javassist.expr.ExprEditor;
 import org.scannotation.AnnotationDB;
 
 import javax.swing.*;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -49,7 +51,7 @@ public class Patcher {
         System.out.println("Done.");
     }
 
-    public static HashSet<CtClass> injectPatches(ClassLoader loader, ClassPool pool, List<Iterable<String>> class_names) throws CannotCompileException, NotFoundException, ClassNotFoundException
+    public static HashSet<CtClass> injectPatches(ClassLoader loader, ClassPool pool, List<Iterable<String>> class_names) throws CannotCompileException, NotFoundException, ClassNotFoundException, InvocationTargetException, IllegalAccessException
     {
         HashSet<CtClass> ctClasses = new HashSet<>();
         for (Iterable<String> it : class_names) {
@@ -61,7 +63,8 @@ public class Patcher {
         return ctClasses;
     }
 
-    public static HashSet<CtClass> injectPatches(ClassLoader loader, ClassPool pool, Iterable<String> class_names) throws ClassNotFoundException, NotFoundException, CannotCompileException {
+    public static HashSet<CtClass> injectPatches(ClassLoader loader, ClassPool pool, Iterable<String> class_names) throws ClassNotFoundException, NotFoundException, CannotCompileException, InvocationTargetException, IllegalAccessException
+    {
         if (class_names == null)
             return null;
 
@@ -121,6 +124,9 @@ public class Patcher {
                         System.out.println("    Adding Insert @ r" + insertPatch.rloc() + " (abs:" + abs_loc + ")...");
                         addInsert(insertPatch, abs_loc, ctMethodToPatch, pool.getMethod(patchClass.getName(), m.getName()));
                     }
+                } else if (m.getName().equals("Instrument")) {
+                    System.out.println("    Adding Instrument...");
+                    addInstrument(ctMethodToPatch, m);
                 }
             }
 
@@ -257,6 +263,12 @@ public class Patcher {
         src += "}";
         System.out.println(src);
         ctMethodToPatch.insertAt(loc, src);
+    }
+
+    private static void addInstrument(CtBehavior ctMethodToPatch, Method method) throws InvocationTargetException, IllegalAccessException, CannotCompileException
+    {
+        ExprEditor exprEditor = (ExprEditor)method.invoke(null);
+        ctMethodToPatch.instrument(exprEditor);
     }
 
     private static boolean paramByRef(Object[] annotations) {
