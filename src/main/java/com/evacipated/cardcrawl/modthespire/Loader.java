@@ -17,7 +17,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class Loader {
-    public static String MTS_VERSION = "2.1.0";
+    public static Version MTS_VERSION = new Version("2.2.0");
     private static String MOD_DIR = "mods/";
     private static String STS_JAR = "desktop-1.0.jar";
     private static String STS_JAR2 = "SlayTheSpire.jar";
@@ -59,6 +59,9 @@ public class Loader {
             MTSClassLoader loader = new MTSClassLoader(ClassLoader.getSystemResourceAsStream(COREPATCHES_JAR), modUrls, ClassLoader.getSystemClassLoader());
 
             if (modJars.length > 0) {
+                ModInfo[] modInfos = buildInfoArray(modJars);
+                MODINFOS = modInfos;
+
                 ClassPool pool = ClassPool.getDefault();
                 pool.insertClassPath(new LoaderClassPath(loader));
                 loader.addStreamToClassPool(pool); // Inserts infront of above path
@@ -68,9 +71,6 @@ public class Loader {
                 // Find and inject mod patches
                 ctClasses.addAll(Patcher.injectPatches(loader, pool, Patcher.findPatches(modUrls)));
                 Patcher.compilePatches(loader, ctClasses);
-
-                ModInfo[] modInfos = buildInfoArray(modJars);
-                MODINFOS = modInfos;
 
                 // Set Settings.isModded = true
                 System.out.printf("Setting isModded = true...");
@@ -86,7 +86,7 @@ public class Loader {
                 Class<?> CardCrawlGame = loader.loadClass("com.megacrit.cardcrawl.core.CardCrawlGame");
                 Field VERSION_NUM = CardCrawlGame.getDeclaredField("VERSION_NUM");
                 String oldVersion = (String) VERSION_NUM.get(null);
-                VERSION_NUM.set(null, oldVersion + " [ModTheSpire " + MTS_VERSION + "]");
+                VERSION_NUM.set(null, oldVersion + " [ModTheSpire " + MTS_VERSION.get() + "]");
                 System.out.println("Done.");
 
                 // Initialize any mods which declare an initialization function

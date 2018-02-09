@@ -15,7 +15,7 @@ public class ModSelectWindow extends JFrame {
     }
 
     private void initUI() {
-        setTitle("Mod The Spire " + Loader.MTS_VERSION);
+        setTitle("Mod The Spire " + Loader.MTS_VERSION.get());
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setResizable(false);
 

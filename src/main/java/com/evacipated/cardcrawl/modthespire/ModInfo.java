@@ -9,11 +9,13 @@ import java.util.Properties;
 public class ModInfo {
     public String Name;
     public String Author;
+    public Version MTS_Version;
 
     private ModInfo()
     {
         Name = "";
-        Author = "";
+        Author = null;
+        MTS_Version = null;
     }
 
     public static ModInfo ReadModInfo(File mod_jar)
@@ -32,6 +34,7 @@ public class ModInfo {
                 prop.load(inProp);
                 info.Name = prop.getProperty("name");
                 info.Author = prop.getProperty("author");
+                info.MTS_Version = new Version(prop.getProperty("mts_version", "0.0.0"));
             }
         } catch (Exception e) {
             System.out.println("ERROR: Failed to read Mod info from " + mod_jar.getName());

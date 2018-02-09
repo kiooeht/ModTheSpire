@@ -33,10 +33,16 @@ public class Patcher {
         System.arraycopy(urls, 0, urls_cpy, 0, urls_cpy.length);
 
         List<Iterable<String>> patchSetList = new ArrayList<>();
-        for (URL url : urls_cpy) {
-            AnnotationDB db = new AnnotationDB();
-            db.scanArchives(url);
-            patchSetList.add(db.getAnnotationIndex().get(SpirePatch.class.getName()));
+        for (int i = 0; i < urls_cpy.length; ++i) {
+            if (Loader.MODINFOS[i].MTS_Version.compareTo(Loader.MTS_VERSION) <= 0) {
+                AnnotationDB db = new AnnotationDB();
+                db.scanArchives(urls_cpy[i]);
+                patchSetList.add(db.getAnnotationIndex().get(SpirePatch.class.getName()));
+            } else {
+                String str = "ERROR: " + Loader.MODINFOS[i].Name + " requires ModTheSpire v" + Loader.MODINFOS[i].MTS_Version.get() + " or greater!";
+                System.out.println(str);
+                JOptionPane.showMessageDialog(null, str);
+            }
         }
         return patchSetList;
     }
