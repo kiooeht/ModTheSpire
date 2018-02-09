@@ -22,7 +22,7 @@ public class CreditsModList {
     };
 
     @SpireInsertPatch(
-            loc=66,
+            rloc=5,
             localvars={"tmpY"}
     )
     public static void Insert(Object __obj_instance, @ByRef float[] tmpY)
