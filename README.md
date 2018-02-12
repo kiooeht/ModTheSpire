@@ -18,20 +18,14 @@ ModTheSpire is a tool to load external mods for Slay the Spire without modifying
 2. Create a `mods` directory. Place mod JAR files into the `mods` directory.
 
 ## Usage ##
-1. Run `ModTheSpire.jar` or run `_run.bat` to get logger output.
+1. Run `ModTheSpire.jar`.
 2. Select the mod(s) you want to use.
 3. Press 'Play'.
 
 ## For Modders ##
 * ModTheSpire automatically sets the Settings.isModded flag to true, so there is no need to do that yourself.
-* Initialization: in `modname.ModName` implement `public static void initialize()`.
-* If you include a file called `ModTheSpire.config` at the root of your mod's .jar, ModTheSpire will use it to determine the mod's name and author.
-Example:
-```
-name=Example Mod Name
-author=kiooeht
-```
-* For mod code injection, see [ModTheSpireLib](https://github.com/kiooeht/ModTheSpireLib) and the [wiki](https://github.com/kiooeht/ModTheSpire/wiki/SpirePatch).
+* [ModTheSpireLib](https://github.com/kiooeht/ModTheSpireLib)
+* [Wiki](https://github.com/kiooeht/ModTheSpire/wiki/SpirePatch)
 
 ## Changelog ##
 #### v2.2.0 ####
@@ -47,6 +41,7 @@ author=kiooeht
 * Mods can tag a class @SpireInitializer, and the class's `initialize()` method will be called (kiooeht)
 * Fix: Stop code patches from stopping mod patches (kiooeht)
 * Fix: Can now prefix constructors (kiooeht)
+* Fix NullPointerException if mod doesn't contain `ModTheSpire.config` (kiooeht)
 
 #### v2.1.0 ####
 * Display mods on main menu (kiooeht)
