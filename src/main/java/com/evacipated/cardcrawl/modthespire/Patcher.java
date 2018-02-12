@@ -1,9 +1,6 @@
 package com.evacipated.cardcrawl.modthespire;
 
-import com.evacipated.cardcrawl.modthespire.lib.ByRef;
-import com.evacipated.cardcrawl.modthespire.lib.SpireEnum;
-import com.evacipated.cardcrawl.modthespire.lib.SpireInsertPatch;
-import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
+import com.evacipated.cardcrawl.modthespire.lib.*;
 import javassist.*;
 import javassist.expr.ExprEditor;
 import org.scannotation.AnnotationDB;
@@ -17,7 +14,34 @@ import java.net.URL;
 import java.util.*;
 
 public class Patcher {
+    private static Map<URL, AnnotationDB> annotationDBMap = new HashMap<>();
     private static Map<Class<?>, EnumBusterReflect> enumBusterMap = new HashMap<>();
+
+    public static List<String> initializeMods(ClassLoader loader, URL... urls) throws ClassNotFoundException, InvocationTargetException, IllegalAccessException
+    {
+        List<String> result = new ArrayList<>();
+
+        for (URL url : urls) {
+            if (annotationDBMap.containsKey(url)) {
+                Set<String> initializers = annotationDBMap.get(url).getAnnotationIndex().get(SpireInitializer.class.getName());
+                if (initializers != null) {
+                    for (String initializer : initializers) {
+                        try {
+                            Method init = loader.loadClass(initializer).getDeclaredMethod("initialize");
+                            init.invoke(null);
+                            result.add(initializer);
+                        } catch (NoSuchMethodException e) {
+                            System.out.println("WARNING: Unable to find method initialize() on class marked @SpireInitializer: " + initializer);
+                        }
+                    }
+                }
+            } else {
+                System.err.println(url + " Not in DB map. Something is very wrong");
+            }
+        }
+
+        return result;
+    }
 
     public static List<Iterable<String>> findPatches(URL[] urls) throws IOException
     {
@@ -29,7 +53,15 @@ public class Patcher {
         List<Iterable<String>> patchSetList = new ArrayList<>();
         for (int i = 0; i < urls.length; ++i) {
             if (modInfos == null || modInfos[i].MTS_Version.compareTo(Loader.MTS_VERSION) <= 0) {
-                AnnotationDB db = new AnnotationDB();
+                AnnotationDB db;
+                if (annotationDBMap.containsKey(urls[i])) {
+                    System.out.println("Cached AnnotationDB");
+                    db = annotationDBMap.get(urls[i]);
+                } else {
+                    System.out.println("New AnnotationDB");
+                    db = new AnnotationDB();
+                    annotationDBMap.put(urls[i], db);
+                }
                 db.scanArchives(urls[i]);
                 patchSetList.add(db.getAnnotationIndex().get(SpirePatch.class.getName()));
             } else {

@@ -13,8 +13,8 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
+import java.util.List;
 
 public class Loader {
     public static Version MTS_VERSION = new Version("2.2.0");
@@ -102,8 +102,11 @@ public class Loader {
                 VERSION_NUM.set(null, oldVersion + " [ModTheSpire " + MTS_VERSION.get() + "]");
                 System.out.println("Done.");
 
-                // Initialize any mods which declare an initialization function
+                // Initialize any mods that implement SpireInitializer.initialize()
                 System.out.println("Initializing mods...");
+                List<String> initialized = Patcher.initializeMods(loader, modOnlyUrls);
+                // DEPRECATED
+                // Initialize any mods which declare an initialization function
                 for (int i = 0; i < modUrls.length - 1; i++) {
                     String modUrl = modUrls[i].toString();
                     String modName = modUrl.substring(modUrl.lastIndexOf('/') + 1, modUrl.length() - 4);
@@ -111,7 +114,11 @@ public class Loader {
                     try {
                         Class<?> modMainClass = loader.loadClass(modName.toLowerCase() + "." + modName);
                         Method initialize = modMainClass.getDeclaredMethod("initialize");
-                        initialize.invoke(null);
+                        if (!initialized.contains(modMainClass.getName())) {
+                            System.out.println("WARNING: <ModName>.<ModName>.initialize() method is deprecated and will be removed in a future version of ModTheSpire." +
+                                " Use @SpireInitializer intead.");
+                            initialize.invoke(null);
+                        }
                     } catch (ClassNotFoundException e) {
                         continue;
                     } catch (NoSuchMethodException e) {
