@@ -19,7 +19,7 @@ import java.util.Set;
 public class Loader {
     public static Version MTS_VERSION = new Version("2.2.0");
     private static String MOD_DIR = "mods/";
-    private static String STS_JAR = "desktop-1.0.jar";
+    public static String STS_JAR = "desktop-1.0.jar";
     private static String STS_JAR2 = "SlayTheSpire.jar";
     public static String COREPATCHES_JAR = "corepatches.jar";
     public static ModInfo[] MODINFOS;
@@ -62,15 +62,28 @@ public class Loader {
                 ModInfo[] modInfos = buildInfoArray(modJars);
                 MODINFOS = modInfos;
 
+                // Remove the base game jar from the search path
+                URL[] modOnlyUrls = new URL[modUrls.length - 1];
+                System.arraycopy(modUrls, 0, modOnlyUrls, 0, modOnlyUrls.length);
+
                 ClassPool pool = ClassPool.getDefault();
                 pool.insertClassPath(new LoaderClassPath(loader));
                 loader.addStreamToClassPool(pool); // Inserts infront of above path
                 Set<CtClass> ctClasses = new HashSet<>();
                 // Find and inject core patches
-                ctClasses.addAll(Patcher.injectPatches(loader, pool, Patcher.findMTSPatches()));
+                System.out.println("Finding core patches...");
+                ctClasses.addAll(Patcher.injectPatches(loader, pool, Patcher.findPatches(new URL[]{ClassLoader.getSystemResource(Loader.COREPATCHES_JAR)})));
                 // Find and inject mod patches
-                ctClasses.addAll(Patcher.injectPatches(loader, pool, Patcher.findPatches(modUrls)));
+                System.out.println("Finding patches...");
+                ctClasses.addAll(Patcher.injectPatches(loader, pool, Patcher.findPatches(modOnlyUrls, MODINFOS)));
                 Patcher.compilePatches(loader, ctClasses);
+
+                System.out.printf("Patching enums...");
+                // Patch SpireEnums from core patches
+                Patcher.patchEnums(loader, ClassLoader.getSystemResource(Loader.COREPATCHES_JAR));
+                // Patch SpireEnums from mods
+                Patcher.patchEnums(loader, modOnlyUrls);
+                System.out.println("Done.");
 
                 // Set Settings.isModded = true
                 System.out.printf("Setting isModded = true...");

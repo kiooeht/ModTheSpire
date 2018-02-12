@@ -1,6 +1,7 @@
 package com.evacipated.cardcrawl.modthespire;
 
 import com.evacipated.cardcrawl.modthespire.lib.ByRef;
+import com.evacipated.cardcrawl.modthespire.lib.SpireEnum;
 import com.evacipated.cardcrawl.modthespire.lib.SpireInsertPatch;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
 import javassist.*;
@@ -9,42 +10,74 @@ import org.scannotation.AnnotationDB;
 
 import javax.swing.*;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
 
 public class Patcher {
-    public static Set<String> findMTSPatches() throws URISyntaxException, IOException {
-        System.out.println("Finding core patches...");
-
-        AnnotationDB db = new AnnotationDB();
-        db.scanArchives(ClassLoader.getSystemResource(Loader.COREPATCHES_JAR));
-        return db.getAnnotationIndex().get(SpirePatch.class.getName());
-    }
+    private static Map<Class<?>, EnumBusterReflect> enumBusterMap = new HashMap<>();
 
     public static List<Iterable<String>> findPatches(URL[] urls) throws IOException
     {
-        System.out.println("Finding patches...");
+        return findPatches(urls, null);
+    }
 
-        // Remove the base game jar from the search path
-        URL[] urls_cpy = new URL[urls.length - 1];
-        System.arraycopy(urls, 0, urls_cpy, 0, urls_cpy.length);
-
+    public static List<Iterable<String>> findPatches(URL[] urls, ModInfo[] modInfos) throws IOException
+    {
         List<Iterable<String>> patchSetList = new ArrayList<>();
-        for (int i = 0; i < urls_cpy.length; ++i) {
-            if (Loader.MODINFOS[i].MTS_Version.compareTo(Loader.MTS_VERSION) <= 0) {
+        for (int i = 0; i < urls.length; ++i) {
+            if (modInfos == null || modInfos[i].MTS_Version.compareTo(Loader.MTS_VERSION) <= 0) {
                 AnnotationDB db = new AnnotationDB();
-                db.scanArchives(urls_cpy[i]);
+                db.scanArchives(urls[i]);
                 patchSetList.add(db.getAnnotationIndex().get(SpirePatch.class.getName()));
             } else {
-                String str = "ERROR: " + Loader.MODINFOS[i].Name + " requires ModTheSpire v" + Loader.MODINFOS[i].MTS_Version.get() + " or greater!";
+                String str = "ERROR: " + modInfos[i].Name + " requires ModTheSpire v" + modInfos[i].MTS_Version.get() + " or greater!";
                 System.out.println(str);
                 JOptionPane.showMessageDialog(null, str);
             }
         }
         return patchSetList;
+    }
+
+    public static void patchEnums(ClassLoader loader, URL... urls) throws IOException, ClassNotFoundException, NoSuchFieldException, IllegalAccessException
+    {
+        AnnotationDB db = new AnnotationDB();
+        db.setScanClassAnnotations(false);
+        db.setScanMethodAnnotations(false);
+        db.scanArchives(urls);
+
+        Set<String> annotations = db.getAnnotationIndex().get(SpireEnum.class.getName());
+        if (annotations == null) {
+            return;
+        }
+
+        for (String s : annotations) {
+            Class<?> cls = loader.loadClass(s);
+            for (Field field : cls.getDeclaredFields()) {
+                SpireEnum spireEnum = field.getDeclaredAnnotation(SpireEnum.class);
+                if (spireEnum != null) {
+                    String enumName = field.getName();
+                    if (!spireEnum.name().isEmpty()) {
+                        enumName = spireEnum.name();
+                    }
+
+                    EnumBusterReflect buster;
+                    if (enumBusterMap.containsKey(field.getType())) {
+                        buster = enumBusterMap.get(field.getType());
+                    } else {
+                        buster = new EnumBusterReflect(loader, field.getType());
+                        enumBusterMap.put(field.getType(), buster);
+                    }
+                    Enum<?> enumValue = buster.make(enumName);
+                    buster.addByValue(enumValue);
+
+                    field.setAccessible(true);
+                    field.set(null, enumValue);
+                }
+            }
+        }
     }
 
     public static void compilePatches(ClassLoader loader, Set<CtClass> ctClasses) throws CannotCompileException
