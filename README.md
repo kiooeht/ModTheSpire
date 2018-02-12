@@ -31,9 +31,23 @@ Example:
 name=Example Mod Name
 author=kiooeht
 ```
-* For mod code injection, see [ModTheSpireLib](https://github.com/kiooeht/ModTheSpireLib).
+* For mod code injection, see [ModTheSpireLib](https://github.com/kiooeht/ModTheSpireLib) and the [wiki](https://github.com/kiooeht/ModTheSpire/wiki/SpirePatch).
 
 ## Changelog ##
+#### v2.2.0 ####
+* Inject patches in mod load order (kiooeht)
+* Include dependency licenses (kiooeht)
+* Mod list when hovering over version string in-game (kiooeht)
+* Debug log window in launcher (kiooeht)
+* Relative line numbers for insert patches (kiooeht)
+* Allow @ByRef for prefixes (kiooeht)
+* Instrument (ExprEditor) patches (kiooeht)
+* SpireEnum to add new enum values (kiooeht)
+* Mods can specify minimum ModTheSpire version needed (kiooeht)
+* Mods can tag a class @SpireInitializer, and the class's `initialize()` method will be called (kiooeht)
+* Fix: Stop code patches from stopping mod patches (kiooeht)
+* Fix: Can now prefix constructors (kiooeht)
+
 #### v2.1.0 ####
 * Display mods on main menu (kiooeht)
 * Insert patches (kiooeht)
