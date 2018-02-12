@@ -14,8 +14,8 @@ public class ModInfo {
     private ModInfo()
     {
         Name = "";
-        Author = null;
-        MTS_Version = null;
+        Author = "";
+        MTS_Version = new Version("0.0.0");
     }
 
     public static ModInfo ReadModInfo(File mod_jar)
