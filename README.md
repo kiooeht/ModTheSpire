@@ -28,6 +28,9 @@ ModTheSpire is a tool to load external mods for Slay the Spire without modifying
 * [Wiki](https://github.com/kiooeht/ModTheSpire/wiki/SpirePatch)
 
 ## Changelog ##
+#### v2.2.1 ####
+* Fix: ByRef can now specify the real type name when using `Object` as parameter type
+
 #### v2.2.0 ####
 * Inject patches in mod load order (kiooeht)
 * Include dependency licenses (kiooeht)
