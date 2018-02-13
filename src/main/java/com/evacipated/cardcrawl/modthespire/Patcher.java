@@ -328,8 +328,13 @@ public class Patcher {
         // Set local variables to changed values
         for (int i = 0; i < info.localvars().length; ++i) {
             if (localVarTypeNames[i] != null) {
-                src += info.localvars()[i] + " = __" + info.localvars()[i] + "[0];\n";
-            }
+            	String cls = classPath(insertParamAnnotations[i+insertParamsStartIndex]);
+            	if (cls == null || cls.equals("primitive")) {
+            		src += info.localvars()[i] + " = __" + info.localvars()[i] + "[0];\n";
+            	} else {
+            		src += info.localvars()[i] + " = (" + cls + ") __" + info.localvars()[i] + "[0];\n";
+            	}
+            } // TODO: add null check
         }
         src += "}";
         System.out.println(src);
@@ -349,6 +354,16 @@ public class Patcher {
             }
         }
         return false;
+    }
+    
+    private static String classPath(Object[] annotations) {
+    	for (Object o : annotations) {
+    		if (o instanceof ByRef) {
+    			ByRef byRefAnnotation = (ByRef) o;
+    			return byRefAnnotation.cls();
+    		}
+    	}
+    	return null;
     }
 
     private static CtClass[] patchParamTypes(ClassPool pool, SpirePatch patch) throws NotFoundException {
