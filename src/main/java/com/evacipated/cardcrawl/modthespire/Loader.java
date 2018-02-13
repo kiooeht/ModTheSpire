@@ -13,11 +13,12 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.*;
 import java.util.List;
 
 public class Loader {
-    public static Version MTS_VERSION = new Version("2.2.0");
+    public static Version MTS_VERSION = new Version("2.2.1");
     private static String MOD_DIR = "mods/";
     public static String STS_JAR = "desktop-1.0.jar";
     private static String STS_JAR2 = "SlayTheSpire.jar";

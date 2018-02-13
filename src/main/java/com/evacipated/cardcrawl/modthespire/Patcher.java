@@ -55,10 +55,8 @@ public class Patcher {
             if (modInfos == null || modInfos[i].MTS_Version.compareTo(Loader.MTS_VERSION) <= 0) {
                 AnnotationDB db;
                 if (annotationDBMap.containsKey(urls[i])) {
-                    System.out.println("Cached AnnotationDB");
                     db = annotationDBMap.get(urls[i]);
                 } else {
-                    System.out.println("New AnnotationDB");
                     db = new AnnotationDB();
                     annotationDBMap.put(urls[i], db);
                 }
@@ -212,6 +210,7 @@ public class Patcher {
         String src = "{\n";
         String funccall = prefix.getDeclaringClass().getName() + "." + prefix.getName() + "(";
         String postcallsrc = "";
+        String postcallsrc2 = "";
 
         int paramOffset = (Modifier.isStatic(ctMethodToPatch.getModifiers()) ? 1 : 0);
         CtClass[] prefixParamTypes = prefix.getParameterTypes();
@@ -220,7 +219,17 @@ public class Patcher {
             if (paramByRef(prefixParamAnnotations[i])) {
                 src += prefixParamTypes[i].getName() + " __param" + i + " = new " + prefixParamTypes[i].getName() + "{" + "$" + (i + paramOffset) + "};\n";
                 funccall += "__param" + i;
-                postcallsrc += "$" + (i + paramOffset) + " = __param" + i + "[0];\n";
+
+                postcallsrc += "$" + (i + paramOffset) + " = ";
+                postcallsrc2 += "$" + (i + paramOffset) + " = ";
+
+                String typename = paramByRefTypename(prefixParamAnnotations[i]);
+                if (!typename.isEmpty()) {
+                    postcallsrc += "(" + typename + ")";
+                    postcallsrc2 += "(com.megacrit.cardcrawl." + typename + ")";
+                }
+                postcallsrc += "__param" + i + "[0];\n";
+                postcallsrc2 += "__param" + i + "[0];\n";
             } else {
                 funccall += "$" + (i + paramOffset);
             }
@@ -230,14 +239,27 @@ public class Patcher {
         }
 
         src += funccall + ");\n";
-        src += postcallsrc;
-        src += "}";
+        String src2 = src;
+        src += postcallsrc + "}";
+        src2 += postcallsrc2 + "}";
 
         System.out.println(src);
-        if (ctMethodToPatch instanceof CtConstructor) {
-            ((CtConstructor)ctMethodToPatch).insertBeforeBody(src);
-        } else {
-            ctMethodToPatch.insertBefore(src);
+        try {
+            if (ctMethodToPatch instanceof CtConstructor) {
+                ((CtConstructor) ctMethodToPatch).insertBeforeBody(src);
+            } else {
+                ctMethodToPatch.insertBefore(src);
+            }
+        } catch (javassist.CannotCompileException e) {
+            try {
+                if (ctMethodToPatch instanceof CtConstructor) {
+                    ((CtConstructor) ctMethodToPatch).insertBeforeBody(src2);
+                } else {
+                    ctMethodToPatch.insertBefore(src2);
+                }
+            } catch (javassist.CannotCompileException e2) {
+                throw e;
+            }
         }
     }
 
@@ -325,15 +347,34 @@ public class Patcher {
         }
         src += ");\n";
 
+        String src2 = src;
         // Set local variables to changed values
         for (int i = 0; i < info.localvars().length; ++i) {
             if (localVarTypeNames[i] != null) {
-                src += info.localvars()[i] + " = __" + info.localvars()[i] + "[0];\n";
+                src += info.localvars()[i] + " = ";
+                src2 += info.localvars()[i] + " = ";
+
+                String typename = paramByRefTypename(insertParamAnnotations[i + insertParamsStartIndex]);
+                if (!typename.isEmpty()) {
+                    src += "(" + typename + ")";
+                    src2 += "(com.megacrit.cardcrawl." + typename + ")";
+                }
+                src += "__" + info.localvars()[i] + "[0];\n";
+                src2 += "__" + info.localvars()[i] + "[0];\n";
             }
         }
         src += "}";
+        src2 += "}";
         System.out.println(src);
-        ctMethodToPatch.insertAt(loc, src);
+        try {
+            ctMethodToPatch.insertAt(loc, src);
+        } catch (javassist.CannotCompileException e) {
+            try {
+                ctMethodToPatch.insertAt(loc, src2);
+            } catch (javassist.CannotCompileException e2) {
+                throw e;
+            }
+        }
     }
 
     private static void addInstrument(CtBehavior ctMethodToPatch, Method method) throws InvocationTargetException, IllegalAccessException, CannotCompileException
@@ -349,6 +390,15 @@ public class Patcher {
             }
         }
         return false;
+    }
+
+    private static String paramByRefTypename(Object[] annotations) {
+        for (Object o : annotations) {
+            if (o instanceof ByRef) {
+                return ((ByRef) o).type();
+            }
+        }
+        return "";
     }
 
     private static CtClass[] patchParamTypes(ClassPool pool, SpirePatch patch) throws NotFoundException {
