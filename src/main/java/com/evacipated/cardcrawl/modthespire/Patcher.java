@@ -158,6 +158,12 @@ public class Patcher {
                         ctMethodToPatch = ctClsToPatch.getDeclaredConstructors()[0];
                     else
                         ctMethodToPatch = ctClsToPatch.getDeclaredConstructor(ctParamTypes);
+                } else if (patch.method().equals("<staticinit>")) {
+                    ctMethodToPatch = ctClsToPatch.getClassInitializer();
+                    if (ctMethodToPatch == null) {
+                        System.out.println("No class initializer, making one");
+                        ctMethodToPatch = ctClsToPatch.makeClassInitializer();
+                    }
                 } else {
                     if (ctParamTypes == null)
                         ctMethodToPatch = ctClsToPatch.getDeclaredMethod(patch.method());
@@ -245,7 +251,7 @@ public class Patcher {
 
         System.out.println(src);
         try {
-            if (ctMethodToPatch instanceof CtConstructor) {
+            if (ctMethodToPatch instanceof CtConstructor && !((CtConstructor) ctMethodToPatch).isClassInitializer()) {
                 ((CtConstructor) ctMethodToPatch).insertBeforeBody(src);
             } else {
                 ctMethodToPatch.insertBefore(src);
