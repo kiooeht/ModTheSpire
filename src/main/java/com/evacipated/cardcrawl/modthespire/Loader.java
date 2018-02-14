@@ -13,7 +13,6 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.*;
 import java.util.List;
 
@@ -24,6 +23,7 @@ public class Loader {
     private static String STS_JAR2 = "SlayTheSpire.jar";
     public static String COREPATCHES_JAR = "corepatches.jar";
     public static ModInfo[] MODINFOS;
+    public static URL[] MODONLYURLS;
 
     private static Object ARGS;
 
@@ -66,6 +66,7 @@ public class Loader {
                 // Remove the base game jar from the search path
                 URL[] modOnlyUrls = new URL[modUrls.length - 1];
                 System.arraycopy(modUrls, 0, modOnlyUrls, 0, modOnlyUrls.length);
+                MODONLYURLS = modOnlyUrls;
 
                 ClassPool pool = ClassPool.getDefault();
                 pool.insertClassPath(new LoaderClassPath(loader));
@@ -78,13 +79,6 @@ public class Loader {
                 System.out.println("Finding patches...");
                 ctClasses.addAll(Patcher.injectPatches(loader, pool, Patcher.findPatches(modOnlyUrls, MODINFOS)));
                 Patcher.compilePatches(loader, ctClasses);
-
-                System.out.printf("Patching enums...");
-                // Patch SpireEnums from core patches
-                Patcher.patchEnums(loader, ClassLoader.getSystemResource(Loader.COREPATCHES_JAR));
-                // Patch SpireEnums from mods
-                Patcher.patchEnums(loader, modOnlyUrls);
-                System.out.println("Done.");
 
                 // Set Settings.isModded = true
                 System.out.printf("Setting isModded = true...");
