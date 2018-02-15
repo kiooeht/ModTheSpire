@@ -202,6 +202,9 @@ public class Patcher {
                 } else if (m.getName().equals("Instrument")) {
                     System.out.println("    Adding Instrument...");
                     addInstrument(ctMethodToPatch, m);
+                } else if (m.getName().equals("Replace")) {
+                    System.out.println("    Replacing...");
+                    addReplace(ctMethodToPatch, pool.getMethod(patchClass.getName(), m.getName()));
                 }
             }
 
@@ -387,6 +390,11 @@ public class Patcher {
     {
         ExprEditor exprEditor = (ExprEditor)method.invoke(null);
         ctMethodToPatch.instrument(exprEditor);
+    }
+
+    private static void addReplace(CtBehavior ctMethodToPatch, CtMethod method) throws CannotCompileException
+    {
+        ((CtMethod)ctMethodToPatch).setBody(method, null);
     }
 
     private static boolean paramByRef(Object[] annotations) {
