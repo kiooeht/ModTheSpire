@@ -55,7 +55,7 @@ public class ModPanel extends JPanel {
             JPanel buttonPanel = new JPanel(new BorderLayout());
             String nameString = ((info.Name != null) ? info.Name : "") + 
                     " " + 
-                    ((info.MTS_Version != null) ? "MTS Version: " + info.MTS_Version.toString() : "");
+                    ((info.MTS_Version != null) ? "MTS Version: " + info.MTS_Version.get() : "");
             
             JLabel name = new JLabel(nameString, JLabel.LEFT);
             name.setFont(new Font("Serif", Font.PLAIN, 18));
