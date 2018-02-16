@@ -25,6 +25,8 @@ public class Loader {
     public static ModInfo[] MODINFOS;
     public static URL[] MODONLYURLS;
 
+    public static List<String> MODCARDS;
+
     private static Object ARGS;
 
     public static void main(String[] args) {
@@ -79,6 +81,9 @@ public class Loader {
                 System.out.println("Finding patches...");
                 ctClasses.addAll(Patcher.injectPatches(loader, pool, Patcher.findPatches(modOnlyUrls, MODINFOS)));
                 Patcher.compilePatches(loader, ctClasses);
+
+                System.out.println("Finding cards...");
+                MODCARDS = CustomContent.findCards(modOnlyUrls);
 
                 // Set Settings.isModded = true
                 System.out.printf("Setting isModded = true...");
