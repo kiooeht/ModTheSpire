@@ -19,6 +19,17 @@ public class ModInfo {
         MTS_Version = new Version("0.0.0");
         Description = "";
     }
+    
+    public static void closeLoader(URLClassLoader loader)
+    {
+    	try {
+    		if (loader != null) {
+    			loader.close();
+    		}
+    	} catch (Exception e) {
+    		System.out.println("Exception during loader.close(), URLClassLoader may be leaked. " + e.toString());
+    	}
+    }
 
     public static ModInfo ReadModInfo(File mod_jar)
     {
@@ -27,8 +38,9 @@ public class ModInfo {
         info.Name = mod_jar.getName();
         info.Name = info.Name.substring(0, info.Name.length() - 4);
 
+        URLClassLoader loader = null;
         try {
-            URLClassLoader loader = new URLClassLoader(new URL[] {mod_jar.toURI().toURL()});
+            loader = new URLClassLoader(new URL[] {mod_jar.toURI().toURL()});
             // Read ModTheSpire.config
             Properties prop = new Properties();
             InputStream inProp = loader.getResourceAsStream("ModTheSpire.config");
@@ -41,6 +53,8 @@ public class ModInfo {
             }
         } catch (Exception e) {
             System.out.println("ERROR: Failed to read Mod info from " + mod_jar.getName());
+        } finally {
+        	closeLoader(loader);
         }
         return info;
     }
