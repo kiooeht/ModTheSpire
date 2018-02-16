@@ -51,7 +51,8 @@ public class MTSClassLoader extends URLClassLoader {
     @Override
     public Class<?> loadClass(String name) throws ClassNotFoundException {
         if (name.equals("com.megacrit.cardcrawl.desktop.DesktopLauncher")) {
-            Class c = findLoadedClass(name);
+            @SuppressWarnings("rawtypes")
+			Class c = findLoadedClass(name);
             if (c == null) {
                 c = findClass(name);
                 if (c == null) {
