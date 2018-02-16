@@ -143,7 +143,7 @@ public class Loader {
         return urls;
     }
 
-    private static ModInfo[] buildInfoArray(File[] modJars) {
+    public static ModInfo[] buildInfoArray(File[] modJars) {
         ModInfo[] infos = new ModInfo[modJars.length];
         for (int i = 0; i < modJars.length; ++i) {
             infos[i] = ModInfo.ReadModInfo(modJars[i]);
