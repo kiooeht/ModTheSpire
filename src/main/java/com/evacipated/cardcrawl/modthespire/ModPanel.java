@@ -26,6 +26,7 @@ public class ModPanel extends JPanel {
 		this.add(new InfoPanel(), BorderLayout.CENTER);
 	}
 	
+	
 	public class InfoPanel extends JPanel {
 		
 		public InfoPanel() {
@@ -54,7 +55,7 @@ public class ModPanel extends JPanel {
 			JPanel buttonPanel = new JPanel(new BorderLayout());
 			String nameString = ((info.Name != null) ? info.Name : "") + 
 					" " + 
-					((info.MTS_Version != null) ? info.MTS_Version.toString() : "");
+					((info.MTS_Version != null) ? "MTS Version: " + info.MTS_Version.toString() : "");
 			
 			JLabel name = new JLabel(nameString, JLabel.LEFT);
 			name.setFont(new Font("Serif", Font.PLAIN, 18));

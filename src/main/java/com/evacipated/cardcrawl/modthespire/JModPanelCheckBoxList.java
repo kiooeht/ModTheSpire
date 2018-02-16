@@ -25,10 +25,10 @@ import javax.swing.border.EmptyBorder;
 
 // From https://stackoverflow.com/a/24777687
 @SuppressWarnings("serial")
-public class JCheckBoxList extends JList<ModPanel> {
+public class JModPanelCheckBoxList extends JList<ModPanel> {
 	protected static Border noFocusBorder = new EmptyBorder(1, 1, 1, 1);
 
-	public JCheckBoxList() {
+	public JModPanelCheckBoxList() {
 		// enable drag and drop
 		setDragEnabled(true);
 		setDropMode(DropMode.INSERT);
@@ -48,7 +48,7 @@ public class JCheckBoxList extends JList<ModPanel> {
 		});
 	}
 
-	public JCheckBoxList(DefaultListModel<ModPanel> model) {
+	public JModPanelCheckBoxList(DefaultListModel<ModPanel> model) {
 		this();
 		setModel(model);
 	}
@@ -79,6 +79,7 @@ public class JCheckBoxList extends JList<ModPanel> {
 			// Drawing checkbox, change the appearance here
 			value.setBackground(isSelected ? getSelectionBackground() : getBackground());
 			value.setForeground(isSelected ? getSelectionForeground() : getForeground());
+			
 			checkbox.setEnabled(isEnabled());
 			checkbox.setFont(getFont());
 			checkbox.setFocusPainted(false);
