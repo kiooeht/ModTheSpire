@@ -10,12 +10,14 @@ public class ModInfo {
     public String Name;
     public String Author;
     public Version MTS_Version;
+    public String Description;
 
     private ModInfo()
     {
         Name = "";
         Author = "";
         MTS_Version = new Version("0.0.0");
+        Description = "";
     }
 
     public static ModInfo ReadModInfo(File mod_jar)
@@ -35,6 +37,7 @@ public class ModInfo {
                 info.Name = prop.getProperty("name");
                 info.Author = prop.getProperty("author");
                 info.MTS_Version = new Version(prop.getProperty("mts_version", "0.0.0"));
+                info.Description = prop.getProperty("description");
             }
         } catch (Exception e) {
             System.out.println("ERROR: Failed to read Mod info from " + mod_jar.getName());
