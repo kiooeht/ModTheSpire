@@ -6,10 +6,12 @@ import java.lang.reflect.*;
 public class ReflectionHelper {
     private static final String MODIFIERS_FIELD = "modifiers";
 
-    private static final ReflectionFactory reflection =
+    @SuppressWarnings("restriction")
+	private static final ReflectionFactory reflection =
         ReflectionFactory.getReflectionFactory();
 
-    public static void setStaticFinalField(
+    @SuppressWarnings("restriction")
+	public static void setStaticFinalField(
         Field field, Object value)
         throws NoSuchFieldException, IllegalAccessException {
         // we mark the field to be public
@@ -24,7 +26,7 @@ public class ReflectionHelper {
         // blank out the final bit in the modifiers int
         modifiers &= ~Modifier.FINAL;
         modifiersField.setInt(field, modifiers);
-        FieldAccessor fa = reflection.newFieldAccessor(
+		FieldAccessor fa = reflection.newFieldAccessor(
             field, false
         );
         fa.set(null, value);

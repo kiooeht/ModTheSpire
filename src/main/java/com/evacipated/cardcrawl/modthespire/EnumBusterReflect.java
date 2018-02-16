@@ -10,7 +10,8 @@ import java.lang.reflect.Field;
 import java.util.*;
 
 public class EnumBusterReflect {
-    private static final Class[] EMPTY_CLASS_ARRAY =
+    @SuppressWarnings("rawtypes")
+	private static final Class[] EMPTY_CLASS_ARRAY =
         new Class[0];
     private static final Object[] EMPTY_OBJECT_ARRAY =
         new Object[0];
@@ -18,7 +19,7 @@ public class EnumBusterReflect {
     private static final String VALUES_FIELD = "$VALUES";
     private static final String ORDINAL_FIELD = "ordinal";
 
-    private final ReflectionFactory reflection =
+	private final ReflectionFactory reflection =
         ReflectionFactory.getReflectionFactory();
 
     private final ClassLoader loader;
@@ -63,11 +64,11 @@ public class EnumBusterReflect {
      * additional parameters.  The additionalTypes is used to match
      * the constructor accurately.
      */
-    public Enum<?> make(String value, int ordinal,
-                  Class[] additionalTypes, Object[] additional) {
+	public Enum<?> make(String value, int ordinal,
+                  @SuppressWarnings("rawtypes") Class[] additionalTypes, Object[] additional) {
         try {
             undoStack.push(new Memento());
-            ConstructorAccessor ca = findConstructorAccessor(
+			ConstructorAccessor ca = findConstructorAccessor(
                 additionalTypes, clazz);
             return constructEnum(clazz, ca, value,
                 ordinal, additional);
@@ -194,7 +195,8 @@ public class EnumBusterReflect {
         }
     }
 
-    private ConstructorAccessor findConstructorAccessor(
+    @SuppressWarnings("rawtypes")
+	private ConstructorAccessor findConstructorAccessor(
         Class[] additionalParameterTypes,
         Class<?> clazz) throws NoSuchMethodException {
         Class[] parameterTypes =
@@ -211,7 +213,7 @@ public class EnumBusterReflect {
         return reflection.newConstructorAccessor(cstr);
     }
 
-    private Enum<?> constructEnum(Class<?> clazz,
+	private Enum<?> constructEnum(Class<?> clazz,
                             ConstructorAccessor ca,
                             String value, int ordinal,
                             Object[] additional)

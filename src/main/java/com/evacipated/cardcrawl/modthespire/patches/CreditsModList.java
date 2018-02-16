@@ -30,7 +30,8 @@ public class CreditsModList {
         try {
             Field f = CreditsScreen.class.getDeclaredField("lines");
             f.setAccessible(true);
-            ArrayList<CreditLine> lines = (ArrayList<CreditLine>)f.get(__obj_instance);
+            @SuppressWarnings("unchecked")
+			ArrayList<CreditLine> lines = (ArrayList<CreditLine>)f.get(__obj_instance);
 
             // ModTheSpire
             lines.add(new CreditLine("ModTheSpire", tmpY[0] -= 150.0F, true));

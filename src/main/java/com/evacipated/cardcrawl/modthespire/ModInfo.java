@@ -2,12 +2,17 @@ package com.evacipated.cardcrawl.modthespire;
 
 import java.io.File;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Properties;
 
-public class ModInfo {
-    public String Name;
+public class ModInfo implements Serializable {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 7452562412479584982L;
+	public String Name;
     public String Author;
     public Version MTS_Version;
     public String Description;
@@ -18,6 +23,14 @@ public class ModInfo {
         Author = "";
         MTS_Version = new Version("0.0.0");
         Description = "";
+    }
+    
+    public ModInfo(String Name, String Author, Version version, String Description)
+    {
+    	this.Name = Name;
+    	this.Author = Author;
+    	this.MTS_Version = (version == null) ? new Version("0.0.0") : version;
+    	this.Description = Description;
     }
     
     public static void closeLoader(URLClassLoader loader)
