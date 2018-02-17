@@ -17,6 +17,8 @@ import java.util.*;
 import java.util.List;
 
 public class Loader {
+    public static boolean DEBUG = false;
+
     public static Version MTS_VERSION = new Version("2.2.1");
     private static String MOD_DIR = "mods/";
     public static String STS_JAR = "desktop-1.0.jar";
@@ -29,6 +31,10 @@ public class Loader {
 
     public static void main(String[] args) {
         ARGS = args;
+        if (Arrays.asList(args).contains("--debug")) {
+            System.out.println("Debug mode!");
+            DEBUG = true;
+        }
 
         try {
             String thisJarName = new File(Loader.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath()).getName();
