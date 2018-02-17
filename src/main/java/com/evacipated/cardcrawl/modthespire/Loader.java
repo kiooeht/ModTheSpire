@@ -80,6 +80,12 @@ public class Loader {
                 ctClasses.addAll(Patcher.injectPatches(loader, pool, Patcher.findPatches(modOnlyUrls, MODINFOS)));
                 Patcher.compilePatches(loader, ctClasses);
 
+                System.out.printf("Patching enums...");
+                Patcher.patchEnums(loader, ClassLoader.getSystemResource(Loader.COREPATCHES_JAR));
+                // Patch SpireEnums from mods
+                Patcher.patchEnums(loader, Loader.MODONLYURLS);
+                System.out.println("Done.");
+                
                 // Set Settings.isModded = true
                 System.out.printf("Setting isModded = true...");
                 System.out.flush();
@@ -143,7 +149,7 @@ public class Loader {
         return urls;
     }
 
-    private static ModInfo[] buildInfoArray(File[] modJars) {
+    public static ModInfo[] buildInfoArray(File[] modJars) {
         ModInfo[] infos = new ModInfo[modJars.length];
         for (int i = 0; i < modJars.length; ++i) {
             infos[i] = ModInfo.ReadModInfo(modJars[i]);
