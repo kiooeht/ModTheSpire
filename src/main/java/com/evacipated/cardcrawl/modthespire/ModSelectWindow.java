@@ -23,7 +23,7 @@ public class ModSelectWindow extends JFrame {
     private void initUI() {
         setTitle("Mod The Spire " + Loader.MTS_VERSION.get());
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setResizable(false);
+        setResizable(true);
 
         rootPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 
@@ -35,7 +35,7 @@ public class ModSelectWindow extends JFrame {
         LoadOrder.loadModsInOrder(model, mods, info);
 
         JScrollPane modScroller = new JScrollPane(modList);
-        modScroller.setMinimumSize(new Dimension(300, 200));
+        modScroller.setPreferredSize(new Dimension(300, 200));
         this.getContentPane().add(modScroller, BorderLayout.CENTER);
 
         // Play button

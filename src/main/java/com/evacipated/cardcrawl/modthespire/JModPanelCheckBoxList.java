@@ -1,6 +1,6 @@
 package com.evacipated.cardcrawl.modthespire;
 
-import java.awt.Component;
+import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
@@ -11,15 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
 
-import javax.swing.DefaultListModel;
-import javax.swing.DropMode;
-import javax.swing.JCheckBox;
-import javax.swing.JComponent;
-import javax.swing.JList;
-import javax.swing.ListCellRenderer;
-import javax.swing.ListSelectionModel;
-import javax.swing.TransferHandler;
-import javax.swing.UIManager;
+import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 
@@ -83,8 +75,7 @@ public class JModPanelCheckBoxList extends JList<ModPanel> {
             checkbox.setEnabled(isEnabled());
             checkbox.setFont(getFont());
             checkbox.setFocusPainted(false);
-            checkbox.setBorderPainted(true);
-            checkbox.setBorder(isSelected ? UIManager.getBorder("List.focusCellHighlightBorder") : noFocusBorder);
+            checkbox.setBorderPainted(false);
             return value;
         }
     }
