@@ -232,7 +232,7 @@ public class Patcher {
                 postcallsrc += "$" + (i + paramOffset) + " = ";
                 postcallsrc2 += "$" + (i + paramOffset) + " = ";
 
-                String typename = paramByRefTypename(prefixParamAnnotations[i]);
+                String typename = paramByRefTypename2(ctMethodToPatch, i);
                 if (!typename.isEmpty()) {
                     postcallsrc += "(" + typename + ")";
                     postcallsrc2 += "(com.megacrit.cardcrawl." + typename + ")";
@@ -406,6 +406,7 @@ public class Patcher {
         return false;
     }
 
+    // Gets the typename from the ByRef annotation
     private static String paramByRefTypename(Object[] annotations) {
         for (Object o : annotations) {
             if (o instanceof ByRef) {
@@ -413,6 +414,19 @@ public class Patcher {
             }
         }
         return "";
+    }
+
+    // Gets the typename from the patched method's marameter types
+    private static String paramByRefTypename2(CtBehavior ctMethodToPatch, int index) throws NotFoundException
+    {
+        if (!Modifier.isStatic(ctMethodToPatch.getModifiers())) {
+            --index;
+        }
+        try {
+            return ctMethodToPatch.getParameterTypes()[index].getName();
+        } catch (ArrayIndexOutOfBoundsException e) {
+            return null;
+        }
     }
 
     private static CtClass[] patchParamTypes(ClassPool pool, SpirePatch patch) throws NotFoundException {
