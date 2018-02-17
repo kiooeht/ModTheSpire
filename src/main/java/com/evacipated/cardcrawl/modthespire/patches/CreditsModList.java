@@ -18,7 +18,8 @@ import java.util.ArrayList;
 public class CreditsModList {
     private static String[] MTS_AUTHORS = new String[] {
             "kiooeht",
-            "t-larson"
+            "t-larson",
+            "test447"
     };
 
     @SpireInsertPatch(
