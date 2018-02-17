@@ -2,9 +2,11 @@ package com.evacipated.cardcrawl.modthespire.patches;
 
 import com.evacipated.cardcrawl.modthespire.Loader;
 import com.evacipated.cardcrawl.modthespire.ModInfo;
+import com.evacipated.cardcrawl.modthespire.ReflectionHelper;
 import com.evacipated.cardcrawl.modthespire.lib.ByRef;
 import com.evacipated.cardcrawl.modthespire.lib.SpireInsertPatch;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
+import com.megacrit.cardcrawl.core.Settings;
 import com.megacrit.cardcrawl.credits.CreditLine;
 import com.megacrit.cardcrawl.credits.CreditsScreen;
 
@@ -50,6 +52,31 @@ public class CreditsModList {
                 }
             }
         } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void Postfix(Object __obj_instance)
+    {
+        try {
+            Field f = CreditsScreen.class.getDeclaredField("lines");
+            f.setAccessible(true);
+            ArrayList<CreditLine> lines = (ArrayList<CreditLine>) f.get(__obj_instance);
+
+            int headers = 0;
+            for (CreditLine line : lines) {
+                Field color = CreditLine.class.getDeclaredField("color");
+                color.setAccessible(true);
+                if (color.get(line).equals(Settings.GOLD_COLOR)) {
+                    ++headers;
+                }
+            }
+
+            float NEW_END_OF_CREDITS_Y = 85.0F + (headers * 150.0F) + ((lines.size() - headers) * 45.0F);
+            NEW_END_OF_CREDITS_Y *= Settings.scale;
+            Field END_OF_CREDITS_Y = CreditsScreen.class.getDeclaredField("END_OF_CREDITS_Y");
+            ReflectionHelper.setStaticFinalField(END_OF_CREDITS_Y, NEW_END_OF_CREDITS_Y);
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
