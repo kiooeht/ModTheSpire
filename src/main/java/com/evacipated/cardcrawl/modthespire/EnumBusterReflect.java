@@ -311,16 +311,24 @@ public class EnumBusterReflect {
         Collection<ClassInfo> foundClasses = new ArrayList<>();
         finder.findClasses(foundClasses, filter);
 
+        if (Loader.DEBUG) {
+            System.out.println();
+            System.out.println(clazz.getName());
+        }
+        int count = 0;
         for (ClassInfo classInfo : foundClasses) {
             for (FieldInfo field : classInfo.getFields()) {
                 String switchMapName = "$SwitchMap$" + clazz.getName().replace('.', '$');
                 if (field.getName().equals(switchMapName)) {
+                    count++;
+                    if (Loader.DEBUG) System.out.println("  " + classInfo.getClassName());
                     Field realField = loader.loadClass(classInfo.getClassName()).getDeclaredField(field.getName());
                     realField.setAccessible(true);
                     result.add(realField);
                 }
             }
         }
+        if (Loader.DEBUG) System.out.println(count + " switch statement(s)");
 
         return  result;
     }

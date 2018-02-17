@@ -17,6 +17,8 @@ import java.util.*;
 import java.util.List;
 
 public class Loader {
+    public static boolean DEBUG = false;
+
     public static Version MTS_VERSION = new Version("2.2.1");
     private static String MOD_DIR = "mods/";
     public static String STS_JAR = "desktop-1.0.jar";
@@ -31,6 +33,10 @@ public class Loader {
 
     public static void main(String[] args) {
         ARGS = args;
+        if (Arrays.asList(args).contains("--debug")) {
+            System.out.println("Debug mode!");
+            DEBUG = true;
+        }
 
         try {
             String thisJarName = new File(Loader.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath()).getName();
@@ -84,6 +90,12 @@ public class Loader {
 
                 System.out.println("Finding cards...");
                 MODCARDS = CustomContent.findCards(modOnlyUrls);
+
+                System.out.printf("Patching enums...");
+                Patcher.patchEnums(loader, ClassLoader.getSystemResource(Loader.COREPATCHES_JAR));
+                // Patch SpireEnums from mods
+                Patcher.patchEnums(loader, Loader.MODONLYURLS);
+                System.out.println("Done.");
 
                 // Set Settings.isModded = true
                 System.out.printf("Setting isModded = true...");
@@ -148,7 +160,7 @@ public class Loader {
         return urls;
     }
 
-    private static ModInfo[] buildInfoArray(File[] modJars) {
+    public static ModInfo[] buildInfoArray(File[] modJars) {
         ModInfo[] infos = new ModInfo[modJars.length];
         for (int i = 0; i < modJars.length; ++i) {
             infos[i] = ModInfo.ReadModInfo(modJars[i]);
