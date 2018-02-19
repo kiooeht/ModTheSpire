@@ -115,20 +115,29 @@ public class Patcher {
 
     public static void finalizePatches(ClassLoader loader) throws Exception
     {
-        System.out.println("Injecting patches...");
+        System.out.printf("Injecting patches...");
+        if (Loader.DEBUG) {
+            System.out.println();
+        }
         for (PatchInfo p : patchInfos) {
             if (Loader.DEBUG) {
                 p.debugPrint();
             }
             p.doPatch();
         }
+        System.out.println("Done.");
     }
 
     public static void compilePatches(ClassLoader loader, Set<CtClass> ctClasses) throws CannotCompileException
     {
-        System.out.println("Compiling patched classes...");
+        System.out.printf("Compiling patched classes...");
+        if (Loader.DEBUG) {
+            System.out.println();
+        }
         for (CtClass cls : ctClasses) {
-            System.out.println("  " + cls.getName());
+            if (Loader.DEBUG) {
+                System.out.println("  " + cls.getName());
+            }
             cls.toClass(loader, null);
         }
         System.out.println("Done.");
