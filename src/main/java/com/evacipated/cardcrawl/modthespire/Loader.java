@@ -84,6 +84,8 @@ public class Loader {
                 // Find and inject mod patches
                 System.out.println("Finding patches...");
                 ctClasses.addAll(Patcher.injectPatches(loader, pool, Patcher.findPatches(modOnlyUrls, MODINFOS)));
+
+                Patcher.finalizePatches(loader);
                 Patcher.compilePatches(loader, ctClasses);
 
                 System.out.printf("Patching enums...");
