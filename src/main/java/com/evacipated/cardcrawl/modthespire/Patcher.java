@@ -1,10 +1,12 @@
 package com.evacipated.cardcrawl.modthespire;
 
 import com.evacipated.cardcrawl.modthespire.lib.*;
+import com.evacipated.cardcrawl.modthespire.patcher.*;
 import javassist.*;
 import javassist.expr.ExprEditor;
 import org.scannotation.AnnotationDB;
 
+import javax.sound.midi.Patch;
 import javax.swing.*;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -16,6 +18,7 @@ import java.util.*;
 public class Patcher {
     private static Map<URL, AnnotationDB> annotationDBMap = new HashMap<>();
     private static Map<Class<?>, EnumBusterReflect> enumBusterMap = new HashMap<>();
+    private static TreeSet<PatchInfo> patchInfos = new TreeSet<>(new PatchInfoComparator());
 
     public static List<String> initializeMods(ClassLoader loader, URL... urls) throws ClassNotFoundException, InvocationTargetException, IllegalAccessException
     {
@@ -110,6 +113,17 @@ public class Patcher {
         }
     }
 
+    public static void finalizePatches(ClassLoader loader) throws Exception
+    {
+        System.out.println("Injecting patches...");
+        for (PatchInfo p : patchInfos) {
+            if (Loader.DEBUG) {
+                p.debugPrint();
+            }
+            p.doPatch();
+        }
+    }
+
     public static void compilePatches(ClassLoader loader, Set<CtClass> ctClasses) throws CannotCompileException
     {
         System.out.println("Compiling patched classes...");
@@ -120,7 +134,7 @@ public class Patcher {
         System.out.println("Done.");
     }
 
-    public static HashSet<CtClass> injectPatches(ClassLoader loader, ClassPool pool, List<Iterable<String>> class_names) throws CannotCompileException, NotFoundException, ClassNotFoundException, InvocationTargetException, IllegalAccessException
+    public static HashSet<CtClass> injectPatches(ClassLoader loader, ClassPool pool, List<Iterable<String>> class_names) throws Exception
     {
         HashSet<CtClass> ctClasses = new HashSet<>();
         for (Iterable<String> it : class_names) {
@@ -128,19 +142,18 @@ public class Patcher {
             if (tmp != null) {
                 ctClasses.addAll(tmp);
             }
+            PatchInfo.nextMod();
         }
         return ctClasses;
     }
 
-    public static HashSet<CtClass> injectPatches(ClassLoader loader, ClassPool pool, Iterable<String> class_names) throws ClassNotFoundException, NotFoundException, CannotCompileException, InvocationTargetException, IllegalAccessException
+    public static HashSet<CtClass> injectPatches(ClassLoader loader, ClassPool pool, Iterable<String> class_names) throws Exception
     {
         if (class_names == null)
             return null;
 
         HashSet<CtClass> ctClasses = new HashSet<CtClass>();
         for (String cls_name : class_names) {
-            System.out.println("Patch [" + cls_name + "]");
-
             Class<?> patchClass = loader.loadClass(cls_name);
             if (!patchClass.isAnnotationPresent(SpirePatch.class)) {
                 JOptionPane.showMessageDialog(null, "Something went wrong finding SpirePatch on [" + cls_name + "].\n" +
@@ -176,15 +189,12 @@ public class Patcher {
             if (ctMethodToPatch == null)
                 continue;
 
-            System.out.println("  Patching [" + patch.cls() + "." + patch.method() + "]");
-
             for (Method m : patchClass.getDeclaredMethods()) {
+                PatchInfo p = null;
                 if (m.getName().equals("Prefix")) {
-                    System.out.println("    Adding Prefix...");
-                    addPrefix(ctMethodToPatch, pool.getMethod(patchClass.getName(), m.getName()));
+                    p = new PrefixPatchInfo(ctMethodToPatch, pool.getMethod(patchClass.getName(), m.getName()));
                 } else if (m.getName().equals("Postfix")) {
-                    System.out.println("    Adding Postfix...");
-                    addPostfix(ctMethodToPatch, pool.getMethod(patchClass.getName(), m.getName()));
+                    p = new PostfixPatchInfo(ctMethodToPatch, pool.getMethod(patchClass.getName(), m.getName()));
                 } else if (m.getName().equals("Insert")) {
                     SpireInsertPatch insertPatch = m.getAnnotation(SpireInsertPatch.class);
                     if (insertPatch == null) {
@@ -192,19 +202,20 @@ public class Patcher {
                     } else if (insertPatch.loc() == -1 && insertPatch.rloc() == -1) {
                         System.err.println("    ERROR: SpireInsertPatch missing line number! Must specify either loc or rloc");
                     } else if (insertPatch.loc() >= 0) {
-                        System.out.println("    Adding Insert @ " + insertPatch.loc() + "...");
-                        addInsert(insertPatch, insertPatch.loc(), ctMethodToPatch, pool.getMethod(patchClass.getName(), m.getName()));
+                        p = new InsertPatchInfo(insertPatch, insertPatch.loc(), ctMethodToPatch, pool.getMethod(patchClass.getName(), m.getName()));
                     } else {
                         int abs_loc = ctMethodToPatch.getMethodInfo().getLineNumber(0) + insertPatch.rloc();
-                        System.out.println("    Adding Insert @ r" + insertPatch.rloc() + " (abs:" + abs_loc + ")...");
-                        addInsert(insertPatch, abs_loc, ctMethodToPatch, pool.getMethod(patchClass.getName(), m.getName()));
+                        p = new InsertPatchInfo(insertPatch, abs_loc, ctMethodToPatch, pool.getMethod(patchClass.getName(), m.getName()));
                     }
                 } else if (m.getName().equals("Instrument")) {
-                    System.out.println("    Adding Instrument...");
-                    addInstrument(ctMethodToPatch, m);
+                    p = new InstrumentPatchInfo(ctMethodToPatch, m);
                 } else if (m.getName().equals("Replace")) {
-                    System.out.println("    Replacing...");
-                    addReplace(ctMethodToPatch, pool.getMethod(patchClass.getName(), m.getName()));
+                    p = new ReplacePatchInfo(ctMethodToPatch, pool.getMethod(patchClass.getName(), m.getName()));
+                }
+
+                if (p != null) {
+                    patchInfos.add(p);
+                    //p.doPatch();
                 }
             }
 
@@ -212,221 +223,6 @@ public class Patcher {
         }
 
         return ctClasses;
-    }
-
-    private static void addPrefix(CtBehavior ctMethodToPatch, CtMethod prefix) throws CannotCompileException, NotFoundException, ClassNotFoundException
-    {
-        String src = "{\n";
-        String funccall = prefix.getDeclaringClass().getName() + "." + prefix.getName() + "(";
-        String postcallsrc = "";
-        String postcallsrc2 = "";
-
-        int paramOffset = (Modifier.isStatic(ctMethodToPatch.getModifiers()) ? 1 : 0);
-        CtClass[] prefixParamTypes = prefix.getParameterTypes();
-        Object[][] prefixParamAnnotations = prefix.getParameterAnnotations();
-        for (int i = 0; i < prefixParamTypes.length; ++i) {
-            if (paramByRef(prefixParamAnnotations[i])) {
-                src += prefixParamTypes[i].getName() + " __param" + i + " = new " + prefixParamTypes[i].getName() + "{" + "$" + (i + paramOffset) + "};\n";
-                funccall += "__param" + i;
-
-                postcallsrc += "$" + (i + paramOffset) + " = ";
-                postcallsrc2 += "$" + (i + paramOffset) + " = ";
-
-                String typename = paramByRefTypename2(ctMethodToPatch, i);
-                if (!typename.isEmpty()) {
-                    postcallsrc += "(" + typename + ")";
-                    postcallsrc2 += "(com.megacrit.cardcrawl." + typename + ")";
-                }
-                postcallsrc += "__param" + i + "[0];\n";
-                postcallsrc2 += "__param" + i + "[0];\n";
-            } else {
-                funccall += "$" + (i + paramOffset);
-            }
-            if (i < prefixParamTypes.length - 1) {
-                funccall += ", ";
-            }
-        }
-
-        src += funccall + ");\n";
-        String src2 = src;
-        src += postcallsrc + "}";
-        src2 += postcallsrc2 + "}";
-
-        System.out.println(src);
-        try {
-            if (ctMethodToPatch instanceof CtConstructor && !((CtConstructor) ctMethodToPatch).isClassInitializer()) {
-                ((CtConstructor) ctMethodToPatch).insertBeforeBody(src);
-            } else {
-                ctMethodToPatch.insertBefore(src);
-            }
-        } catch (javassist.CannotCompileException e) {
-            try {
-                if (ctMethodToPatch instanceof CtConstructor) {
-                    ((CtConstructor) ctMethodToPatch).insertBeforeBody(src2);
-                } else {
-                    ctMethodToPatch.insertBefore(src2);
-                }
-            } catch (javassist.CannotCompileException e2) {
-                throw e;
-            }
-        }
-    }
-
-    private static void addPostfix(CtBehavior ctMethodToPatch, CtMethod postfix) throws NotFoundException, CannotCompileException {
-        CtClass returnType = postfix.getReturnType();
-        CtClass[] parameters = postfix.getParameterTypes();
-
-        boolean returnsValue = false;
-        boolean takesResultParam = false;
-
-        if (!returnType.equals(CtPrimitiveType.voidType)) {
-            returnsValue = true;
-            System.out.println("      Return: " + returnType.getName());
-        }
-        if (parameters.length >= 1 && parameters[0].equals(returnType)) {
-            takesResultParam = true;
-            System.out.println("      Result param: " + parameters[0].getName());
-        }
-
-        String src = postfix.getDeclaringClass().getName() + "." + postfix.getName() + "(";
-        if (returnsValue) {
-            src = "return ($r)" + src;
-        }
-        if (takesResultParam) {
-            src += "$_";
-        }
-        if (!Modifier.isStatic(ctMethodToPatch.getModifiers())) {
-            if (src.charAt(src.length()-1) != '(') {
-                src += ", ";
-            }
-            src += "$0";
-        }
-        if (src.charAt(src.length()-1) != '(') {
-            src += ", ";
-        }
-        src += "$$);";
-        System.out.println("      " + src);
-        ctMethodToPatch.insertAfter(src);
-    }
-
-    private static void addInsert(SpireInsertPatch info, int loc, CtBehavior ctMethodToPatch, CtMethod insert) throws CannotCompileException, NotFoundException, ClassNotFoundException
-    {
-        CtClass[] insertParamTypes = insert.getParameterTypes();
-        Object[][] insertParamAnnotations = insert.getParameterAnnotations();
-        int insertParamsStartIndex = ctMethodToPatch.getParameterTypes().length;
-        if (!Modifier.isStatic(ctMethodToPatch.getModifiers())) {
-            insertParamsStartIndex += 1;
-        }
-        String[] localVarTypeNames = new String[insertParamAnnotations.length - insertParamsStartIndex];
-        for (int i = insertParamsStartIndex; i < insertParamAnnotations.length; ++i) {
-            if (paramByRef(insertParamAnnotations[i])) {
-                if (!insertParamTypes[i].isArray()) {
-                    System.out.println("      WARNING: ByRef parameter is not array type");
-                } else {
-                    localVarTypeNames[i - insertParamsStartIndex] = insertParamTypes[i].getName();
-                }
-            }
-        }
-
-        String src = "{\n";
-        // Setup array holders for each local variable
-        for (int i = 0; i < info.localvars().length; ++i) {
-            if (localVarTypeNames[i] != null) {
-                src += localVarTypeNames[i] + " __" + info.localvars()[i] + " = new " + localVarTypeNames[i] + "{" + info.localvars()[i] + "};\n";
-            }
-        }
-
-        src += insert.getDeclaringClass().getName() + "." + insert.getName() + "(";
-        if (!Modifier.isStatic(ctMethodToPatch.getModifiers())) {
-            if (src.charAt(src.length()-1) != '(') {
-                src += ", ";
-            }
-            src += "$0";
-        }
-        if (src.charAt(src.length()-1) != '(') {
-            src += ", ";
-        }
-        src += "$$";
-        for (int i = 0; i < info.localvars().length; ++i) {
-            src += ", ";
-            if (localVarTypeNames[i] != null) {
-                src += "__";
-            }
-            src += info.localvars()[i];
-        }
-        src += ");\n";
-
-        String src2 = src;
-        // Set local variables to changed values
-        for (int i = 0; i < info.localvars().length; ++i) {
-            if (localVarTypeNames[i] != null) {
-                src += info.localvars()[i] + " = ";
-                src2 += info.localvars()[i] + " = ";
-
-                String typename = paramByRefTypename(insertParamAnnotations[i + insertParamsStartIndex]);
-                if (!typename.isEmpty()) {
-                    src += "(" + typename + ")";
-                    src2 += "(com.megacrit.cardcrawl." + typename + ")";
-                }
-                src += "__" + info.localvars()[i] + "[0];\n";
-                src2 += "__" + info.localvars()[i] + "[0];\n";
-            }
-        }
-        src += "}";
-        src2 += "}";
-        System.out.println(src);
-        try {
-            ctMethodToPatch.insertAt(loc, src);
-        } catch (javassist.CannotCompileException e) {
-            try {
-                ctMethodToPatch.insertAt(loc, src2);
-            } catch (javassist.CannotCompileException e2) {
-                throw e;
-            }
-        }
-    }
-
-    private static void addInstrument(CtBehavior ctMethodToPatch, Method method) throws InvocationTargetException, IllegalAccessException, CannotCompileException
-    {
-        ExprEditor exprEditor = (ExprEditor)method.invoke(null);
-        ctMethodToPatch.instrument(exprEditor);
-    }
-
-    private static void addReplace(CtBehavior ctMethodToPatch, CtMethod method) throws CannotCompileException
-    {
-        ((CtMethod)ctMethodToPatch).setBody(method, null);
-    }
-
-    private static boolean paramByRef(Object[] annotations) {
-        for (Object o : annotations) {
-            if (o instanceof ByRef) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // Gets the typename from the ByRef annotation
-    private static String paramByRefTypename(Object[] annotations) {
-        for (Object o : annotations) {
-            if (o instanceof ByRef) {
-                return ((ByRef) o).type();
-            }
-        }
-        return "";
-    }
-
-    // Gets the typename from the patched method's marameter types
-    private static String paramByRefTypename2(CtBehavior ctMethodToPatch, int index) throws NotFoundException
-    {
-        if (!Modifier.isStatic(ctMethodToPatch.getModifiers())) {
-            --index;
-        }
-        try {
-            return ctMethodToPatch.getParameterTypes()[index].getName();
-        } catch (ArrayIndexOutOfBoundsException e) {
-            return null;
-        }
     }
 
     private static CtClass[] patchParamTypes(ClassPool pool, SpirePatch patch) throws NotFoundException {
