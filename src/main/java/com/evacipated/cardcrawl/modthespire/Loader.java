@@ -23,7 +23,7 @@ public class Loader {
     private static String MOD_DIR = "mods/";
     public static String STS_JAR = "desktop-1.0.jar";
     private static String STS_JAR2 = "SlayTheSpire.jar";
-    public static String COREPATCHES_JAR = "corepatches.jar";
+    public static String COREPATCHES_JAR = "/corepatches.jar";
     public static ModInfo[] MODINFOS;
     public static URL[] MODONLYURLS;
 
@@ -63,7 +63,7 @@ public class Loader {
 
             // Construct ClassLoader
             URL[] modUrls = buildUrlArray(modJars);
-            MTSClassLoader loader = new MTSClassLoader(ClassLoader.getSystemResourceAsStream(COREPATCHES_JAR), modUrls, ClassLoader.getSystemClassLoader());
+            MTSClassLoader loader = new MTSClassLoader(Loader.class.getResourceAsStream(COREPATCHES_JAR), modUrls, ClassLoader.getSystemClassLoader());
 
             if (modJars.length > 0) {
                 ModInfo[] modInfos = buildInfoArray(modJars);
@@ -80,7 +80,7 @@ public class Loader {
                 Set<CtClass> ctClasses = new HashSet<>();
                 // Find and inject core patches
                 System.out.println("Finding core patches...");
-                ctClasses.addAll(Patcher.injectPatches(loader, pool, Patcher.findPatches(new URL[]{ClassLoader.getSystemResource(Loader.COREPATCHES_JAR)})));
+                ctClasses.addAll(Patcher.injectPatches(loader, pool, Patcher.findPatches(new URL[]{Loader.class.getResource(Loader.COREPATCHES_JAR)})));
                 // Find and inject mod patches
                 System.out.println("Finding patches...");
                 ctClasses.addAll(Patcher.injectPatches(loader, pool, Patcher.findPatches(modOnlyUrls, MODINFOS)));
@@ -89,7 +89,7 @@ public class Loader {
                 Patcher.compilePatches(loader, ctClasses);
 
                 System.out.printf("Patching enums...");
-                Patcher.patchEnums(loader, ClassLoader.getSystemResource(Loader.COREPATCHES_JAR));
+                Patcher.patchEnums(loader, Loader.class.getResource(Loader.COREPATCHES_JAR));
                 // Patch SpireEnums from mods
                 Patcher.patchEnums(loader, Loader.MODONLYURLS);
                 System.out.println("Done.");
