@@ -63,7 +63,7 @@ public class Loader {
 
             // Construct ClassLoader
             URL[] modUrls = buildUrlArray(modJars);
-            MTSClassLoader loader = new MTSClassLoader(Loader.class.getResourceAsStream(COREPATCHES_JAR), modUrls, ClassLoader.getSystemClassLoader());
+            MTSClassLoader loader = new MTSClassLoader(Loader.class.getResourceAsStream(COREPATCHES_JAR), modUrls, Loader.class.getClassLoader());
 
             if (modJars.length > 0) {
                 ModInfo[] modInfos = buildInfoArray(modJars);
