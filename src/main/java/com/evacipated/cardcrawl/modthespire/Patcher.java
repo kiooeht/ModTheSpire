@@ -3,10 +3,8 @@ package com.evacipated.cardcrawl.modthespire;
 import com.evacipated.cardcrawl.modthespire.lib.*;
 import com.evacipated.cardcrawl.modthespire.patcher.*;
 import javassist.*;
-import javassist.expr.ExprEditor;
 import org.scannotation.AnnotationDB;
 
-import javax.sound.midi.Patch;
 import javax.swing.*;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -163,13 +161,13 @@ public class Patcher {
 
         HashSet<CtClass> ctClasses = new HashSet<CtClass>();
         for (String cls_name : class_names) {
-            Class<?> patchClass = loader.loadClass(cls_name);
-            if (!patchClass.isAnnotationPresent(SpirePatch.class)) {
+            CtClass ctPatchClass = pool.get(cls_name);
+            if (!ctPatchClass.hasAnnotation(SpirePatch.class)) {
                 JOptionPane.showMessageDialog(null, "Something went wrong finding SpirePatch on [" + cls_name + "].\n" +
                         "Most likely the mod was compiled with a different version of ModTheSpireLib.");
                 continue;
             }
-            SpirePatch patch = patchClass.getAnnotation(SpirePatch.class);
+            SpirePatch patch = (SpirePatch) ctPatchClass.getAnnotation(SpirePatch.class);
 
             CtClass ctClsToPatch = pool.get(patch.cls());
             CtBehavior ctMethodToPatch = null;
@@ -198,33 +196,32 @@ public class Patcher {
             if (ctMethodToPatch == null)
                 continue;
 
-            for (Method m : patchClass.getDeclaredMethods()) {
+            for (CtMethod m : ctPatchClass.getDeclaredMethods()) {
                 PatchInfo p = null;
                 if (m.getName().equals("Prefix")) {
-                    p = new PrefixPatchInfo(ctMethodToPatch, pool.getMethod(patchClass.getName(), m.getName()));
+                    p = new PrefixPatchInfo(ctMethodToPatch, m);
                 } else if (m.getName().equals("Postfix")) {
-                    p = new PostfixPatchInfo(ctMethodToPatch, pool.getMethod(patchClass.getName(), m.getName()));
+                    p = new PostfixPatchInfo(ctMethodToPatch, m);
                 } else if (m.getName().equals("Insert")) {
-                    SpireInsertPatch insertPatch = m.getAnnotation(SpireInsertPatch.class);
+                    SpireInsertPatch insertPatch = (SpireInsertPatch) m.getAnnotation(SpireInsertPatch.class);
                     if (insertPatch == null) {
                         System.err.println("    ERROR: Insert missing SpireInsertPatch info!");
                     } else if (insertPatch.loc() == -1 && insertPatch.rloc() == -1) {
                         System.err.println("    ERROR: SpireInsertPatch missing line number! Must specify either loc or rloc");
                     } else if (insertPatch.loc() >= 0) {
-                        p = new InsertPatchInfo(insertPatch, insertPatch.loc(), ctMethodToPatch, pool.getMethod(patchClass.getName(), m.getName()));
+                        p = new InsertPatchInfo(insertPatch, insertPatch.loc(), ctMethodToPatch, m);
                     } else {
                         int abs_loc = ctMethodToPatch.getMethodInfo().getLineNumber(0) + insertPatch.rloc();
-                        p = new InsertPatchInfo(insertPatch, abs_loc, ctMethodToPatch, pool.getMethod(patchClass.getName(), m.getName()));
+                        p = new InsertPatchInfo(insertPatch, abs_loc, ctMethodToPatch, m);
                     }
                 } else if (m.getName().equals("Instrument")) {
-                    p = new InstrumentPatchInfo(ctMethodToPatch, m);
+                    p = new InstrumentPatchInfo(ctMethodToPatch, loader.loadClass(cls_name).getDeclaredMethod(m.getName()));
                 } else if (m.getName().equals("Replace")) {
-                    p = new ReplacePatchInfo(ctMethodToPatch, pool.getMethod(patchClass.getName(), m.getName()));
+                    p = new ReplacePatchInfo(ctMethodToPatch, m);
                 }
 
                 if (p != null) {
                     patchInfos.add(p);
-                    //p.doPatch();
                 }
             }
 
