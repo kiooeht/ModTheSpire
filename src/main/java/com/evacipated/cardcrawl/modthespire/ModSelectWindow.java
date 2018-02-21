@@ -72,7 +72,20 @@ public class ModSelectWindow extends JFrame {
             });
             t.start();
         });
-        add(playBtn, BorderLayout.SOUTH);
+
+        JPanel playPane = new JPanel();
+        playPane.setLayout(new BorderLayout());
+        playPane.add(playBtn, BorderLayout.CENTER);
+        JCheckBox debugCheck = new JCheckBox("Debug");
+        if (Loader.DEBUG) {
+            debugCheck.setSelected(true);
+        }
+        debugCheck.addActionListener((ActionEvent event) -> {
+            Loader.DEBUG = debugCheck.isSelected();
+        });
+        playPane.add(debugCheck, BorderLayout.EAST);
+
+        add(playPane, BorderLayout.SOUTH);
 
         pack();
         setLocationRelativeTo(null);

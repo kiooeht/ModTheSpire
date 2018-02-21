@@ -32,7 +32,6 @@ public class Loader {
     public static void main(String[] args) {
         ARGS = args;
         if (Arrays.asList(args).contains("--debug")) {
-            System.out.println("Debug mode!");
             DEBUG = true;
         }
 
@@ -53,6 +52,7 @@ public class Loader {
 
     // runMods - sets up the ClassLoader, sets the isModded flag and launches the game
     public static void runMods(File[] modJars) {
+        System.out.println("Debug mode!");
         try {
             // Check that desktop-1.0.jar exists
             File tmp = new File(STS_JAR);
