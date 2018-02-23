@@ -19,7 +19,7 @@ import java.util.List;
 public class Loader {
     public static boolean DEBUG = false;
 
-    public static Version MTS_VERSION = new Version("2.2.1");
+    public static Version MTS_VERSION = new Version("2.3.0");
     private static String MOD_DIR = "mods/";
     public static String STS_JAR = "desktop-1.0.jar";
     private static String STS_JAR2 = "SlayTheSpire.jar";
