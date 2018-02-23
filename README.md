@@ -29,7 +29,7 @@ ModTheSpire is a tool to load external mods for Slay the Spire without modifying
 
 ## Changelog ##
 #### v2.3.0 ####
-* Allow patching static initializers ("<staticinit>")
+* Allow patching static initializers (`"<staticinit>"`)
 * Replace patches, completely replace a method
 * Raw patches, gives complete access to Javassist API
 * Patch loading order now: Insert, Instrument, Replace, Prefix, Postfix, Raw
