@@ -218,6 +218,8 @@ public class Patcher {
                     p = new InstrumentPatchInfo(ctMethodToPatch, loader.loadClass(cls_name).getDeclaredMethod(m.getName()));
                 } else if (m.getName().equals("Replace")) {
                     p = new ReplacePatchInfo(ctMethodToPatch, m);
+                } else if (m.getName().equals("Raw")) {
+                    p = new RawPatchInfo(ctMethodToPatch, findRawMethod(loader.loadClass(cls_name), m.getName()));
                 }
 
                 if (p != null) {
@@ -237,5 +239,15 @@ public class Patcher {
             return null;
 
         return pool.get(patch.paramtypes());
+    }
+
+    private static Method findRawMethod(Class<?> cls, String name) throws NoSuchMethodException
+    {
+        for (Method m : cls.getDeclaredMethods()) {
+            if (m.getName().equals(name) && m.getParameterCount() == 1) {
+                return m;
+            }
+        }
+        throw new NoSuchMethodException();
     }
 }

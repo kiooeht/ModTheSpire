@@ -5,7 +5,7 @@ import java.util.Comparator;
 public class PatchInfoComparator implements Comparator<PatchInfo>
 {
     // Ordering:
-    //   Insert, Instrument, Replace, Prefix, Postfix
+    //   Insert, Instrument, Replace, Prefix, Postfix, Raw
     //   Then sorted by mod load order
     @Override
     public int compare(PatchInfo o1, PatchInfo o2)
