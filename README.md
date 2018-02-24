@@ -28,6 +28,17 @@ ModTheSpire is a tool to load external mods for Slay the Spire without modifying
 * [Wiki](https://github.com/kiooeht/ModTheSpire/wiki/SpirePatch)
 
 ## Changelog ##
+#### v2.3.0 ####
+* Allow patching static initializers (`"<staticinit>"`)
+* Replace patches, completely replace a method
+* Raw patches, gives complete access to Javassist API
+* Patch loading order now: Insert, Instrument, Replace, Prefix, Postfix, Raw
+* Include mod author and description in launcher (test447)
+* Debug mode: Displays some additional info for modders
+  * Enable with `--debug` flag or checkbox in GUI
+* ByRef can auto-determine parameter type for Prefix patches
+* Fix: ModTheSpire can now be run through SlayTheSpire.exe
+
 #### v2.2.1 ####
 * Fix: ByRef can now specify the real type name when using `Object` as parameter type
 
