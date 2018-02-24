@@ -1,6 +1,7 @@
 package com.evacipated.cardcrawl.modthespire;
 
 import com.evacipated.cardcrawl.modthespire.classfilters.CardFilter;
+import com.evacipated.cardcrawl.modthespire.classfilters.RelicFilter;
 import org.clapper.util.classutil.*;
 
 import java.io.File;
@@ -12,7 +13,7 @@ import java.util.List;
 
 public class CustomContent
 {
-    public static List<String> findCards(URL[] urls) throws URISyntaxException
+    public static List<String> find(ClassFilter typeFilter, URL[] urls) throws URISyntaxException
     {
         ClassFinder finder = new ClassFinder();
         File[] files = new File[urls.length];
@@ -25,7 +26,7 @@ public class CustomContent
             new AndClassFilter(
                 new NotClassFilter(new InterfaceOnlyClassFilter()),
                 new NotClassFilter(new AbstractClassFilter()),
-                new CardFilter()
+                typeFilter
             );
         Collection<ClassInfo> foundClasses = new ArrayList<>();
         finder.findClasses(foundClasses, filter);
@@ -35,5 +36,15 @@ public class CustomContent
             ret.add(classInfo.getClassName());
         }
         return ret;
+    }
+
+    public static List<String> findCards(URL[] urls) throws URISyntaxException
+    {
+        return find(new CardFilter(), urls);
+    }
+
+    public static List<String> findRelics(URL[] urls) throws URISyntaxException
+    {
+        return find(new RelicFilter(), urls);
     }
 }

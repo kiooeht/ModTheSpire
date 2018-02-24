@@ -28,6 +28,7 @@ public class Loader {
     public static URL[] MODONLYURLS;
 
     public static List<String> MODCARDS;
+    public static List<String> MODRELICS;
 
     private static Object ARGS;
 
@@ -94,6 +95,8 @@ public class Loader {
 
                 System.out.println("Finding cards...");
                 MODCARDS = CustomContent.findCards(modOnlyUrls);
+                System.out.println("Finding relics...");
+                MODRELICS = CustomContent.findRelics(modOnlyUrls);
 
                 System.out.printf("Patching enums...");
                 Patcher.patchEnums(loader, Loader.class.getResource(Loader.COREPATCHES_JAR));
