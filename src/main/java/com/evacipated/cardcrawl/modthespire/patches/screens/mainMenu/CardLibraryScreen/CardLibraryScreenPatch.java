@@ -139,11 +139,19 @@ public class CardLibraryScreenPatch
                 renderGroup.setAccessible(true);
 
                 for (Map.Entry<AbstractCard.CardColor, CardGroup> cards : Initialize.cardGroupMap.entrySet()) {
-                    renderGroup.invoke(__obj_instance, sbObj, cards.getValue(), cards.getKey().name(), "");
+                    renderGroup.invoke(__obj_instance, sbObj, cards.getValue(), capitalizeWord(cards.getKey().name()), "");
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+
+        private static String capitalizeWord(String str)
+        {
+            if (str.isEmpty()) {
+                return str;
+            }
+            return str.substring(0, 1).toUpperCase() + (str.length() > 1 ? str.substring(1).toLowerCase() : "");
         }
     }
 }
