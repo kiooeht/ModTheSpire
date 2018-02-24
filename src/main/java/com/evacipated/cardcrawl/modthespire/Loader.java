@@ -170,7 +170,7 @@ public class Loader {
     // getAllModFiles - returns a File array containing all of the JAR files in the mods directory
     private static File[] getAllModFiles() {
         File file = new File(MOD_DIR);
-        if (!file.exists() || !file.isDirectory()) return null;
+        if (!file.exists() || !file.isDirectory()) return new File[0];
 
         File[] files = file.listFiles(new FilenameFilter() {
             @Override
@@ -180,6 +180,6 @@ public class Loader {
         });
 
         if (files.length > 0) return files;
-        return null;
+        return new File[0];
     }
 }
