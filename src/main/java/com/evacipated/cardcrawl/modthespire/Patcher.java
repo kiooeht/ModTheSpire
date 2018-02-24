@@ -63,6 +63,7 @@ public class Patcher {
                 }
                 db.scanArchives(urls[i]);
                 patchSetList.add(db.getAnnotationIndex().get(SpirePatch.class.getName()));
+                patchSetList.add(db.getAnnotationIndex().get(SpirePatches.class.getName()));
             } else {
                 String str = "ERROR: " + modInfos[i].Name + " requires ModTheSpire v" + modInfos[i].MTS_Version.get() + " or greater!";
                 System.out.println(str);
@@ -162,72 +163,79 @@ public class Patcher {
         HashSet<CtClass> ctClasses = new HashSet<CtClass>();
         for (String cls_name : class_names) {
             CtClass ctPatchClass = pool.get(cls_name);
-            if (!ctPatchClass.hasAnnotation(SpirePatch.class)) {
-                JOptionPane.showMessageDialog(null, "Something went wrong finding SpirePatch on [" + cls_name + "].\n" +
-                        "Most likely the mod was compiled with a different version of ModTheSpireLib.");
-                continue;
-            }
-            SpirePatch patch = (SpirePatch) ctPatchClass.getAnnotation(SpirePatch.class);
 
-            CtClass ctClsToPatch = pool.get(patch.cls());
-            CtBehavior ctMethodToPatch = null;
-            try {
-                CtClass[] ctParamTypes = patchParamTypes(pool, patch);
-                if (patch.method().equals("ctor")) {
-                    if (ctParamTypes == null)
-                        ctMethodToPatch = ctClsToPatch.getDeclaredConstructors()[0];
-                    else
-                        ctMethodToPatch = ctClsToPatch.getDeclaredConstructor(ctParamTypes);
-                } else if (patch.method().equals("<staticinit>")) {
-                    ctMethodToPatch = ctClsToPatch.getClassInitializer();
-                    if (ctMethodToPatch == null) {
-                        System.out.println("No class initializer, making one");
-                        ctMethodToPatch = ctClsToPatch.makeClassInitializer();
-                    }
-                } else {
-                    if (ctParamTypes == null)
-                        ctMethodToPatch = ctClsToPatch.getDeclaredMethod(patch.method());
-                    else
-                        ctMethodToPatch = ctClsToPatch.getDeclaredMethod(patch.method(), ctParamTypes);
+            SpirePatch[] patchArr = null;
+            SpirePatches patches = (SpirePatches) ctPatchClass.getAnnotation(SpirePatches.class);
+            if (patches != null) {
+                patchArr = patches.value();
+            } else {
+                SpirePatch patch = (SpirePatch) ctPatchClass.getAnnotation(SpirePatch.class);
+                if (patch != null) {
+                    patchArr = new SpirePatch[]{patch};
                 }
-            } catch (NotFoundException e) {
-                System.err.println("ERROR: No method [" + patch.method() + "] found on class [" + patch.cls() + "]");
             }
-            if (ctMethodToPatch == null)
-                continue;
 
-            for (CtMethod m : ctPatchClass.getDeclaredMethods()) {
-                PatchInfo p = null;
-                if (m.getName().equals("Prefix")) {
-                    p = new PrefixPatchInfo(ctMethodToPatch, m);
-                } else if (m.getName().equals("Postfix")) {
-                    p = new PostfixPatchInfo(ctMethodToPatch, m);
-                } else if (m.getName().equals("Insert")) {
-                    SpireInsertPatch insertPatch = (SpireInsertPatch) m.getAnnotation(SpireInsertPatch.class);
-                    if (insertPatch == null) {
-                        System.err.println("    ERROR: Insert missing SpireInsertPatch info!");
-                    } else if (insertPatch.loc() == -1 && insertPatch.rloc() == -1) {
-                        System.err.println("    ERROR: SpireInsertPatch missing line number! Must specify either loc or rloc");
-                    } else if (insertPatch.loc() >= 0) {
-                        p = new InsertPatchInfo(insertPatch, insertPatch.loc(), ctMethodToPatch, m);
+            for (SpirePatch patch : patchArr) {
+                CtClass ctClsToPatch = pool.get(patch.cls());
+                CtBehavior ctMethodToPatch = null;
+                try {
+                    CtClass[] ctParamTypes = patchParamTypes(pool, patch);
+                    if (patch.method().equals("ctor")) {
+                        if (ctParamTypes == null)
+                            ctMethodToPatch = ctClsToPatch.getDeclaredConstructors()[0];
+                        else
+                            ctMethodToPatch = ctClsToPatch.getDeclaredConstructor(ctParamTypes);
+                    } else if (patch.method().equals("<staticinit>")) {
+                        ctMethodToPatch = ctClsToPatch.getClassInitializer();
+                        if (ctMethodToPatch == null) {
+                            System.out.println("No class initializer, making one");
+                            ctMethodToPatch = ctClsToPatch.makeClassInitializer();
+                        }
                     } else {
-                        int abs_loc = ctMethodToPatch.getMethodInfo().getLineNumber(0) + insertPatch.rloc();
-                        p = new InsertPatchInfo(insertPatch, abs_loc, ctMethodToPatch, m);
+                        if (ctParamTypes == null)
+                            ctMethodToPatch = ctClsToPatch.getDeclaredMethod(patch.method());
+                        else
+                            ctMethodToPatch = ctClsToPatch.getDeclaredMethod(patch.method(), ctParamTypes);
                     }
-                } else if (m.getName().equals("Instrument")) {
-                    p = new InstrumentPatchInfo(ctMethodToPatch, loader.loadClass(cls_name).getDeclaredMethod(m.getName()));
-                } else if (m.getName().equals("Replace")) {
-                    p = new ReplacePatchInfo(ctMethodToPatch, m);
-                } else if (m.getName().equals("Raw")) {
-                    p = new RawPatchInfo(ctMethodToPatch, findRawMethod(loader.loadClass(cls_name), m.getName()));
+                } catch (NotFoundException e) {
+                    System.err.println("ERROR: No method [" + patch.method() + "] found on class [" + patch.cls() + "]");
+                }
+                if (ctMethodToPatch == null)
+                    continue;
+
+                for (CtMethod m : ctPatchClass.getDeclaredMethods()) {
+                    PatchInfo p = null;
+                    if (m.getName().equals("Prefix")) {
+                        p = new PrefixPatchInfo(ctMethodToPatch, m);
+                    } else if (m.getName().equals("Postfix")) {
+                        p = new PostfixPatchInfo(ctMethodToPatch, m);
+                    } else if (m.getName().equals("Insert")) {
+                        SpireInsertPatch insertPatch = (SpireInsertPatch) m.getAnnotation(SpireInsertPatch.class);
+                        if (insertPatch == null) {
+                            System.err.println("    ERROR: Insert missing SpireInsertPatch info!");
+                        } else if (insertPatch.loc() == -1 && insertPatch.rloc() == -1) {
+                            System.err.println("    ERROR: SpireInsertPatch missing line number! Must specify either loc or rloc");
+                        } else if (insertPatch.loc() >= 0) {
+                            p = new InsertPatchInfo(insertPatch, insertPatch.loc(), ctMethodToPatch, m);
+                        } else {
+                            int abs_loc = ctMethodToPatch.getMethodInfo().getLineNumber(0) + insertPatch.rloc();
+                            p = new InsertPatchInfo(insertPatch, abs_loc, ctMethodToPatch, m);
+                        }
+                    } else if (m.getName().equals("Instrument")) {
+                        p = new InstrumentPatchInfo(ctMethodToPatch, loader.loadClass(cls_name).getDeclaredMethod(m.getName()));
+                    } else if (m.getName().equals("Replace")) {
+                        p = new ReplacePatchInfo(ctMethodToPatch, m);
+                    } else if (m.getName().equals("Raw")) {
+                        p = new RawPatchInfo(ctMethodToPatch, findRawMethod(loader.loadClass(cls_name), m.getName()));
+                    }
+
+                    if (p != null) {
+                        patchInfos.add(p);
+                    }
                 }
 
-                if (p != null) {
-                    patchInfos.add(p);
-                }
+                ctClasses.add(ctClsToPatch);
             }
-
-            ctClasses.add(ctClsToPatch);
         }
 
         return ctClasses;
