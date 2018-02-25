@@ -4,6 +4,9 @@ import com.badlogic.gdx.graphics.Color;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.helpers.CardHelper;
+import javassist.CannotCompileException;
+import javassist.expr.ExprEditor;
+import javassist.expr.MethodCall;
 
 import java.lang.reflect.Field;
 
@@ -50,5 +53,19 @@ public class CreateCardImage
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    // Stop needless logger errors
+    public static ExprEditor Instrument()
+    {
+        return new ExprEditor() {
+            @Override
+            public void edit(MethodCall m) throws CannotCompileException
+            {
+                if (m.getMethodName().equals("info")) {
+                    m.replace("");
+                }
+            }
+        };
     }
 }
