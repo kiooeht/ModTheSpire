@@ -47,6 +47,12 @@ public class Loader {
         EventQueue.invokeLater(() -> {
            ModSelectWindow ex = new ModSelectWindow(getAllModFiles());
             ex.setVisible(true);
+
+            String java_version = System.getProperty("java.version");
+            if (!java_version.startsWith("1.8")) {
+                String msg = "ModTheSpire requires Java version 8 to run properly.\nYou are currently using Java " + java_version;
+                JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE);
+            }
         });
     }
 
