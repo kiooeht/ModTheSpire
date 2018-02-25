@@ -3,10 +3,10 @@ ModTheSpire is a tool to load external mods for Slay the Spire without modifying
 
 ## Requirements ##
 #### General Use ####
-* Java 8+
+* Java 8
 
 #### Development ####
-* Java 8+
+* Java 8
 * Maven
 * [ModTheSpireLib](https://github.com/kiooeht/ModTheSpireLib)
 
@@ -28,6 +28,11 @@ ModTheSpire is a tool to load external mods for Slay the Spire without modifying
 * [Wiki](https://github.com/kiooeht/ModTheSpire/wiki/SpirePatch)
 
 ## Changelog ##
+#### dev ####
+* Allow multiple @SpirePatches on single class
+* Warn if not running with Java 8
+* Fix: NullPointerException when no/empty mods folder
+
 #### v2.3.0 ####
 * Allow patching static initializers (`"<staticinit>"`)
 * Replace patches, completely replace a method
