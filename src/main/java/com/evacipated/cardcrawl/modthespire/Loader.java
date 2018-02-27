@@ -8,6 +8,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -19,7 +20,7 @@ import java.util.List;
 public class Loader {
     public static boolean DEBUG = false;
 
-    public static Version MTS_VERSION = new Version("2.3.0");
+    public static Version MTS_VERSION;
     private static String MOD_DIR = "mods/";
     public static String STS_JAR = "desktop-1.0.jar";
     private static String STS_JAR2 = "SlayTheSpire.jar";
@@ -33,6 +34,15 @@ public class Loader {
         ARGS = args;
         if (Arrays.asList(args).contains("--debug")) {
             DEBUG = true;
+        }
+
+        try {
+            Properties properties = new Properties();
+            properties.load(Loader.class.getResourceAsStream("/META-INF/version.prop"));
+            MTS_VERSION = new Version(properties.getProperty("version"));
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(-1);
         }
 
         try {
