@@ -28,10 +28,12 @@ ModTheSpire is a tool to load external mods for Slay the Spire without modifying
 * [Wiki](https://github.com/kiooeht/ModTheSpire/wiki/SpirePatch)
 
 ## Changelog ##
-#### dev ####
+#### v2.4.0 ####
 * Allow multiple @SpirePatches on single class
 * Warn if not running with Java 8
 * Fix: NullPointerException when no/empty mods folder
+* Fix?: Unable to find `desktop-1.0.jar` on Mac
+* Fix: Sometimes crashing when patching a superclass and subclass
 
 #### v2.3.0 ####
 * Allow patching static initializers (`"<staticinit>"`)
