@@ -127,17 +127,17 @@ public class Patcher {
         System.out.println("Done.");
     }
 
-    public static void compilePatches(ClassLoader loader, Set<CtClass> ctClasses) throws CannotCompileException
+    public static void compilePatches(ClassLoader loader, SortedMap<String, CtClass> ctClasses) throws CannotCompileException
     {
         System.out.printf("Compiling patched classes...");
         if (Loader.DEBUG) {
             System.out.println();
         }
-        for (CtClass cls : ctClasses) {
+        for (Map.Entry<String, CtClass> cls : ctClasses.entrySet()) {
             if (Loader.DEBUG) {
-                System.out.println("  " + cls.getName());
+                System.out.println("  " + cls.getValue().getName());
             }
-            cls.toClass(loader, null);
+            cls.getValue().toClass(loader, null);
         }
         System.out.println("Done.");
     }

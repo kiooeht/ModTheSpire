@@ -3,6 +3,7 @@ package com.evacipated.cardcrawl.modthespire;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.LoaderClassPath;
+import javassist.NotFoundException;
 
 import javax.swing.*;
 import java.awt.*;
@@ -110,13 +111,17 @@ public class Loader {
                 ClassPool pool = ClassPool.getDefault();
                 pool.insertClassPath(new LoaderClassPath(loader));
                 loader.addStreamToClassPool(pool); // Inserts infront of above path
-                Set<CtClass> ctClasses = new HashSet<>();
+                SortedMap<String, CtClass> ctClasses = new TreeMap<>();
                 // Find and inject core patches
                 System.out.println("Finding core patches...");
-                ctClasses.addAll(Patcher.injectPatches(loader, pool, Patcher.findPatches(new URL[]{Loader.class.getResource(Loader.COREPATCHES_JAR)})));
+                for (CtClass cls : Patcher.injectPatches(loader, pool, Patcher.findPatches(new URL[]{Loader.class.getResource(Loader.COREPATCHES_JAR)}))) {
+                    ctClasses.put(countSuperClasses(cls) + cls.getName(), cls);
+                }
                 // Find and inject mod patches
                 System.out.println("Finding patches...");
-                ctClasses.addAll(Patcher.injectPatches(loader, pool, Patcher.findPatches(modOnlyUrls, MODINFOS)));
+                for (CtClass cls :Patcher.injectPatches(loader, pool, Patcher.findPatches(modOnlyUrls, MODINFOS))) {
+                    ctClasses.put(countSuperClasses(cls) + cls.getName(), cls);
+                }
 
                 Patcher.finalizePatches(loader);
                 Patcher.compilePatches(loader, ctClasses);
@@ -233,5 +238,23 @@ public class Loader {
                 System.out.println("Unknown");
             }
         }
+    }
+
+    private static int countSuperClasses(CtClass cls)
+    {
+        String name = cls.getName();
+        int count = 0;
+
+        while (cls != null) {
+            try {
+                cls = cls.getSuperclass();
+            } catch (NotFoundException e) {
+                break;
+            }
+            ++count;
+        }
+
+        System.out.println(name + " superclasses: " + count);
+        return count;
     }
 }
