@@ -23,6 +23,7 @@ public class Loader {
     public static Version MTS_VERSION;
     private static String MOD_DIR = "mods/";
     public static String STS_JAR = "desktop-1.0.jar";
+    private static String MAC_STS_JAR = "SlayTheSpire.app/Contents/Resources/" + STS_JAR;
     private static String STS_JAR2 = "SlayTheSpire.jar";
     public static String COREPATCHES_JAR = "/corepatches.jar";
     public static ModInfo[] MODINFOS;
@@ -73,10 +74,24 @@ public class Loader {
         }
         try {
             // Check that desktop-1.0.jar exists
-            File tmp = new File(STS_JAR);
-            if (!tmp.exists()) {
-                JOptionPane.showMessageDialog(null, "Unable to find '" + STS_JAR + "'");
-                return;
+            {
+                File tmp = new File(STS_JAR);
+                if (!tmp.exists()) {
+                    // Check if for the Mac version
+                    tmp = new File(MAC_STS_JAR);
+                    checkFileInfo(tmp);
+                    if (!tmp.exists()) {
+                        checkFileInfo(new File("SlayTheSpire.app"));
+                        checkFileInfo(new File("SlayTheSpire.app/Contents"));
+                        checkFileInfo(new File("SlayTheSpire.app/Contents/Resources"));
+
+                        JOptionPane.showMessageDialog(null, "Unable to find '" + STS_JAR + "'");
+                        return;
+                    } else {
+                        System.out.println("Using Mac version at: " + MAC_STS_JAR);
+                        STS_JAR = MAC_STS_JAR;
+                    }
+                }
             }
 
             // Construct ClassLoader
@@ -197,5 +212,26 @@ public class Loader {
 
         if (files.length > 0) return files;
         return new File[0];
+    }
+
+    private static void checkFileInfo(File file)
+    {
+        System.out.printf(file.getName() + ": ");
+        System.out.println(file.exists() ? "Exists" : "Does not exist");
+
+        if (file.exists()) {
+            System.out.printf("Type: ");
+            if (file.isFile()) {
+                System.out.println("File");
+            } else if (file.isDirectory()) {
+                System.out.println("Directory");
+                System.out.println("Contents:");
+                for (File subfile : Objects.requireNonNull(file.listFiles())) {
+                    System.out.println("  " + subfile.getName());
+                }
+            } else {
+                System.out.println("Unknown");
+            }
+        }
     }
 }
