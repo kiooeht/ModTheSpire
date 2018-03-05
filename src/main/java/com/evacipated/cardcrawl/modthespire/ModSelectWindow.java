@@ -20,6 +20,8 @@ public class ModSelectWindow extends JFrame {
     private Properties windowProperties;
     private boolean showingLog = false;
     private boolean isMaximized = false;
+    private boolean isCentered = false;
+    private Rectangle location;
     
     public ModSelectWindow(File[] modJars) {
         mods = modJars;
@@ -58,6 +60,21 @@ public class ModSelectWindow extends JFrame {
         if (Integer.parseInt(windowProperties.getProperty("height", String.valueOf(DEFAULT_HEIGHT))) < DEFAULT_HEIGHT) {
             windowProperties.setProperty("height", String.valueOf(DEFAULT_HEIGHT));
         }
+        location = new Rectangle();
+        location.width = Integer.parseInt(windowProperties.getProperty("width", String.valueOf(DEFAULT_WIDTH)));
+        location.height = Integer.parseInt(windowProperties.getProperty("height", String.valueOf(DEFAULT_HEIGHT)));
+        if (windowProperties.getProperty("x", "center").equals("center") || windowProperties.getProperty("y", "center").equals("center")) {
+            isCentered = true;
+        } else {
+            isCentered = false;
+            location.x = Integer.parseInt(windowProperties.getProperty("x", "0"));
+            location.y = Integer.parseInt(windowProperties.getProperty("y", "0"));
+            if (!isInScreenBounds(location)) {
+                windowProperties.setProperty("x", "center");
+                windowProperties.setProperty("y", "center");
+                isCentered = true;
+            }
+        }
 
         saveWindowProperties();
     }
@@ -66,18 +83,6 @@ public class ModSelectWindow extends JFrame {
         setTitle("Mod The Spire " + Loader.MTS_VERSION.get());
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setResizable(true);
-
-        int w, h;
-        try {
-            w = Integer.parseInt(windowProperties.getProperty("width"));
-        } catch (NumberFormatException e) {
-            w = DEFAULT_WIDTH;
-        }
-        try {
-            h = Integer.parseInt(windowProperties.getProperty("height"));
-        } catch (NumberFormatException e) {
-            h = DEFAULT_HEIGHT;
-        }
 
         ModSelectWindow tmpthis = this;
         this.addComponentListener(new ComponentAdapter()
@@ -92,6 +97,22 @@ public class ModSelectWindow extends JFrame {
                     if (!isMaximized) {
                         saveWindowDimensions(d);
                     }
+                }
+            }
+
+            int skipMoves = 2;
+
+            @Override
+            public void componentMoved(ComponentEvent e)
+            {
+                super.componentMoved(e);
+
+                if (!showingLog && skipMoves == 0) {
+                    if (isInScreenBounds(getLocationOnScreen(), getBounds())) {
+                        saveWindowLocation();
+                    }
+                } else if (skipMoves > 0) {
+                    --skipMoves;
                 }
             }
         });
@@ -124,7 +145,7 @@ public class ModSelectWindow extends JFrame {
         LoadOrder.loadModsInOrder(model, mods, info);
 
         JScrollPane modScroller = new JScrollPane(modList);
-        this.getContentPane().setPreferredSize(new Dimension(w, h));
+        this.getContentPane().setPreferredSize(new Dimension(location.width, location.height));
         this.getContentPane().add(modScroller, BorderLayout.CENTER);
 
         // Play button
@@ -178,7 +199,16 @@ public class ModSelectWindow extends JFrame {
         add(playPane, BorderLayout.SOUTH);
 
         pack();
-        setLocationRelativeTo(null);
+        if (isCentered) {
+            setLocationRelativeTo(null);
+        } else {
+            setLocation(location.getLocation());
+        }
+
+        GraphicsDevice[] gs = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
+        for (GraphicsDevice gd : gs) {
+            System.out.println(gd.getDisplayMode().getWidth() + "x" + gd.getDisplayMode().getHeight());
+        }
     }
 
     void saveWindowProperties()
@@ -203,5 +233,35 @@ public class ModSelectWindow extends JFrame {
     {
         windowProperties.setProperty("maximize", String.valueOf(isMaximized));
         saveWindowProperties();
+    }
+
+    void saveWindowLocation()
+    {
+        Point loc = getLocationOnScreen();
+        windowProperties.setProperty("x", String.valueOf(loc.x));
+        windowProperties.setProperty("y", String.valueOf(loc.y));
+        saveWindowProperties();
+    }
+
+    boolean isInScreenBounds(Point location, Rectangle size)
+    {
+        size.setLocation(location);
+        return isInScreenBounds(size);
+    }
+
+    boolean isInScreenBounds(Rectangle location)
+    {
+        for (GraphicsDevice gd : GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()) {
+            Rectangle bounds = gd.getDefaultConfiguration().getBounds();
+            // Expand screen bounds slightly
+            bounds.x -= 10;
+            bounds.width += 20;
+            bounds.y -= 10;
+            bounds.height += 20;
+            if (bounds.contains(location)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
