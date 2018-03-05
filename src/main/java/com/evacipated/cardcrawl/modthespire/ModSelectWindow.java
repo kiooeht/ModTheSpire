@@ -101,12 +101,15 @@ public class ModSelectWindow extends JFrame {
             public void windowStateChanged(WindowEvent e)
             {
                 super.windowStateChanged(e);
-                if ((e.getNewState() & Frame.MAXIMIZED_BOTH) != 0) {
-                    isMaximized = true;
-                    saveWindowMaximize();
-                } else {
-                    isMaximized = false;
-                    saveWindowMaximize();
+
+                if (!showingLog) {
+                    if ((e.getNewState() & Frame.MAXIMIZED_BOTH) != 0) {
+                        isMaximized = true;
+                        saveWindowMaximize();
+                    } else {
+                        isMaximized = false;
+                        saveWindowMaximize();
+                    }
                 }
             }
         });
