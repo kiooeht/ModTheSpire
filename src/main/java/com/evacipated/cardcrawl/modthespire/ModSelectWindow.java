@@ -111,6 +111,7 @@ public class ModSelectWindow extends JFrame {
                     if (isInScreenBounds(getLocationOnScreen(), getBounds())) {
                         saveWindowLocation();
                     }
+                    isCentered = false;
                 } else if (skipMoves > 0) {
                     --skipMoves;
                 }
@@ -167,7 +168,9 @@ public class ModSelectWindow extends JFrame {
 
             setResizable(true);
             pack();
-            setLocationRelativeTo(null);
+            if (isCentered) {
+                setLocationRelativeTo(null);
+            }
             
             Thread tCfg = new Thread(() -> {
                 // Save new load order cfg
