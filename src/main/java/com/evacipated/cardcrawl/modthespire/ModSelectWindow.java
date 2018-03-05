@@ -3,9 +3,7 @@ package com.evacipated.cardcrawl.modthespire;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
+import java.awt.event.*;
 import java.io.*;
 import java.util.Properties;
 
@@ -15,17 +13,24 @@ public class ModSelectWindow extends JFrame {
      */
     private static final long serialVersionUID = -8232997068791248057L;
     private static final String WINDOW_PROPERTIES_FILEPATH = "ModTheSpire.properties";
+    private static final int DEFAULT_WIDTH = 300;
+    private static final int DEFAULT_HEIGHT = 226;
     private File[] mods;
     private ModInfo[] info;
     private Properties windowProperties;
-    private int widthOffset = 0;
-    private int heightOffset = 0;
+    private boolean showingLog = false;
+    private boolean isMaximized = false;
     
     public ModSelectWindow(File[] modJars) {
         mods = modJars;
         info = Loader.buildInfoArray(mods);
         readWindowPosSize();
         initUI();
+        System.out.println(windowProperties.getProperty("maximize"));
+        if (Boolean.parseBoolean(windowProperties.getProperty("maximize", "false"))) {
+            isMaximized = true;
+            this.setExtendedState(this.getExtendedState() | JFrame.MAXIMIZED_BOTH);
+        }
     }
 
     private void readWindowPosSize()
@@ -36,12 +41,14 @@ public class ModSelectWindow extends JFrame {
             try {
                 windowProperties.load(new FileInputStream(file));
             } catch (IOException e) {
+                e.printStackTrace();
             }
         } else {
             windowProperties.setProperty("x", "center");
             windowProperties.setProperty("y", "center");
-            windowProperties.setProperty("width", "300");
-            windowProperties.setProperty("height", "200");
+            windowProperties.setProperty("width", String.valueOf(DEFAULT_WIDTH));
+            windowProperties.setProperty("height", String.valueOf(DEFAULT_HEIGHT));
+            windowProperties.setProperty("maximize", "false");
             saveWindowProperties();
         }
     }
@@ -55,35 +62,43 @@ public class ModSelectWindow extends JFrame {
         try {
             w = Integer.parseInt(windowProperties.getProperty("width"));
         } catch (NumberFormatException e) {
-            w = 300;
+            w = DEFAULT_WIDTH;
         }
         try {
             h = Integer.parseInt(windowProperties.getProperty("height"));
         } catch (NumberFormatException e) {
-            h = 200;
+            h = DEFAULT_HEIGHT;
         }
 
         ModSelectWindow tmpthis = this;
-        final int finalW = w;
-        final int finalH = h;
         this.addComponentListener(new ComponentAdapter()
         {
-            private boolean firstResize = true;
-
             @Override
             public void componentResized(ComponentEvent e)
             {
                 super.componentResized(e);
 
-                Dimension d = tmpthis.getContentPane().getSize();
-                if (firstResize) {
-                    firstResize = false;
-                    widthOffset = d.width - finalW;
-                    heightOffset = d.height - finalH;
+                if (!showingLog) {
+                    Dimension d = tmpthis.getContentPane().getSize();
+                    System.out.println(d.width + ", " + d.height);
+                    if (!isMaximized) {
+                        saveWindowDimensions(d);
+                    }
+                }
+            }
+        });
+        this.addWindowStateListener(new WindowAdapter()
+        {
+            @Override
+            public void windowStateChanged(WindowEvent e)
+            {
+                super.windowStateChanged(e);
+                if ((e.getNewState() & Frame.MAXIMIZED_BOTH) != 0) {
+                    isMaximized = true;
+                    saveWindowMaximize();
                 } else {
-                    d.width -= widthOffset;
-                    d.height -= heightOffset;
-                    setWindowDimensions(d);
+                    isMaximized = false;
+                    saveWindowMaximize();
                 }
             }
         });
@@ -98,12 +113,13 @@ public class ModSelectWindow extends JFrame {
         LoadOrder.loadModsInOrder(model, mods, info);
 
         JScrollPane modScroller = new JScrollPane(modList);
-        modScroller.setPreferredSize(new Dimension(w, h));
+        this.getContentPane().setPreferredSize(new Dimension(w, h));
         this.getContentPane().add(modScroller, BorderLayout.CENTER);
 
         // Play button
         JButton playBtn = new JButton("Play");
         playBtn.addActionListener((ActionEvent event) -> {
+            showingLog = true;
             playBtn.setEnabled(false);
 
             this.getContentPane().removeAll();
@@ -111,7 +127,7 @@ public class ModSelectWindow extends JFrame {
             JTextArea textArea = new JTextArea();
             textArea.setFont(new Font("monospaced", Font.PLAIN, 12));
             JScrollPane logScroller = new JScrollPane(textArea);
-            logScroller.setPreferredSize(new Dimension(700, 800));
+            this.getContentPane().setPreferredSize(new Dimension(700, 800));
             this.getContentPane().add(logScroller, BorderLayout.CENTER);
             MessageConsole mc = new MessageConsole(textArea);
             mc.redirectOut(null, System.out);
@@ -165,10 +181,16 @@ public class ModSelectWindow extends JFrame {
         }
     }
 
-    void setWindowDimensions(Dimension d)
+    void saveWindowDimensions(Dimension d)
     {
         windowProperties.setProperty("width", String.valueOf(d.width));
         windowProperties.setProperty("height", String.valueOf(d.height));
+        saveWindowProperties();
+    }
+
+    void saveWindowMaximize()
+    {
+        windowProperties.setProperty("maximize", String.valueOf(isMaximized));
         saveWindowProperties();
     }
 }
