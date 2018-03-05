@@ -207,11 +207,6 @@ public class ModSelectWindow extends JFrame {
         } else {
             setLocation(location.getLocation());
         }
-
-        GraphicsDevice[] gs = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
-        for (GraphicsDevice gd : gs) {
-            System.out.println(gd.getDisplayMode().getWidth() + "x" + gd.getDisplayMode().getHeight());
-        }
     }
 
     void saveWindowProperties()
