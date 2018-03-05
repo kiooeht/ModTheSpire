@@ -28,6 +28,9 @@ ModTheSpire is a tool to load external mods for Slay the Spire without modifying
 * [Wiki](https://github.com/kiooeht/ModTheSpire/wiki/SpirePatch)
 
 ## Changelog ##
+#### dev ####
+* Maintain launcher window size and position between uses
+
 #### v2.4.0 ####
 * Allow multiple @SpirePatches on single class
 * Warn if not running with Java 8
