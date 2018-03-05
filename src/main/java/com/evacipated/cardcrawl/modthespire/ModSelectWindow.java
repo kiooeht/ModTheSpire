@@ -26,7 +26,6 @@ public class ModSelectWindow extends JFrame {
         info = Loader.buildInfoArray(mods);
         readWindowPosSize();
         initUI();
-        System.out.println(windowProperties.getProperty("maximize"));
         if (Boolean.parseBoolean(windowProperties.getProperty("maximize", "false"))) {
             isMaximized = true;
             this.setExtendedState(this.getExtendedState() | JFrame.MAXIMIZED_BOTH);
@@ -43,14 +42,24 @@ public class ModSelectWindow extends JFrame {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        } else {
-            windowProperties.setProperty("x", "center");
-            windowProperties.setProperty("y", "center");
-            windowProperties.setProperty("width", String.valueOf(DEFAULT_WIDTH));
-            windowProperties.setProperty("height", String.valueOf(DEFAULT_HEIGHT));
-            windowProperties.setProperty("maximize", "false");
-            saveWindowProperties();
         }
+
+        // Ensure all properties are present
+        windowProperties.setProperty("x", windowProperties.getProperty("x", "center"));
+        windowProperties.setProperty("y", windowProperties.getProperty("y", "center"));
+        windowProperties.setProperty("width", windowProperties.getProperty("width", String.valueOf(DEFAULT_WIDTH)));
+        windowProperties.setProperty("height", windowProperties.getProperty("height", String.valueOf(DEFAULT_HEIGHT)));
+        windowProperties.setProperty("maximize", windowProperties.getProperty("maximize", "false"));
+
+        // Sanity check values
+        if (Integer.parseInt(windowProperties.getProperty("width", String.valueOf(DEFAULT_WIDTH))) < DEFAULT_WIDTH) {
+            windowProperties.setProperty("width", String.valueOf(DEFAULT_WIDTH));
+        }
+        if (Integer.parseInt(windowProperties.getProperty("height", String.valueOf(DEFAULT_HEIGHT))) < DEFAULT_HEIGHT) {
+            windowProperties.setProperty("height", String.valueOf(DEFAULT_HEIGHT));
+        }
+
+        saveWindowProperties();
     }
 
     private void initUI() {
@@ -80,7 +89,6 @@ public class ModSelectWindow extends JFrame {
 
                 if (!showingLog) {
                     Dimension d = tmpthis.getContentPane().getSize();
-                    System.out.println(d.width + ", " + d.height);
                     if (!isMaximized) {
                         saveWindowDimensions(d);
                     }
