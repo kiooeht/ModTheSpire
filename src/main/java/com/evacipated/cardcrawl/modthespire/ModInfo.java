@@ -2,6 +2,7 @@ package com.evacipated.cardcrawl.modthespire;
 
 import java.io.File;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -58,7 +59,7 @@ public class ModInfo implements Serializable {
             Properties prop = new Properties();
             InputStream inProp = loader.getResourceAsStream("ModTheSpire.config");
             if (inProp != null) {
-                prop.load(inProp);
+                prop.load(new InputStreamReader(inProp,"UTF-8"));
                 info.Name = prop.getProperty("name");
                 info.Author = prop.getProperty("author");
                 info.MTS_Version = new Version(prop.getProperty("mts_version", "0.0.0"));
