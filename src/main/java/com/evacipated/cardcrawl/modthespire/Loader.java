@@ -7,6 +7,7 @@ import javassist.NotFoundException;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -31,6 +32,7 @@ public class Loader {
     public static URL[] MODONLYURLS;
 
     private static Object ARGS;
+    private static ModSelectWindow ex;
 
     public static void main(String[] args) {
         ARGS = args;
@@ -57,7 +59,7 @@ public class Loader {
         }
 
         EventQueue.invokeLater(() -> {
-           ModSelectWindow ex = new ModSelectWindow(getAllModFiles());
+            ex = new ModSelectWindow(getAllModFiles());
             ex.setVisible(true);
 
             String java_version = System.getProperty("java.version");
@@ -66,6 +68,11 @@ public class Loader {
                 JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE);
             }
         });
+    }
+
+    public static void closeWindow()
+    {
+        ex.dispatchEvent(new WindowEvent(ex, WindowEvent.WINDOW_CLOSING));
     }
 
     // runMods - sets up the ClassLoader, sets the isModded flag and launches the game
