@@ -254,7 +254,6 @@ public class Loader {
             ++count;
         }
 
-        System.out.println(name + " superclasses: " + count);
         return count;
     }
 }
