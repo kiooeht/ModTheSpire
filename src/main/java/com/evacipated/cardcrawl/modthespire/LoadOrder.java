@@ -1,5 +1,6 @@
 package com.evacipated.cardcrawl.modthespire;
 
+import java.awt.*;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
@@ -33,18 +34,18 @@ public class LoadOrder {
         }
     }
     
-    public static void defaultLoad(DefaultListModel<ModPanel> model, File[] mods, ModInfo[] info) {
+    public static void defaultLoad(DefaultListModel<ModPanel> model, File[] mods, ModInfo[] info, Dimension parentSize) {
         for (int i = 0; i < info.length; i++) {
-            model.addElement(new ModPanel(info[i], mods[i]));
+            model.addElement(new ModPanel(info[i], mods[i], parentSize));
         }
         return;
     }
     
-    public static void loadModsInOrder(DefaultListModel<ModPanel> model, File[] mods, ModInfo[] info) {
+    public static void loadModsInOrder(DefaultListModel<ModPanel> model, File[] mods, ModInfo[] info, Dimension parentSize) {
         File cfg_file = new File(CFG_FILE);
         
         if (!cfg_file.exists()) {
-            defaultLoad(model, mods, info);
+            defaultLoad(model, mods, info, parentSize);
             return;
         }
         
@@ -56,7 +57,7 @@ public class LoadOrder {
             System.out.println("could not load config file: " + CFG_FILE);
             System.out.println("exception was: " + e.toString());
             e.printStackTrace();
-            defaultLoad(model, mods, info);
+            defaultLoad(model, mods, info, parentSize);
             return;
         }
         
@@ -96,7 +97,7 @@ public class LoadOrder {
         
         // actually set them in order in the list
         for (ModDescriptor descriptor : loadOrder) {
-			ModPanel toAdd = new ModPanel(descriptor.info, descriptor.mod);
+			ModPanel toAdd = new ModPanel(descriptor.info, descriptor.mod, parentSize);
 			toAdd.checkBox.setSelected(descriptor.checked);
             model.addElement(toAdd);
         }
@@ -131,5 +132,4 @@ public class LoadOrder {
         }
 
     }
-    
 }

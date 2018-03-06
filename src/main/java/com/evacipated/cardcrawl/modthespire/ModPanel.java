@@ -1,15 +1,11 @@
 package com.evacipated.cardcrawl.modthespire;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Font;
+import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.io.File;
 
-import javax.swing.BoxLayout;
-import javax.swing.JCheckBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+import javax.swing.*;
 import javax.swing.border.MatteBorder;
 
 @SuppressWarnings("serial")
@@ -20,12 +16,12 @@ public class ModPanel extends JPanel {
     public JCheckBox checkBox;
     private InfoPanel infoPanel;
     
-    public ModPanel(ModInfo info, File modFile) {
+    public ModPanel(ModInfo info, File modFile, Dimension parentSize) {
         this.info = info;
         this.modFile = modFile;
         this.checkBox = new JCheckBox();
         this.setLayout(new BorderLayout());
-        infoPanel = new InfoPanel();
+        infoPanel = new InfoPanel(parentSize);
         this.add(infoPanel, BorderLayout.CENTER);
 
         if (info.MTS_Version.compareTo(Loader.MTS_VERSION) > 0) {
@@ -38,26 +34,17 @@ public class ModPanel extends JPanel {
     
     public class InfoPanel extends JPanel {
         JPanel buttonPanel;
+        JLabel description;
+        JTextArea author;
 
-        public InfoPanel() {
-            this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+        public InfoPanel(Dimension parentSize) {
+            this.setLayout(new BorderLayout());
             
             buttonPanel = buildButtonPanel(info, checkBox);
             buttonPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-            this.add(buttonPanel);
-            
-            if (info.Description != null && !info.Description.equals("")) {
-                JLabel description = new JLabel(info.Description);
-                description.setFont(description.getFont().deriveFont(Font.PLAIN));
-                description.setAlignmentX(Component.LEFT_ALIGNMENT);
-                this.add(description);
-            }
+            this.add(buttonPanel, BorderLayout.NORTH);
 
-            if (info.Author != null && !info.Author.equals("")) {
-                JLabel author = new JLabel("Author: " + info.Author);
-                author.setAlignmentX(Component.LEFT_ALIGNMENT);
-                this.add(author);
-            }
+            this.add(buildInfoPanel(info, parentSize), BorderLayout.CENTER);
 
             this.setBorder(new MatteBorder(0, 0, 1, 0, Color.darkGray));
         }
@@ -74,6 +61,49 @@ public class ModPanel extends JPanel {
             return buttonPanel;
         }
 
+        public JPanel buildInfoPanel(ModInfo info, Dimension parentSize)
+        {
+            JPanel infoPanel = new JPanel();
+            infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
+
+            if (info.Description != null && !info.Description.equals("")) {
+                description = new JLabel(info.Description);
+                description.setFont(description.getFont().deriveFont(Font.PLAIN));
+                description.setAlignmentX(Component.LEFT_ALIGNMENT);
+                infoPanel.add(description);
+            }
+
+            if (info.Author != null && !info.Author.equals("")) {
+                String[] authors = info.Author.split(",");
+                for (int i=0; i<authors.length; ++i) {
+                    authors[i] = authors[i].trim();
+                }
+                String label = "Author" + (authors.length > 1 ? "s" : "") + ": ";
+                author = new JTextArea(label + String.join(", ", authors));
+                author.setAlignmentX(Component.LEFT_ALIGNMENT);
+                author.setLineWrap(true);
+                author.setWrapStyleWord(true);
+                author.setEditable(false);
+                author.setBorder(null);
+                author.setOpaque(false);
+                author.setFont(author.getFont().deriveFont(Font.BOLD));
+                author.setSize(parentSize.width, author.getPreferredSize().height);
+                infoPanel.add(author);
+
+                author.addComponentListener(new ComponentAdapter()
+                {
+                    @Override
+                    public void componentResized(ComponentEvent e)
+                    {
+                        super.componentResized(e);
+                        System.out.println("resized");
+                    }
+                });
+            }
+
+            return infoPanel;
+        }
+
         @Override
         public void setBackground(Color c)
         {
@@ -81,6 +111,25 @@ public class ModPanel extends JPanel {
             if (buttonPanel != null) {
                 buttonPanel.setBackground(c);
             }
+            if (author != null) {
+                author.setBackground(c);
+            }
+        }
+
+        @Override
+        public Dimension getPreferredSize()
+        {
+            int height = 0;
+            if (buttonPanel != null) {
+                height += buttonPanel.getPreferredSize().height;
+            }
+            if (description != null) {
+                height += description.getPreferredSize().height;
+            }
+            if (author != null) {
+                height += author.getPreferredSize().height;
+            }
+            return new Dimension(-1, height);
         }
     }
     

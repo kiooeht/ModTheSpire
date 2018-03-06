@@ -141,9 +141,9 @@ public class ModSelectWindow extends JFrame {
         setLayout(new BorderLayout());
 
         // Mod List
-	    DefaultListModel<ModPanel> model = new DefaultListModel<>();
+        DefaultListModel<ModPanel> model = new DefaultListModel<>();
         JModPanelCheckBoxList modList = new JModPanelCheckBoxList(model);
-        LoadOrder.loadModsInOrder(model, mods, info);
+        LoadOrder.loadModsInOrder(model, mods, info, new Dimension(location.width, location.height));
 
         JScrollPane modScroller = new JScrollPane(modList);
         this.getContentPane().setPreferredSize(new Dimension(location.width, location.height));
