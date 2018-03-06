@@ -8,9 +8,7 @@ import javassist.NotFoundException;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowEvent;
-import java.io.File;
-import java.io.FilenameFilter;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -31,11 +29,26 @@ public class Loader {
     public static ModInfo[] MODINFOS;
     public static URL[] MODONLYURLS;
 
+    private static final String PROPERTIES_FILEPATH = "ModTheSpire.properties";
+    public static Properties MTS_PROPERTIES;
+
     private static Object ARGS;
     private static ModSelectWindow ex;
 
     public static void main(String[] args) {
         ARGS = args;
+        MTS_PROPERTIES = new Properties();
+        File file = new File(PROPERTIES_FILEPATH);
+        if (file.exists()) {
+            try {
+                MTS_PROPERTIES.load(new FileInputStream(file));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        MTS_PROPERTIES.setProperty("debug", MTS_PROPERTIES.getProperty("debug", Boolean.toString(false)));
+        DEBUG = Boolean.parseBoolean(MTS_PROPERTIES.getProperty("debug", Boolean.toString(false)));
+
         if (Arrays.asList(args).contains("--debug")) {
             DEBUG = true;
         }
@@ -68,6 +81,17 @@ public class Loader {
                 JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE);
             }
         });
+    }
+
+    public static void saveProperties()
+    {
+        try {
+            MTS_PROPERTIES.store(new FileOutputStream(PROPERTIES_FILEPATH), null);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void closeWindow()

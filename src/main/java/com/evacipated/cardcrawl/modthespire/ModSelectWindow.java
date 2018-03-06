@@ -12,7 +12,6 @@ public class ModSelectWindow extends JFrame {
      * 
      */
     private static final long serialVersionUID = -8232997068791248057L;
-    private static final String WINDOW_PROPERTIES_FILEPATH = "ModTheSpire.properties";
     private static final int DEFAULT_WIDTH = 300;
     private static final int DEFAULT_HEIGHT = 226;
     private File[] mods;
@@ -36,15 +35,7 @@ public class ModSelectWindow extends JFrame {
 
     private void readWindowPosSize()
     {
-        windowProperties = new Properties();
-        File file = new File(WINDOW_PROPERTIES_FILEPATH);
-        if (file.exists()) {
-            try {
-                windowProperties.load(new FileInputStream(file));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+        windowProperties = Loader.MTS_PROPERTIES;
 
         // Ensure all properties are present
         windowProperties.setProperty("x", windowProperties.getProperty("x", "center"));
@@ -196,6 +187,8 @@ public class ModSelectWindow extends JFrame {
         }
         debugCheck.addActionListener((ActionEvent event) -> {
             Loader.DEBUG = debugCheck.isSelected();
+            Loader.MTS_PROPERTIES.setProperty("debug", Boolean.toString(Loader.DEBUG));
+            Loader.saveProperties();
         });
         playPane.add(debugCheck, BorderLayout.EAST);
 
@@ -211,13 +204,7 @@ public class ModSelectWindow extends JFrame {
 
     void saveWindowProperties()
     {
-        try {
-            windowProperties.store(new FileOutputStream(WINDOW_PROPERTIES_FILEPATH), null);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        Loader.saveProperties();
     }
 
     void saveWindowDimensions(Dimension d)
