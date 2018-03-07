@@ -36,11 +36,6 @@
             <version>3.2.0</version>
         </dependency>
         <dependency>
-            <groupId>com.evacipated.cardcrawl</groupId>
-            <artifactId>ModTheSpireLib</artifactId>
-            <version>1.4</version>
-        </dependency>
-        <dependency>
             <groupId>com.megacrit.cardcrawl</groupId>
             <artifactId>slaythespire</artifactId>
             <version>015</version>
