@@ -29,10 +29,11 @@ ModTheSpire is a tool to load external mods for Slay the Spire without modifying
 
 ## Changelog ##
 #### dev ####
-* *Merge ModTheSpire and ModTheSpireLib. They are now one project*
+* **Merge ModTheSpire and ModTheSpireLib. They are now one project**
 * Maintain launcher window size and position between uses
 * When not using debug mode, close log window when game closes
 * Retain debug mode between uses
+* SpireConfig: Save/load mod config options from user directory
 * Fix: Launcher UI for long lists of mod authors
 * Fix: UTF-8 support in ModInfo (pk27602017)
 

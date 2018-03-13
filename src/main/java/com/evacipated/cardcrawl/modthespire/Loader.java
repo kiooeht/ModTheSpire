@@ -1,9 +1,11 @@
 package com.evacipated.cardcrawl.modthespire;
 
+import com.evacipated.cardcrawl.modthespire.lib.SpireConfig;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.LoaderClassPath;
 import javassist.NotFoundException;
+import org.clapper.util.classutil.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -29,25 +31,22 @@ public class Loader {
     public static ModInfo[] MODINFOS;
     public static URL[] MODONLYURLS;
 
-    private static final String PROPERTIES_FILEPATH = "ModTheSpire.properties";
-    public static Properties MTS_PROPERTIES;
+    static SpireConfig MTS_CONFIG;
 
     private static Object ARGS;
     private static ModSelectWindow ex;
 
     public static void main(String[] args) {
         ARGS = args;
-        MTS_PROPERTIES = new Properties();
-        File file = new File(PROPERTIES_FILEPATH);
-        if (file.exists()) {
-            try {
-                MTS_PROPERTIES.load(new FileInputStream(file));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        try {
+            Properties defaults = new Properties();
+            defaults.setProperty("debug", Boolean.toString(false));
+            defaults.putAll(ModSelectWindow.getDefaults());
+            MTS_CONFIG = new SpireConfig(null, "ModTheSpire", defaults);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        MTS_PROPERTIES.setProperty("debug", MTS_PROPERTIES.getProperty("debug", Boolean.toString(false)));
-        DEBUG = Boolean.parseBoolean(MTS_PROPERTIES.getProperty("debug", Boolean.toString(false)));
+        DEBUG = MTS_CONFIG.getBool("debug");
 
         if (Arrays.asList(args).contains("--debug")) {
             DEBUG = true;
@@ -71,6 +70,8 @@ public class Loader {
             // NOP
         }
 
+        //findGameVersion();
+
         EventQueue.invokeLater(() -> {
             ex = new ModSelectWindow(getAllModFiles());
             ex.setVisible(true);
@@ -81,17 +82,6 @@ public class Loader {
                 JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE);
             }
         });
-    }
-
-    public static void saveProperties()
-    {
-        try {
-            MTS_PROPERTIES.store(new FileOutputStream(PROPERTIES_FILEPATH), null);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     public static void closeWindow()
@@ -212,6 +202,26 @@ public class Loader {
             method.invoke(null, (Object) ARGS);
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private static void findGameVersion()
+    {
+        ClassFinder finder = new ClassFinder();
+        finder.add(new File(STS_JAR));
+
+        ClassFilter filter = new RegexClassFilter("CardCrawlGame$");
+        ArrayList<ClassInfo> foundClasses = new ArrayList<>();
+        finder.findClasses(foundClasses, filter);
+        System.out.println(foundClasses.size());
+        for (ClassInfo c : foundClasses) {
+            System.out.println(c.getClassName());
+            for (FieldInfo f : c.getFields()) {
+                if (f.getName().equals("VERSION_NUM")) {
+                    System.out.println(f.getName() + " = ");
+                    System.out.println("  " + f.getValue());
+                }
+            }
         }
     }
 

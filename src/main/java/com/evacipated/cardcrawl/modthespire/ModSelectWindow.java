@@ -16,18 +16,28 @@ public class ModSelectWindow extends JFrame {
     private static final int DEFAULT_HEIGHT = 226;
     private File[] mods;
     private ModInfo[] info;
-    private Properties windowProperties;
     private boolean showingLog = false;
     private boolean isMaximized = false;
     private boolean isCentered = false;
     private Rectangle location;
+
+    public static Properties getDefaults()
+    {
+        Properties properties = new Properties();
+        properties.setProperty("x", "center");
+        properties.setProperty("y", "center");
+        properties.setProperty("width", Integer.toString(DEFAULT_WIDTH));
+        properties.setProperty("height", Integer.toString(DEFAULT_HEIGHT));
+        properties.setProperty("maximize", Boolean.toString(false));
+        return properties;
+    }
     
     public ModSelectWindow(File[] modJars) {
         mods = modJars;
         info = Loader.buildInfoArray(mods);
         readWindowPosSize();
         initUI();
-        if (Boolean.parseBoolean(windowProperties.getProperty("maximize", "false"))) {
+        if (Loader.MTS_CONFIG.getBool("maximize")) {
             isMaximized = true;
             this.setExtendedState(this.getExtendedState() | JFrame.MAXIMIZED_BOTH);
         }
@@ -35,39 +45,34 @@ public class ModSelectWindow extends JFrame {
 
     private void readWindowPosSize()
     {
-        windowProperties = Loader.MTS_PROPERTIES;
-
-        // Ensure all properties are present
-        windowProperties.setProperty("x", windowProperties.getProperty("x", "center"));
-        windowProperties.setProperty("y", windowProperties.getProperty("y", "center"));
-        windowProperties.setProperty("width", windowProperties.getProperty("width", String.valueOf(DEFAULT_WIDTH)));
-        windowProperties.setProperty("height", windowProperties.getProperty("height", String.valueOf(DEFAULT_HEIGHT)));
-        windowProperties.setProperty("maximize", windowProperties.getProperty("maximize", "false"));
-
         // Sanity check values
-        if (Integer.parseInt(windowProperties.getProperty("width", String.valueOf(DEFAULT_WIDTH))) < DEFAULT_WIDTH) {
-            windowProperties.setProperty("width", String.valueOf(DEFAULT_WIDTH));
+        if (Loader.MTS_CONFIG.getInt("width") < DEFAULT_WIDTH) {
+            Loader.MTS_CONFIG.setInt("width", DEFAULT_WIDTH);
         }
-        if (Integer.parseInt(windowProperties.getProperty("height", String.valueOf(DEFAULT_HEIGHT))) < DEFAULT_HEIGHT) {
-            windowProperties.setProperty("height", String.valueOf(DEFAULT_HEIGHT));
+        if (Loader.MTS_CONFIG.getInt("height") < DEFAULT_HEIGHT) {
+            Loader.MTS_CONFIG.setInt("height", DEFAULT_HEIGHT);
         }
         location = new Rectangle();
-        location.width = Integer.parseInt(windowProperties.getProperty("width", String.valueOf(DEFAULT_WIDTH)));
-        location.height = Integer.parseInt(windowProperties.getProperty("height", String.valueOf(DEFAULT_HEIGHT)));
-        if (windowProperties.getProperty("x", "center").equals("center") || windowProperties.getProperty("y", "center").equals("center")) {
+        location.width = Loader.MTS_CONFIG.getInt("width");
+        location.height = Loader.MTS_CONFIG.getInt("height");
+        if (Loader.MTS_CONFIG.getString("x").equals("center") || Loader.MTS_CONFIG.getString("y").equals("center")) {
             isCentered = true;
         } else {
             isCentered = false;
-            location.x = Integer.parseInt(windowProperties.getProperty("x", "0"));
-            location.y = Integer.parseInt(windowProperties.getProperty("y", "0"));
+            location.x = Loader.MTS_CONFIG.getInt("x");
+            location.y = Loader.MTS_CONFIG.getInt("y");
             if (!isInScreenBounds(location)) {
-                windowProperties.setProperty("x", "center");
-                windowProperties.setProperty("y", "center");
+                Loader.MTS_CONFIG.setString("x", "center");
+                Loader.MTS_CONFIG.setString("y", "center");
                 isCentered = true;
             }
         }
 
-        saveWindowProperties();
+        try {
+            Loader.MTS_CONFIG.save();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void initUI() {
@@ -187,8 +192,12 @@ public class ModSelectWindow extends JFrame {
         }
         debugCheck.addActionListener((ActionEvent event) -> {
             Loader.DEBUG = debugCheck.isSelected();
-            Loader.MTS_PROPERTIES.setProperty("debug", Boolean.toString(Loader.DEBUG));
-            Loader.saveProperties();
+            Loader.MTS_CONFIG.setBool("debug", Loader.DEBUG);
+            try {
+                Loader.MTS_CONFIG.save();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         });
         playPane.add(debugCheck, BorderLayout.EAST);
 
@@ -202,30 +211,37 @@ public class ModSelectWindow extends JFrame {
         }
     }
 
-    void saveWindowProperties()
-    {
-        Loader.saveProperties();
-    }
-
     void saveWindowDimensions(Dimension d)
     {
-        windowProperties.setProperty("width", String.valueOf(d.width));
-        windowProperties.setProperty("height", String.valueOf(d.height));
-        saveWindowProperties();
+        Loader.MTS_CONFIG.setInt("width", d.width);
+        Loader.MTS_CONFIG.setInt("height", d.height);
+        try {
+            Loader.MTS_CONFIG.save();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     void saveWindowMaximize()
     {
-        windowProperties.setProperty("maximize", String.valueOf(isMaximized));
-        saveWindowProperties();
+        Loader.MTS_CONFIG.setBool("maximize", isMaximized);
+        try {
+            Loader.MTS_CONFIG.save();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     void saveWindowLocation()
     {
         Point loc = getLocationOnScreen();
-        windowProperties.setProperty("x", String.valueOf(loc.x));
-        windowProperties.setProperty("y", String.valueOf(loc.y));
-        saveWindowProperties();
+        Loader.MTS_CONFIG.setInt("x", loc.x);
+        Loader.MTS_CONFIG.setInt("y", loc.y);
+        try {
+            Loader.MTS_CONFIG.save();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     boolean isInScreenBounds(Point location, Rectangle size)

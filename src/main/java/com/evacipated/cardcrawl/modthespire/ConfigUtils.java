@@ -28,7 +28,7 @@ public class ConfigUtils
             basedir = SystemUtils.USER_HOME;
         }
         CONFIG_DIR = basedir + File.separator +
-            APP_NAME + File.separator;
+            APP_NAME;
 
         // Make config directory
         File directory = new File(CONFIG_DIR);
