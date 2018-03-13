@@ -6,6 +6,7 @@ import javassist.CtClass;
 import javassist.LoaderClassPath;
 import javassist.NotFoundException;
 import org.clapper.util.classutil.*;
+import org.objectweb.asm.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,8 +17,12 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLClassLoader;
+import java.text.ParsePosition;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
+import java.util.jar.JarInputStream;
 
 public class Loader {
     public static boolean DEBUG = false;
@@ -32,6 +37,7 @@ public class Loader {
     public static URL[] MODONLYURLS;
 
     static SpireConfig MTS_CONFIG;
+    static Date STS_VERSION = null;
 
     private static Object ARGS;
     private static ModSelectWindow ex;
@@ -61,6 +67,7 @@ public class Loader {
             System.exit(-1);
         }
 
+        // Check if we are desktop-1.0.jar
         try {
             String thisJarName = new File(Loader.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath()).getName();
             if (thisJarName.equals(STS_JAR)) {
@@ -69,8 +76,26 @@ public class Loader {
         } catch (URISyntaxException e) {
             // NOP
         }
+        // Check that desktop-1.0.jar exists
+        {
+            File tmp = new File(STS_JAR);
+            if (!tmp.exists()) {
+                // Check if for the Mac version
+                tmp = new File(MAC_STS_JAR);
+                checkFileInfo(tmp);
+                if (!tmp.exists()) {
+                    checkFileInfo(new File("SlayTheSpire.app"));
+                    checkFileInfo(new File("SlayTheSpire.app/Contents"));
+                    checkFileInfo(new File("SlayTheSpire.app/Contents/Resources"));
 
-        //findGameVersion();
+                    JOptionPane.showMessageDialog(null, "Unable to find '" + STS_JAR + "'");
+                    return;
+                } else {
+                    System.out.println("Using Mac version at: " + MAC_STS_JAR);
+                    STS_JAR = MAC_STS_JAR;
+                }
+            }
+        }
 
         EventQueue.invokeLater(() -> {
             ex = new ModSelectWindow(getAllModFiles());
@@ -82,6 +107,8 @@ public class Loader {
                 JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE);
             }
         });
+
+        findGameVersion();
     }
 
     public static void closeWindow()
@@ -95,27 +122,6 @@ public class Loader {
             System.out.println("Debug mode!");
         }
         try {
-            // Check that desktop-1.0.jar exists
-            {
-                File tmp = new File(STS_JAR);
-                if (!tmp.exists()) {
-                    // Check if for the Mac version
-                    tmp = new File(MAC_STS_JAR);
-                    checkFileInfo(tmp);
-                    if (!tmp.exists()) {
-                        checkFileInfo(new File("SlayTheSpire.app"));
-                        checkFileInfo(new File("SlayTheSpire.app/Contents"));
-                        checkFileInfo(new File("SlayTheSpire.app/Contents/Resources"));
-
-                        JOptionPane.showMessageDialog(null, "Unable to find '" + STS_JAR + "'");
-                        return;
-                    } else {
-                        System.out.println("Using Mac version at: " + MAC_STS_JAR);
-                        STS_JAR = MAC_STS_JAR;
-                    }
-                }
-            }
-
             // Construct ClassLoader
             URL[] modUrls = buildUrlArray(modJars);
             MTSClassLoader loader = new MTSClassLoader(Loader.class.getResourceAsStream(COREPATCHES_JAR), modUrls, Loader.class.getClassLoader());
@@ -205,23 +211,23 @@ public class Loader {
         }
     }
 
+    public static void setGameVersion(String versionString)
+    {
+        SimpleDateFormat sdf = new SimpleDateFormat("(MM-dd-yyyy)");
+        sdf.setTimeZone(TimeZone.getTimeZone("PST"));
+        STS_VERSION = sdf.parse(versionString, new ParsePosition(0));
+    }
+
     private static void findGameVersion()
     {
-        ClassFinder finder = new ClassFinder();
-        finder.add(new File(STS_JAR));
+        try {
+            URLClassLoader tmpLoader = new URLClassLoader(new URL[]{new File(STS_JAR).toURI().toURL()});
+            InputStream in = tmpLoader.getResourceAsStream("com/megacrit/cardcrawl/core/CardCrawlGame.class");
+            ClassReader classReader = new ClassReader(in);
 
-        ClassFilter filter = new RegexClassFilter("CardCrawlGame$");
-        ArrayList<ClassInfo> foundClasses = new ArrayList<>();
-        finder.findClasses(foundClasses, filter);
-        System.out.println(foundClasses.size());
-        for (ClassInfo c : foundClasses) {
-            System.out.println(c.getClassName());
-            for (FieldInfo f : c.getFields()) {
-                if (f.getName().equals("VERSION_NUM")) {
-                    System.out.println(f.getName() + " = ");
-                    System.out.println("  " + f.getValue());
-                }
-            }
+            classReader.accept(new GameVersionFinder(), 0);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
