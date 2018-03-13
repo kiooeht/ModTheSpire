@@ -43,7 +43,7 @@ public class ModPanel extends JPanel {
     
     public class InfoPanel extends JPanel {
         JPanel buttonPanel;
-        JLabel description;
+        JTextArea description;
         JTextArea author;
 
         public InfoPanel(Dimension parentSize) {
@@ -76,9 +76,15 @@ public class ModPanel extends JPanel {
             infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
 
             if (info.Description != null && !info.Description.equals("")) {
-                description = new JLabel(info.Description);
-                description.setFont(description.getFont().deriveFont(Font.PLAIN));
+                description = new JTextArea(info.Description);
                 description.setAlignmentX(Component.LEFT_ALIGNMENT);
+                description.setLineWrap(true);
+                description.setWrapStyleWord(true);
+                description.setEditable(false);
+                description.setBorder(null);
+                description.setOpaque(false);
+                description.setFont(description.getFont().deriveFont(Font.PLAIN));
+                description.setSize(parentSize.width, description.getPreferredSize().height);
                 infoPanel.add(description);
             }
 
@@ -121,7 +127,12 @@ public class ModPanel extends JPanel {
                 buttonPanel.setBackground(c);
             }
             if (author != null) {
+                author.setOpaque(c.equals(lightRed) || c.equals(lightYellow));
                 author.setBackground(c);
+            }
+            if (description != null) {
+                description.setOpaque(c.equals(lightRed) || c.equals(lightYellow));
+                description.setBackground(c);
             }
         }
 
