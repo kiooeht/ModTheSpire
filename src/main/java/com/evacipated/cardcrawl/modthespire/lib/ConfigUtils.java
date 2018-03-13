@@ -1,4 +1,4 @@
-package com.evacipated.cardcrawl.modthespire;
+package com.evacipated.cardcrawl.modthespire.lib;
 
 import org.apache.commons.lang3.SystemUtils;
 

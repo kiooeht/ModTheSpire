@@ -1,7 +1,5 @@
 package com.evacipated.cardcrawl.modthespire.lib;
 
-import com.evacipated.cardcrawl.modthespire.ConfigUtils;
-
 import java.io.*;
 import java.util.Properties;
 
