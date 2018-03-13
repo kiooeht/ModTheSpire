@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import javax.swing.DefaultListModel;
-import javax.swing.JCheckBox;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -20,7 +19,7 @@ import org.xml.sax.SAXException;
 
 public class LoadOrder {
     
-    private static String CFG_FILE = "mod_order.xml";
+    private static String CFG_FILE = ConfigUtils.CONFIG_DIR + File.separator + "mod_order.xml";
     
     private static class ModDescriptor {
         public File mod;
