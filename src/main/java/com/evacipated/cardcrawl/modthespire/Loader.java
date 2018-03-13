@@ -97,6 +97,8 @@ public class Loader {
             }
         }
 
+        findGameVersion();
+
         EventQueue.invokeLater(() -> {
             ex = new ModSelectWindow(getAllModFiles());
             ex.setVisible(true);
@@ -107,8 +109,6 @@ public class Loader {
                 JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE);
             }
         });
-
-        findGameVersion();
     }
 
     public static void closeWindow()

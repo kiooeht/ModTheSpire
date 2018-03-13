@@ -4,6 +4,7 @@ import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.io.File;
+import java.text.SimpleDateFormat;
 
 import javax.swing.*;
 import javax.swing.border.MatteBorder;
@@ -11,6 +12,7 @@ import javax.swing.border.MatteBorder;
 @SuppressWarnings("serial")
 public class ModPanel extends JPanel {
     private static final Color lightRed = new Color(229,115,115);
+    private static final Color lightYellow = new Color(255, 238, 88);
     public ModInfo info;
     public File modFile;
     public JCheckBox checkBox;
@@ -29,6 +31,13 @@ public class ModPanel extends JPanel {
             checkBox.setBackground(lightRed);
             infoPanel.setBackground(lightRed);
             setToolTipText("This mod requires ModTheSpire v" + info.MTS_Version.get() + " or higher.");
+        } else if (Loader.STS_VERSION != null && info.STS_Version != null && !Loader.STS_VERSION.equals(info.STS_Version)) {
+            checkBox.setBackground(lightYellow);
+            infoPanel.setBackground(lightYellow);
+            SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy");
+            setToolTipText("<html>This mod explicitly supports StS " + sdf.format(info.STS_Version) + ".<br/>" +
+                "You are running StS " + sdf.format(Loader.STS_VERSION) + ".<br/>" +
+                "You may encounter problems running it.</html>");
         }
     }
     

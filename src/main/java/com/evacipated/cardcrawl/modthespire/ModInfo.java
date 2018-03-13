@@ -6,7 +6,11 @@ import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.text.ParsePosition;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Properties;
+import java.util.TimeZone;
 
 public class ModInfo implements Serializable {
     /**
@@ -15,23 +19,17 @@ public class ModInfo implements Serializable {
     private static final long serialVersionUID = 7452562412479584982L;
     public String Name;
     public String Author;
-    public Version MTS_Version;
     public String Description;
+    public Version MTS_Version;
+    public Date STS_Version;
 
     private ModInfo()
     {
         Name = "";
         Author = "";
-        MTS_Version = new Version("0.0.0");
         Description = "";
-    }
-    
-    public ModInfo(String Name, String Author, Version version, String Description)
-    {
-        this.Name = Name;
-        this.Author = Author;
-        this.MTS_Version = (version == null) ? new Version("0.0.0") : version;
-        this.Description = Description;
+        MTS_Version = new Version("0.0.0");
+        STS_Version = null;
     }
     
     public static void closeLoader(URLClassLoader loader)
@@ -64,6 +62,13 @@ public class ModInfo implements Serializable {
                 info.Author = prop.getProperty("author");
                 info.MTS_Version = new Version(prop.getProperty("mts_version", "0.0.0"));
                 info.Description = prop.getProperty("description");
+
+                String stsVersionString = prop.getProperty("sts_version");
+                if (stsVersionString != null) {
+                    SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy");
+                    sdf.setTimeZone(TimeZone.getTimeZone("PST"));
+                    info.STS_Version = sdf.parse(stsVersionString, new ParsePosition(0));
+                }
             }
         } catch (Exception e) {
             System.out.println("ERROR: Failed to read Mod info from " + mod_jar.getName());
