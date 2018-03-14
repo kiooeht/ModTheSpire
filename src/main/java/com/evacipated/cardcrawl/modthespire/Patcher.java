@@ -176,7 +176,15 @@ public class Patcher {
             }
 
             for (SpirePatch patch : patchArr) {
-                CtClass ctClsToPatch = pool.get(patch.cls());
+                CtClass ctClsToPatch;
+                try {
+                    ctClsToPatch = pool.get(patch.cls());
+                } catch (NotFoundException e) {
+                    if (patch.optional()) {
+                        continue;
+                    }
+                    throw e;
+                }
                 CtBehavior ctMethodToPatch = null;
                 try {
                     CtClass[] ctParamTypes = patchParamTypes(pool, patch);
