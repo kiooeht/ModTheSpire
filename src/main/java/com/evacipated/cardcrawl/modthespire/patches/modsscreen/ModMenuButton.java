@@ -6,25 +6,47 @@ import com.megacrit.cardcrawl.screens.mainMenu.MenuButton;
 
 import java.lang.reflect.Field;
 
-@SpirePatch(
-    cls="com.megacrit.cardcrawl.screens.mainMenu.MenuButton",
-    method="setLabel"
-)
 public class ModMenuButton
 {
     @SpireEnum
-    public static MenuButton.ClickResult MODS;
+    static MenuButton.ClickResult MODS;
 
-    public static void Postfix(Object __obj_instance)
+    static ModsScreen modsScreen = null;
+
+    @SpirePatch(
+        cls="com.megacrit.cardcrawl.screens.mainMenu.MenuButton",
+        method="setLabel"
+    )
+    public static class SetLabel
     {
-        try {
-            if (((MenuButton)__obj_instance).result == MODS) {
-                Field f_label = MenuButton.class.getDeclaredField("label");
-                f_label.setAccessible(true);
-                f_label.set(__obj_instance, "Mods");
+        public static void Postfix(MenuButton __instance)
+        {
+            try {
+                if (__instance.result == MODS) {
+                    Field f_label = MenuButton.class.getDeclaredField("label");
+                    f_label.setAccessible(true);
+                    f_label.set(__instance, "Mods");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        }
+    }
+
+    @SpirePatch(
+        cls="com.megacrit.cardcrawl.screens.mainMenu.MenuButton",
+        method="buttonEffect"
+    )
+    public static class ButtonEffect
+    {
+        public static void Postfix(MenuButton __instance)
+        {
+            if (__instance.result == MODS) {
+                if (modsScreen == null) {
+                     modsScreen = new ModsScreen();
+                }
+                modsScreen.open();
+            }
         }
     }
 }
