@@ -3,6 +3,7 @@ package com.evacipated.cardcrawl.modthespire.patches;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl.LwjglGraphics;
+import com.evacipated.cardcrawl.modthespire.Loader;
 import com.evacipated.cardcrawl.modthespire.lib.SpireInsertPatch;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
 
@@ -28,6 +29,9 @@ public class DisableGdxForceExit
             e.printStackTrace();
         } finally {
             System.out.println("Game closed.");
+            if (!Loader.DEBUG) {
+                Loader.closeWindow();
+            }
         }
     }
 }

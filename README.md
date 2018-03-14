@@ -3,10 +3,10 @@ ModTheSpire is a tool to load external mods for Slay the Spire without modifying
 
 ## Requirements ##
 #### General Use ####
-* Java 8+
+* Java 8
 
 #### Development ####
-* Java 8+
+* Java 8
 * Maven
 * [ModTheSpireLib](https://github.com/kiooeht/ModTheSpireLib)
 
@@ -18,22 +18,62 @@ ModTheSpire is a tool to load external mods for Slay the Spire without modifying
 2. Create a `mods` directory. Place mod JAR files into the `mods` directory.
 
 ## Usage ##
-1. Run `ModTheSpire.jar` or run `_run.bat` to get logger output.
+1. Run `ModTheSpire.jar`.
 2. Select the mod(s) you want to use.
 3. Press 'Play'.
 
 ## For Modders ##
 * ModTheSpire automatically sets the Settings.isModded flag to true, so there is no need to do that yourself.
-* Initialization: in `modname.ModName` implement `public static void initialize()`.
-* If you include a file called `ModTheSpire.config` at the root of your mod's .jar, ModTheSpire will use it to determine the mod's name and author.
-Example:
-```
-name=Example Mod Name
-author=kiooeht
-```
-* For mod code injection, see [ModTheSpireLib](https://github.com/kiooeht/ModTheSpireLib).
+* [ModTheSpireLib](https://github.com/kiooeht/ModTheSpireLib)
+* [Wiki](https://github.com/kiooeht/ModTheSpire/wiki/SpirePatch)
 
 ## Changelog ##
+#### dev ####
+* **Merge ModTheSpire and ModTheSpireLib. They are now one project**
+* Maintain launcher window size and position between uses
+* When not using debug mode, close log window when game closes
+* Retain debug mode between uses
+* Warn in launcher if mod specifies a specific StS version that doesn't match the current
+* SpireConfig: Save/load mod config options from user directory
+* Fix: Launcher UI for long lists of mod authors
+* Fix: UTF-8 support in ModInfo (pk27602017)
+
+#### v2.4.0 ####
+* Allow multiple @SpirePatches on single class
+* Warn if not running with Java 8
+* Fix: NullPointerException when no/empty mods folder
+* Fix?: Unable to find `desktop-1.0.jar` on Mac
+* Fix: Sometimes crashing when patching a superclass and subclass
+
+#### v2.3.0 ####
+* Allow patching static initializers (`"<staticinit>"`)
+* Replace patches, completely replace a method
+* Raw patches, gives complete access to Javassist API
+* Patch loading order now: Insert, Instrument, Replace, Prefix, Postfix, Raw
+* Include mod author and description in launcher (test447)
+* Debug mode: Displays some additional info for modders
+  * Enable with `--debug` flag or checkbox in GUI
+* ByRef can auto-determine parameter type for Prefix patches
+* Fix: ModTheSpire can now be run through SlayTheSpire.exe
+
+#### v2.2.1 ####
+* Fix: ByRef can now specify the real type name when using `Object` as parameter type
+
+#### v2.2.0 ####
+* Inject patches in mod load order (kiooeht)
+* Include dependency licenses (kiooeht)
+* Mod list when hovering over version string in-game (kiooeht)
+* Debug log window in launcher (kiooeht)
+* Relative line numbers for insert patches (kiooeht)
+* Allow @ByRef for prefixes (kiooeht)
+* Instrument (ExprEditor) patches (kiooeht)
+* SpireEnum to add new enum values (kiooeht)
+* Mods can specify minimum ModTheSpire version needed (kiooeht)
+* Mods can tag a class @SpireInitializer, and the class's `initialize()` method will be called (kiooeht)
+* Fix: Stop code patches from stopping mod patches (kiooeht)
+* Fix: Can now prefix constructors (kiooeht)
+* Fix NullPointerException if mod doesn't contain `ModTheSpire.config` (kiooeht)
+
 #### v2.1.0 ####
 * Display mods on main menu (kiooeht)
 * Insert patches (kiooeht)

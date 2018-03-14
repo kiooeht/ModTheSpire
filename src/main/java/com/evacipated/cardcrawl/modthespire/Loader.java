@@ -1,34 +1,73 @@
 package com.evacipated.cardcrawl.modthespire;
 
+import com.evacipated.cardcrawl.modthespire.lib.SpireConfig;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.LoaderClassPath;
+import javassist.NotFoundException;
+import org.clapper.util.classutil.*;
+import org.objectweb.asm.*;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
-import java.io.FilenameFilter;
+import java.awt.event.WindowEvent;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.HashSet;
-import java.util.Set;
+import java.net.URLClassLoader;
+import java.text.ParsePosition;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.List;
+import java.util.jar.JarInputStream;
 
 public class Loader {
-    public static Version MTS_VERSION = new Version("2.2.0");
+    public static boolean DEBUG = false;
+
+    public static Version MTS_VERSION;
     private static String MOD_DIR = "mods/";
     public static String STS_JAR = "desktop-1.0.jar";
+    private static String MAC_STS_JAR = "SlayTheSpire.app/Contents/Resources/" + STS_JAR;
     private static String STS_JAR2 = "SlayTheSpire.jar";
-    public static String COREPATCHES_JAR = "corepatches.jar";
+    public static String COREPATCHES_JAR = "/corepatches.jar";
     public static ModInfo[] MODINFOS;
+    public static URL[] MODONLYURLS;
+
+    static SpireConfig MTS_CONFIG;
+    static Date STS_VERSION = null;
 
     private static Object ARGS;
+    private static ModSelectWindow ex;
 
     public static void main(String[] args) {
         ARGS = args;
+        try {
+            Properties defaults = new Properties();
+            defaults.setProperty("debug", Boolean.toString(false));
+            defaults.putAll(ModSelectWindow.getDefaults());
+            MTS_CONFIG = new SpireConfig(null, "ModTheSpire", defaults);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        DEBUG = MTS_CONFIG.getBool("debug");
 
+        if (Arrays.asList(args).contains("--debug")) {
+            DEBUG = true;
+        }
+
+        try {
+            Properties properties = new Properties();
+            properties.load(Loader.class.getResourceAsStream("/META-INF/version.prop"));
+            MTS_VERSION = new Version(properties.getProperty("version"));
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+
+        // Check if we are desktop-1.0.jar
         try {
             String thisJarName = new File(Loader.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath()).getName();
             if (thisJarName.equals(STS_JAR)) {
@@ -37,26 +76,55 @@ public class Loader {
         } catch (URISyntaxException e) {
             // NOP
         }
+        // Check that desktop-1.0.jar exists
+        {
+            File tmp = new File(STS_JAR);
+            if (!tmp.exists()) {
+                // Check if for the Mac version
+                tmp = new File(MAC_STS_JAR);
+                checkFileInfo(tmp);
+                if (!tmp.exists()) {
+                    checkFileInfo(new File("SlayTheSpire.app"));
+                    checkFileInfo(new File("SlayTheSpire.app/Contents"));
+                    checkFileInfo(new File("SlayTheSpire.app/Contents/Resources"));
+
+                    JOptionPane.showMessageDialog(null, "Unable to find '" + STS_JAR + "'");
+                    return;
+                } else {
+                    System.out.println("Using Mac version at: " + MAC_STS_JAR);
+                    STS_JAR = MAC_STS_JAR;
+                }
+            }
+        }
+
+        findGameVersion();
 
         EventQueue.invokeLater(() -> {
-           ModSelectWindow ex = new ModSelectWindow(getAllModFiles());
+            ex = new ModSelectWindow(getAllModFiles());
             ex.setVisible(true);
+
+            String java_version = System.getProperty("java.version");
+            if (!java_version.startsWith("1.8")) {
+                String msg = "ModTheSpire requires Java version 8 to run properly.\nYou are currently using Java " + java_version;
+                JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE);
+            }
         });
+    }
+
+    public static void closeWindow()
+    {
+        ex.dispatchEvent(new WindowEvent(ex, WindowEvent.WINDOW_CLOSING));
     }
 
     // runMods - sets up the ClassLoader, sets the isModded flag and launches the game
     public static void runMods(File[] modJars) {
+        if (Loader.DEBUG) {
+            System.out.println("Debug mode!");
+        }
         try {
-            // Check that desktop-1.0.jar exists
-            File tmp = new File(STS_JAR);
-            if (!tmp.exists()) {
-                JOptionPane.showMessageDialog(null, "Unable to find '" + STS_JAR + "'");
-                return;
-            }
-
             // Construct ClassLoader
             URL[] modUrls = buildUrlArray(modJars);
-            MTSClassLoader loader = new MTSClassLoader(ClassLoader.getSystemResourceAsStream(COREPATCHES_JAR), modUrls, ClassLoader.getSystemClassLoader());
+            MTSClassLoader loader = new MTSClassLoader(Loader.class.getResourceAsStream(COREPATCHES_JAR), modUrls, Loader.class.getClassLoader());
 
             if (modJars.length > 0) {
                 ModInfo[] modInfos = buildInfoArray(modJars);
@@ -65,26 +133,32 @@ public class Loader {
                 // Remove the base game jar from the search path
                 URL[] modOnlyUrls = new URL[modUrls.length - 1];
                 System.arraycopy(modUrls, 0, modOnlyUrls, 0, modOnlyUrls.length);
+                MODONLYURLS = modOnlyUrls;
 
                 ClassPool pool = ClassPool.getDefault();
                 pool.insertClassPath(new LoaderClassPath(loader));
                 loader.addStreamToClassPool(pool); // Inserts infront of above path
-                Set<CtClass> ctClasses = new HashSet<>();
+                SortedMap<String, CtClass> ctClasses = new TreeMap<>();
                 // Find and inject core patches
                 System.out.println("Finding core patches...");
-                ctClasses.addAll(Patcher.injectPatches(loader, pool, Patcher.findPatches(new URL[]{ClassLoader.getSystemResource(Loader.COREPATCHES_JAR)})));
+                for (CtClass cls : Patcher.injectPatches(loader, pool, Patcher.findPatches(new URL[]{Loader.class.getResource(Loader.COREPATCHES_JAR)}))) {
+                    ctClasses.put(countSuperClasses(cls) + cls.getName(), cls);
+                }
                 // Find and inject mod patches
                 System.out.println("Finding patches...");
-                ctClasses.addAll(Patcher.injectPatches(loader, pool, Patcher.findPatches(modOnlyUrls, MODINFOS)));
+                for (CtClass cls :Patcher.injectPatches(loader, pool, Patcher.findPatches(modOnlyUrls, MODINFOS))) {
+                    ctClasses.put(countSuperClasses(cls) + cls.getName(), cls);
+                }
+
+                Patcher.finalizePatches(loader);
                 Patcher.compilePatches(loader, ctClasses);
 
                 System.out.printf("Patching enums...");
-                // Patch SpireEnums from core patches
-                Patcher.patchEnums(loader, ClassLoader.getSystemResource(Loader.COREPATCHES_JAR));
+                Patcher.patchEnums(loader, Loader.class.getResource(Loader.COREPATCHES_JAR));
                 // Patch SpireEnums from mods
-                Patcher.patchEnums(loader, modOnlyUrls);
+                Patcher.patchEnums(loader, Loader.MODONLYURLS);
                 System.out.println("Done.");
-
+                
                 // Set Settings.isModded = true
                 System.out.printf("Setting isModded = true...");
                 System.out.flush();
@@ -102,8 +176,11 @@ public class Loader {
                 VERSION_NUM.set(null, oldVersion + " [ModTheSpire " + MTS_VERSION.get() + "]");
                 System.out.println("Done.");
 
-                // Initialize any mods which declare an initialization function
+                // Initialize any mods that implement SpireInitializer.initialize()
                 System.out.println("Initializing mods...");
+                List<String> initialized = Patcher.initializeMods(loader, modOnlyUrls);
+                // DEPRECATED
+                // Initialize any mods which declare an initialization function
                 for (int i = 0; i < modUrls.length - 1; i++) {
                     String modUrl = modUrls[i].toString();
                     String modName = modUrl.substring(modUrl.lastIndexOf('/') + 1, modUrl.length() - 4);
@@ -111,7 +188,11 @@ public class Loader {
                     try {
                         Class<?> modMainClass = loader.loadClass(modName.toLowerCase() + "." + modName);
                         Method initialize = modMainClass.getDeclaredMethod("initialize");
-                        initialize.invoke(null);
+                        if (!initialized.contains(modMainClass.getName())) {
+                            System.out.println("WARNING: <ModName>.<ModName>.initialize() method is deprecated and will be removed in a future version of ModTheSpire." +
+                                " Use @SpireInitializer intead.");
+                            initialize.invoke(null);
+                        }
                     } catch (ClassNotFoundException e) {
                         continue;
                     } catch (NoSuchMethodException e) {
@@ -130,6 +211,26 @@ public class Loader {
         }
     }
 
+    public static void setGameVersion(String versionString)
+    {
+        SimpleDateFormat sdf = new SimpleDateFormat("(MM-dd-yyyy)");
+        sdf.setTimeZone(TimeZone.getTimeZone("PST"));
+        STS_VERSION = sdf.parse(versionString, new ParsePosition(0));
+    }
+
+    private static void findGameVersion()
+    {
+        try {
+            URLClassLoader tmpLoader = new URLClassLoader(new URL[]{new File(STS_JAR).toURI().toURL()});
+            InputStream in = tmpLoader.getResourceAsStream("com/megacrit/cardcrawl/core/CardCrawlGame.class");
+            ClassReader classReader = new ClassReader(in);
+
+            classReader.accept(new GameVersionFinder(), 0);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     // buildUrlArray - builds the URL array to pass to the ClassLoader
     private static URL[] buildUrlArray(File[] modJars) throws MalformedURLException {
         URL[] urls = new URL[modJars.length + 1];
@@ -141,7 +242,7 @@ public class Loader {
         return urls;
     }
 
-    private static ModInfo[] buildInfoArray(File[] modJars) {
+    public static ModInfo[] buildInfoArray(File[] modJars) {
         ModInfo[] infos = new ModInfo[modJars.length];
         for (int i = 0; i < modJars.length; ++i) {
             infos[i] = ModInfo.ReadModInfo(modJars[i]);
@@ -152,7 +253,7 @@ public class Loader {
     // getAllModFiles - returns a File array containing all of the JAR files in the mods directory
     private static File[] getAllModFiles() {
         File file = new File(MOD_DIR);
-        if (!file.exists() || !file.isDirectory()) return null;
+        if (!file.exists() || !file.isDirectory()) return new File[0];
 
         File[] files = file.listFiles(new FilenameFilter() {
             @Override
@@ -162,6 +263,44 @@ public class Loader {
         });
 
         if (files.length > 0) return files;
-        return null;
+        return new File[0];
+    }
+
+    private static void checkFileInfo(File file)
+    {
+        System.out.printf(file.getName() + ": ");
+        System.out.println(file.exists() ? "Exists" : "Does not exist");
+
+        if (file.exists()) {
+            System.out.printf("Type: ");
+            if (file.isFile()) {
+                System.out.println("File");
+            } else if (file.isDirectory()) {
+                System.out.println("Directory");
+                System.out.println("Contents:");
+                for (File subfile : Objects.requireNonNull(file.listFiles())) {
+                    System.out.println("  " + subfile.getName());
+                }
+            } else {
+                System.out.println("Unknown");
+            }
+        }
+    }
+
+    private static int countSuperClasses(CtClass cls)
+    {
+        String name = cls.getName();
+        int count = 0;
+
+        while (cls != null) {
+            try {
+                cls = cls.getSuperclass();
+            } catch (NotFoundException e) {
+                break;
+            }
+            ++count;
+        }
+
+        return count;
     }
 }
