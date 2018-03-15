@@ -7,7 +7,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.utils.ScissorStack;
 import com.evacipated.cardcrawl.modthespire.Loader;
-import com.evacipated.cardcrawl.modthespire.ModInfo;
 import com.evacipated.cardcrawl.modthespire.lib.SpireEnum;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.core.Settings;
@@ -20,6 +19,10 @@ import com.megacrit.cardcrawl.screens.mainMenu.MenuCancelButton;
 import com.megacrit.cardcrawl.screens.mainMenu.PatchNotesScreen;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.util.Map;
 
 public class ModsScreen
 {
@@ -34,6 +37,27 @@ public class ModsScreen
     private MenuCancelButton button = new MenuCancelButton();
     private boolean grabbedScreen = false;
     private float grabStartY = 0;
+
+    static Map<URL, Object> baseModBadges;
+    private static Field ModBadge_x;
+    private static Field ModBadge_y;
+    private static Method ModBadge_render;
+
+    static
+    {
+        try {
+            Class<?> ModBadge = ModsScreen.class.getClassLoader().loadClass("basemod.ModBadge");
+            ModBadge_x = ModBadge.getDeclaredField("x");
+            ModBadge_x.setAccessible(true);
+            ModBadge_y = ModBadge.getDeclaredField("y");
+            ModBadge_y.setAccessible(true);
+            ModBadge_render = ModBadge.getDeclaredMethod("receiveRender", SpriteBatch.class);
+        } catch (ClassNotFoundException e) {
+            // NOP
+        } catch (NoSuchFieldException | NoSuchMethodException e) {
+            e.printStackTrace();
+        }
+    }
 
     public void open()
     {
@@ -84,13 +108,11 @@ public class ModsScreen
 
     private void resetScrolling()
     {
-        //*
         if (targetY < scrollLowerBound) {
             targetY = MathHelper.scrollSnapLerpSpeed(targetY, scrollLowerBound);
         } else if (targetY > scrollUpperBound) {
             targetY = MathHelper.scrollSnapLerpSpeed(targetY, scrollUpperBound);
         }
-        //*/
     }
 
     public void render(SpriteBatch sb)
@@ -131,12 +153,32 @@ public class ModsScreen
         sb.setColor(Color.WHITE);
 
         float tmpY = 0;
-        for (int i=0; i<Loader.MODINFOS.length; ++i) {
-            final ModInfo info = Loader.MODINFOS[i];
-            FontHelper.renderFontLeftTopAligned(sb, FontHelper.buttonLabelFont, info.Name,
-                70.0f * Settings.scale,
+        for (int i=0; i<Loader.MODONLYURLS.length; ++i) {
+            final URL modURL = Loader.MODONLYURLS[i];
+            FontHelper.renderFontLeftTopAligned(sb, FontHelper.buttonLabelFont, Loader.MODINFOS[i].Name,
+                90.0f * Settings.scale,
                 tmpY + scrollY,
                 Settings.CREAM_COLOR);
+
+            if (baseModBadges != null) {
+                for (Map.Entry<URL, Object> entry : baseModBadges.entrySet()) {
+                    try {
+                        if (entry.getKey().equals(modURL)) {
+                            Object modBadge = entry.getValue();
+                            ModBadge_x.set(modBadge, 55.0f * Settings.scale);
+                            ModBadge_y.set(modBadge, tmpY + scrollY - 27.0f * Settings.scale);
+                            MainMenuScreen.CurScreen tmpScreen = CardCrawlGame.mainMenuScreen.screen;
+                            CardCrawlGame.mainMenuScreen.screen = MainMenuScreen.CurScreen.MAIN_MENU;
+                            ModBadge_render.invoke(modBadge, sb);
+                            CardCrawlGame.mainMenuScreen.screen = tmpScreen;
+                            break;
+                        }
+                    } catch (IllegalAccessException | InvocationTargetException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
             tmpY -= 45.0f * Settings.scale;
         }
 
