@@ -10,10 +10,7 @@ import com.evacipated.cardcrawl.modthespire.Loader;
 import com.evacipated.cardcrawl.modthespire.lib.SpireEnum;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.core.Settings;
-import com.megacrit.cardcrawl.helpers.FontHelper;
-import com.megacrit.cardcrawl.helpers.ImageMaster;
-import com.megacrit.cardcrawl.helpers.InputHelper;
-import com.megacrit.cardcrawl.helpers.MathHelper;
+import com.megacrit.cardcrawl.helpers.*;
 import com.megacrit.cardcrawl.screens.mainMenu.MainMenuScreen;
 import com.megacrit.cardcrawl.screens.mainMenu.MenuCancelButton;
 import com.megacrit.cardcrawl.screens.mainMenu.PatchNotesScreen;
@@ -22,6 +19,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Map;
 
 public class ModsScreen
@@ -38,6 +36,7 @@ public class ModsScreen
     private boolean grabbedScreen = false;
     private float grabStartY = 0;
 
+    private ArrayList<Hitbox> hitboxes = new ArrayList<>();
     private int selectedMod = -1;
 
     static Map<URL, Object> baseModBadges;
@@ -58,6 +57,13 @@ public class ModsScreen
             // NOP
         } catch (NoSuchFieldException | NoSuchMethodException e) {
             e.printStackTrace();
+        }
+    }
+
+    public ModsScreen()
+    {
+        for (int i=0; i<Loader.MODINFOS.length; ++i) {
+            hitboxes.add(new Hitbox(430.0f * Settings.scale, 40.0f * Settings.scale));
         }
     }
 
@@ -84,6 +90,22 @@ public class ModsScreen
         }
         updateScrolling();
         InputHelper.justClickedLeft = false;
+
+        float tmpY = 0;
+        for (int i=0; i<hitboxes.size(); ++i) {
+            hitboxes.get(i).x = 90.0f * Settings.scale;
+            hitboxes.get(i).y = tmpY + scrollY - 30.0f * Settings.scale;
+            hitboxes.get(i).update();
+            if (hitboxes.get(i).hovered && InputHelper.isMouseDown) {
+                hitboxes.get(i).clickStarted = true;
+            }
+            tmpY -= 45.0f * Settings.scale;
+
+            if (hitboxes.get(i).clicked) {
+                hitboxes.get(i).clicked = false;
+                selectedMod = i;
+            }
+        }
     }
 
     private void updateScrolling()
@@ -126,6 +148,10 @@ public class ModsScreen
 
         renderModList(sb);
 
+        for (Hitbox hitbox : hitboxes) {
+            hitbox.render(sb);
+        }
+
         button.render(sb);
     }
 
@@ -156,18 +182,25 @@ public class ModsScreen
 
         float tmpY = 0;
         for (int i=0; i<Loader.MODONLYURLS.length; ++i) {
+            if (hitboxes.get(i).hovered) {
+                Color c = sb.getColor();
+                sb.setColor(1, 1, 1, (hitboxes.get(i).clickStarted ? 0.8f : 0.4f));
+                sb.draw(ImageMaster.WHITE_SQUARE_IMG, hitboxes.get(i).x, hitboxes.get(i).y, hitboxes.get(i).width, hitboxes.get(i).height);
+                sb.setColor(c);
+            }
+
             final URL modURL = Loader.MODONLYURLS[i];
             FontHelper.renderFontLeftTopAligned(sb, FontHelper.buttonLabelFont, Loader.MODINFOS[i].Name,
-                90.0f * Settings.scale,
+                95.0f * Settings.scale,
                 tmpY + scrollY,
                 Settings.CREAM_COLOR);
             if (i == selectedMod) {
                 drawRect(sb,
-                    (int) (85.0f * Settings.scale),
-                    (int) (tmpY + scrollY - 30.0f * Settings.scale),
-                    (int) (430.0f * Settings.scale),
-                    (int) (40.0f * Settings.scale),
-                    3);
+                    hitboxes.get(i).x,
+                    hitboxes.get(i).y,
+                    hitboxes.get(i).width,
+                    hitboxes.get(i).height,
+                    2);
             }
 
             if (baseModBadges != null) {
@@ -198,7 +231,7 @@ public class ModsScreen
         }
     }
 
-    private void drawRect(SpriteBatch sb, int x, int y, int width, int height, int thickness) {
+    private void drawRect(SpriteBatch sb, float x, float y, float width, float height, float thickness) {
         sb.draw(ImageMaster.WHITE_SQUARE_IMG, x, y, width, thickness);
         sb.draw(ImageMaster.WHITE_SQUARE_IMG, x, y, thickness, height);
         sb.draw(ImageMaster.WHITE_SQUARE_IMG, x, y+height-thickness, width, thickness);
