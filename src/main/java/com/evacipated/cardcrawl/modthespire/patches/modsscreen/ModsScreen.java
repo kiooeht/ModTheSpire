@@ -24,7 +24,7 @@ import java.lang.reflect.Field;
 public class ModsScreen
 {
     @SpireEnum
-    static MainMenuScreen.CurScreen MODS_LIST;
+    public static MainMenuScreen.CurScreen MODS_LIST;
 
     private static final float START_Y = Settings.HEIGHT - 200.0F * Settings.scale;
     private float scrollY = START_Y;
