@@ -38,6 +38,8 @@ public class ModsScreen
     private boolean grabbedScreen = false;
     private float grabStartY = 0;
 
+    private int selectedMod = -1;
+
     static Map<URL, Object> baseModBadges;
     private static Field ModBadge_x;
     private static Field ModBadge_y;
@@ -159,6 +161,14 @@ public class ModsScreen
                 90.0f * Settings.scale,
                 tmpY + scrollY,
                 Settings.CREAM_COLOR);
+            if (i == selectedMod) {
+                drawRect(sb,
+                    (int) (85.0f * Settings.scale),
+                    (int) (tmpY + scrollY - 30.0f * Settings.scale),
+                    (int) (430.0f * Settings.scale),
+                    (int) (40.0f * Settings.scale),
+                    3);
+            }
 
             if (baseModBadges != null) {
                 for (Map.Entry<URL, Object> entry : baseModBadges.entrySet()) {
@@ -186,5 +196,12 @@ public class ModsScreen
             sb.flush();
             ScissorStack.popScissors();
         }
+    }
+
+    private void drawRect(SpriteBatch sb, int x, int y, int width, int height, int thickness) {
+        sb.draw(ImageMaster.WHITE_SQUARE_IMG, x, y, width, thickness);
+        sb.draw(ImageMaster.WHITE_SQUARE_IMG, x, y, thickness, height);
+        sb.draw(ImageMaster.WHITE_SQUARE_IMG, x, y+height-thickness, width, thickness);
+        sb.draw(ImageMaster.WHITE_SQUARE_IMG, x+width-thickness, y, thickness, height);
     }
 }
