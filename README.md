@@ -8,7 +8,6 @@ ModTheSpire is a tool to load external mods for Slay the Spire without modifying
 #### Development ####
 * Java 8
 * Maven
-* [ModTheSpireLib](https://github.com/kiooeht/ModTheSpireLib)
 
 ## Building ##
 1. Run `mvn package`
@@ -24,18 +23,18 @@ ModTheSpire is a tool to load external mods for Slay the Spire without modifying
 
 ## For Modders ##
 * ModTheSpire automatically sets the Settings.isModded flag to true, so there is no need to do that yourself.
-* [ModTheSpireLib](https://github.com/kiooeht/ModTheSpireLib)
 * [Wiki](https://github.com/kiooeht/ModTheSpire/wiki/SpirePatch)
 
 ## Changelog ##
-#### dev ####
+#### v2.5.0 ####
 * **Merge ModTheSpire and ModTheSpireLib. They are now one project**
 * Maintain launcher window size and position between uses
 * When not using debug mode, close log window when game closes
 * Retain debug mode between uses
+* Mods can specify an exact StS version they support
 * Warn in launcher if mod specifies a specific StS version that doesn't match the current
 * SpireConfig: Save/load mod config options from user directory
-* Fix: Launcher UI for long lists of mod authors
+* Fix: Launcher UI for long lists of mod authors or long descriptions
 * Fix: UTF-8 support in ModInfo (pk27602017)
 
 #### v2.4.0 ####
