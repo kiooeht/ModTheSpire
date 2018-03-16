@@ -8,7 +8,6 @@ ModTheSpire is a tool to load external mods for Slay the Spire without modifying
 #### Development ####
 * Java 8
 * Maven
-* [ModTheSpireLib](https://github.com/kiooeht/ModTheSpireLib)
 
 ## Building ##
 1. Run `mvn package`
@@ -24,7 +23,6 @@ ModTheSpire is a tool to load external mods for Slay the Spire without modifying
 
 ## For Modders ##
 * ModTheSpire automatically sets the Settings.isModded flag to true, so there is no need to do that yourself.
-* [ModTheSpireLib](https://github.com/kiooeht/ModTheSpireLib)
 * [Wiki](https://github.com/kiooeht/ModTheSpire/wiki/SpirePatch)
 
 ## Changelog ##
