@@ -30,8 +30,6 @@ public class SaveBaseModBadges
         }
 
         StackTraceElement[] stacktrace = Thread.currentThread().getStackTrace();
-        System.out.println(stacktrace[3].getClassName() + "." + stacktrace[3].getMethodName());
-
         try {
             Class<?> cls = SaveBaseModBadges.class.getClassLoader().loadClass(stacktrace[3].getClassName());
             URL modFile = cls.getProtectionDomain().getCodeSource().getLocation().toURI().toURL();

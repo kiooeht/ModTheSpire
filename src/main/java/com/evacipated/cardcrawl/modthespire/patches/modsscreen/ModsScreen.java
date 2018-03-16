@@ -42,7 +42,12 @@ public class ModsScreen
     static Map<URL, Object> baseModBadges;
     private static Field ModBadge_x;
     private static Field ModBadge_y;
+    private static Field ModBadge_modPanel;
     private static Method ModBadge_render;
+    private static Method ModBadge_onClick;
+    private static Field ModPanel_isUp;
+    private static Method ModPanel_update;
+    private static Field BaseMod_modSettingsUp;
 
     static
     {
@@ -52,7 +57,20 @@ public class ModsScreen
             ModBadge_x.setAccessible(true);
             ModBadge_y = ModBadge.getDeclaredField("y");
             ModBadge_y.setAccessible(true);
+            ModBadge_modPanel = ModBadge.getDeclaredField("modPanel");
+            ModBadge_modPanel.setAccessible(true);
             ModBadge_render = ModBadge.getDeclaredMethod("receiveRender", SpriteBatch.class);
+            ModBadge_render.setAccessible(true);
+            ModBadge_onClick = ModBadge.getDeclaredMethod("onClick");
+            ModBadge_onClick.setAccessible(true);
+
+            Class<?> ModPanel = ModsScreen.class.getClassLoader().loadClass("basemod.ModPanel");
+            ModPanel_isUp = ModPanel.getDeclaredField("isUp");
+            ModPanel_isUp.setAccessible(true);
+            ModPanel_update = ModPanel.getDeclaredMethod("update");
+            ModPanel_update.setAccessible(true);
+
+            BaseMod_modSettingsUp = ModsScreen.class.getClassLoader().loadClass("basemod.BaseMod").getDeclaredField("modSettingsUp");
         } catch (ClassNotFoundException e) {
             // NOP
         } catch (NoSuchFieldException | NoSuchMethodException e) {
@@ -84,12 +102,23 @@ public class ModsScreen
         button.update();
         if (button.hb.clicked || InputHelper.pressedEscape) {
             InputHelper.pressedEscape = false;
-            CardCrawlGame.mainMenuScreen.screen = MainMenuScreen.CurScreen.MAIN_MENU;
-            button.hide();
-            CardCrawlGame.mainMenuScreen.lighten();
+            try {
+                if (!(boolean)BaseMod_modSettingsUp.get(null)) {
+                    CardCrawlGame.mainMenuScreen.screen = MainMenuScreen.CurScreen.MAIN_MENU;
+                    button.hide();
+                    CardCrawlGame.mainMenuScreen.lighten();
+                }
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
         }
         updateScrolling();
-        InputHelper.justClickedLeft = false;
+
+        if (baseModBadges != null) {
+            for (Map.Entry<URL, Object> entry : baseModBadges.entrySet()) {
+                modPanel_update(entry.getValue());
+            }
+        }
 
         float tmpY = 0;
         for (int i=0; i<hitboxes.size(); ++i) {
@@ -104,8 +133,13 @@ public class ModsScreen
             if (hitboxes.get(i).clicked) {
                 hitboxes.get(i).clicked = false;
                 selectedMod = i;
+                if (baseModBadges != null) {
+                    modBadge_onClick(baseModBadges.get(Loader.MODONLYURLS[i]));
+                }
             }
         }
+
+        InputHelper.justClickedLeft = false;
     }
 
     private void updateScrolling()
@@ -147,6 +181,23 @@ public class ModsScreen
             Settings.GOLD_COLOR);
 
         renderModList(sb);
+
+        try {
+            if (baseModBadges != null && (boolean)BaseMod_modSettingsUp.get(null)) {
+                for (Map.Entry<URL, Object> entry : baseModBadges.entrySet()) {
+                    try {
+                            MainMenuScreen.CurScreen tmpScreen = CardCrawlGame.mainMenuScreen.screen;
+                            CardCrawlGame.mainMenuScreen.screen = MainMenuScreen.CurScreen.MAIN_MENU;
+                            ModBadge_render.invoke(entry.getValue(), sb);
+                            CardCrawlGame.mainMenuScreen.screen = tmpScreen;
+                    } catch (IllegalAccessException | InvocationTargetException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
 
         for (Hitbox hitbox : hitboxes) {
             hitbox.render(sb);
@@ -203,6 +254,7 @@ public class ModsScreen
                     2);
             }
 
+            // Render BaseMod ModBadges
             if (baseModBadges != null) {
                 for (Map.Entry<URL, Object> entry : baseModBadges.entrySet()) {
                     try {
@@ -210,10 +262,14 @@ public class ModsScreen
                             Object modBadge = entry.getValue();
                             ModBadge_x.set(modBadge, 55.0f * Settings.scale);
                             ModBadge_y.set(modBadge, tmpY + scrollY - 27.0f * Settings.scale);
+
+                            boolean tmpModSettingsUp = (boolean)BaseMod_modSettingsUp.get(null);
+                            BaseMod_modSettingsUp.set(null, false);
                             MainMenuScreen.CurScreen tmpScreen = CardCrawlGame.mainMenuScreen.screen;
                             CardCrawlGame.mainMenuScreen.screen = MainMenuScreen.CurScreen.MAIN_MENU;
                             ModBadge_render.invoke(modBadge, sb);
                             CardCrawlGame.mainMenuScreen.screen = tmpScreen;
+                            BaseMod_modSettingsUp.set(null, tmpModSettingsUp);
                             break;
                         }
                     } catch (IllegalAccessException | InvocationTargetException e) {
@@ -236,5 +292,27 @@ public class ModsScreen
         sb.draw(ImageMaster.WHITE_SQUARE_IMG, x, y, thickness, height);
         sb.draw(ImageMaster.WHITE_SQUARE_IMG, x, y+height-thickness, width, thickness);
         sb.draw(ImageMaster.WHITE_SQUARE_IMG, x+width-thickness, y, thickness, height);
+    }
+
+    private void modPanel_update(Object badge)
+    {
+        try {
+            Object modPanel = ModBadge_modPanel.get(badge);
+            if (modPanel != null && (boolean)ModPanel_isUp.get(modPanel)) {
+                ModPanel_update.invoke(modPanel);
+            }
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void modBadge_onClick(Object badge)
+    {
+        try {
+            ModBadge_onClick.invoke(badge);
+            CardCrawlGame.mainMenuScreen.screen = MODS_LIST;
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
     }
 }
