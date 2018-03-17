@@ -1,6 +1,7 @@
 ## Changelog ##
 #### dev ####
 * Change ModInfo to use JSON
+* Update checker for ModTheSpire
 
 #### v2.5.0 ####
 * **Merge ModTheSpire and ModTheSpireLib. They are now one project**
