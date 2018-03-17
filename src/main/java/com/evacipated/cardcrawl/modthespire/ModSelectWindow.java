@@ -20,6 +20,12 @@ public class ModSelectWindow extends JFrame {
     private boolean isMaximized = false;
     private boolean isCentered = false;
     private Rectangle location;
+    private JPanel playPane;
+
+    enum UpdateIconType
+    {
+        NONE, CHECKING, UPDATE_AVAILABLE, UPTODATE
+    }
 
     public static Properties getDefaults()
     {
@@ -183,7 +189,7 @@ public class ModSelectWindow extends JFrame {
             t.start();
         });
 
-        JPanel playPane = new JPanel();
+        playPane = new JPanel();
         playPane.setLayout(new BorderLayout());
         playPane.add(playBtn, BorderLayout.CENTER);
         JCheckBox debugCheck = new JCheckBox("Debug");
@@ -200,6 +206,8 @@ public class ModSelectWindow extends JFrame {
             }
         });
         playPane.add(debugCheck, BorderLayout.EAST);
+
+        setUpdateIcon(UpdateIconType.NONE);
 
         add(playPane, BorderLayout.SOUTH);
 
@@ -264,5 +272,49 @@ public class ModSelectWindow extends JFrame {
             }
         }
         return false;
+    }
+
+    synchronized void setUpdateIcon(UpdateIconType type)
+    {
+        if (playPane.getComponentCount() > 2) {
+            playPane.remove(2);
+        }
+        switch (type) {
+            case NONE:
+                playPane.add(Box.createRigidArea(new Dimension(20, 16)), BorderLayout.WEST);
+                break;
+            case CHECKING: {
+                JLabel label = new JLabel(new ImageIcon(getClass().getResource("/assets/ajax-loader.gif")), JLabel.CENTER);
+                label.setToolTipText("Checking for updates...");
+                label.setBorder(new EmptyBorder(0, 0, 0, 4));
+                playPane.add(label, BorderLayout.WEST);
+                break;
+            }
+            case UPDATE_AVAILABLE: {
+                JLabel label = new JLabel(new ImageIcon(getClass().getResource("/assets/warning.gif")), JLabel.CENTER);
+                label.setToolTipText("An update for ModTheSpire is available.");
+                label.setBorder(new EmptyBorder(0, 0, 0, 4));
+                playPane.add(label, BorderLayout.WEST);
+                label.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                label.addMouseListener(new MouseAdapter()
+                {
+                    @Override
+                    public void mouseClicked(MouseEvent e)
+                    {
+                        Loader.openLatestReleaseURL();
+                    }
+                });
+                break;
+            }
+            case UPTODATE: {
+                JLabel label = new JLabel(new ImageIcon(getClass().getResource("/assets/good.gif")), JLabel.CENTER);
+                label.setToolTipText("ModTheSpire is up to date.");
+                label.setBorder(new EmptyBorder(0, 0, 0, 4));
+                playPane.add(label, BorderLayout.WEST);
+                break;
+            }
+        }
+        revalidate();
+        repaint();
     }
 }

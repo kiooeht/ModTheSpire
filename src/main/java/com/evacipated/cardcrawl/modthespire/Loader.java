@@ -5,13 +5,15 @@ import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.LoaderClassPath;
 import javassist.NotFoundException;
-import org.clapper.util.classutil.*;
-import org.objectweb.asm.*;
+import org.objectweb.asm.ClassReader;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowEvent;
-import java.io.*;
+import java.io.File;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -22,7 +24,6 @@ import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
-import java.util.jar.JarInputStream;
 
 public class Loader {
     public static boolean DEBUG = false;
@@ -41,6 +42,7 @@ public class Loader {
 
     private static Object ARGS;
     private static ModSelectWindow ex;
+    private static URL latestReleaseURL = null;
 
     public static void main(String[] args) {
         ARGS = args;
@@ -108,12 +110,41 @@ public class Loader {
                 String msg = "ModTheSpire requires Java version 8 to run properly.\nYou are currently using Java " + java_version;
                 JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE);
             }
+
+            // Check for ModTheSpire update
+            new Thread(() -> {
+                ex.setUpdateIcon(ModSelectWindow.UpdateIconType.CHECKING);
+                try {
+                    UpdateChecker updateChecker = new GithubUpdateChecker("kiooeht", "ModTheSpire");
+                    if (updateChecker.isNewerVersionAvailable(MTS_VERSION)) {
+                        latestReleaseURL = updateChecker.getLatestReleaseURL();
+                        ex.setUpdateIcon(ModSelectWindow.UpdateIconType.UPDATE_AVAILABLE);
+                    } else {
+                        ex.setUpdateIcon(ModSelectWindow.UpdateIconType.UPTODATE);
+                    }
+                } catch (IOException e) {
+                    // NOP
+                }
+            }).start();
         });
     }
 
     public static void closeWindow()
     {
         ex.dispatchEvent(new WindowEvent(ex, WindowEvent.WINDOW_CLOSING));
+    }
+
+    public static void openLatestReleaseURL()
+    {
+        if (latestReleaseURL != null) {
+            if (Desktop.isDesktopSupported()) {
+                try {
+                    Desktop.getDesktop().browse(latestReleaseURL.toURI());
+                } catch (IOException | URISyntaxException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     // runMods - sets up the ClassLoader, sets the isModded flag and launches the game
