@@ -161,6 +161,8 @@ public class Loader {
                 ModInfo[] modInfos = buildInfoArray(modJars);
                 MODINFOS = modInfos;
 
+                printMTSInfo();
+
                 // Remove the base game jar from the search path
                 URL[] modOnlyUrls = new URL[modUrls.length - 1];
                 System.arraycopy(modUrls, 0, modOnlyUrls, 0, modOnlyUrls.length);
@@ -295,6 +297,24 @@ public class Loader {
 
         if (files.length > 0) return files;
         return new File[0];
+    }
+
+    private static void printMTSInfo()
+    {
+        System.out.println("Java version: " + System.getProperty("java.version"));
+        SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy");
+        System.out.println("Slay the Spire version: " + sdf.format(STS_VERSION));
+        System.out.println("ModTheSpire version: " + MTS_VERSION.get());
+        System.out.printf("Mod list: ");
+        for (ModInfo info : MODINFOS) {
+            if (info.ID == null || info.ID.isEmpty()) {
+                System.out.printf(info.Name);
+            } else {
+                System.out.printf(info.ID);
+            }
+            System.out.printf(", ");
+        }
+        System.out.println();
     }
 
     private static void checkFileInfo(File file)
