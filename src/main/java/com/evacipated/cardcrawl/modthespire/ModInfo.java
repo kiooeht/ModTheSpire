@@ -60,6 +60,7 @@ public class ModInfo implements Serializable {
         Gson gson = new GsonBuilder()
             .excludeFieldsWithModifiers(Modifier.STATIC)
             .registerTypeAdapter(Version.class, new VersionDeserializer())
+            .setDateFormat("MM-dd-yyyy")
             .create();
 
         URLClassLoader loader = null;
