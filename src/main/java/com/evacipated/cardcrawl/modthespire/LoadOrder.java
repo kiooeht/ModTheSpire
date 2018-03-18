@@ -98,7 +98,9 @@ public class LoadOrder {
         // actually set them in order in the list
         for (ModDescriptor descriptor : loadOrder) {
 			ModPanel toAdd = new ModPanel(descriptor.info, descriptor.mod, parentSize);
-			toAdd.checkBox.setSelected(descriptor.checked);
+			if (toAdd.checkBox.isEnabled()) {
+                toAdd.checkBox.setSelected(descriptor.checked);
+            }
             model.addElement(toAdd);
         }
     }

@@ -40,6 +40,11 @@ public class ModPanel extends JPanel {
                 "You may encounter problems running it.</html>");
         }
     }
+
+    public boolean isSelected()
+    {
+        return checkBox.isEnabled() && checkBox.isSelected();
+    }
     
     public class InfoPanel extends JPanel {
         JPanel buttonPanel;
