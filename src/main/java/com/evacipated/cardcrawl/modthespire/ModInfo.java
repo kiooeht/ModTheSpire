@@ -65,7 +65,7 @@ public class ModInfo implements Serializable {
 
         URLClassLoader loader = null;
         try {
-            loader = new URLClassLoader(new URL[] {mod_jar.toURI().toURL()});
+            loader = new URLClassLoader(new URL[] {mod_jar.toURI().toURL()}, null);
             InputStream in = loader.getResourceAsStream("ModTheSpire.json");
             if (in == null) {
                 // Fallback to old info file
