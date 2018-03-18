@@ -34,6 +34,8 @@ public class ModInfo implements Serializable {
     public Version MTS_Version;
     @SerializedName("sts_version")
     public Date STS_Version;
+    @SerializedName("dependencies")
+    public String[] Dependencies;
 
     private ModInfo()
     {
@@ -42,6 +44,7 @@ public class ModInfo implements Serializable {
         Description = "";
         MTS_Version = new Version("0.0.0");
         STS_Version = null;
+        Dependencies = new String[]{};
     }
     
     private static void closeLoader(URLClassLoader loader)
