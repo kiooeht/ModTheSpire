@@ -158,13 +158,13 @@ public class Loader {
         }
         try {
             ModInfo[] modInfos = buildInfoArray(modJars);
+            checkDependencies(modInfos);
+            modInfos = orderDependencies(modInfos);
             MODINFOS = modInfos;
 
             MTSClassLoader loader = new MTSClassLoader(Loader.class.getResourceAsStream(COREPATCHES_JAR), buildUrlArray(modInfos), Loader.class.getClassLoader());
 
             if (modJars.length > 0) {
-                checkDependencies(MODINFOS);
-
                 ClassPool pool = ClassPool.getDefault();
                 pool.insertClassPath(new LoaderClassPath(loader));
                 loader.addStreamToClassPool(pool); // Inserts infront of above path
@@ -318,7 +318,6 @@ public class Loader {
         }
 
         for (final ModInfo info : modinfos) {
-            System.out.println("Checking " + info.Name + " dependencies...");
             for (String dependency : info.Dependencies) {
                 boolean has = false;
                 for (final ModInfo dependinfo : modinfos) {
@@ -332,6 +331,35 @@ public class Loader {
                 }
             }
         }
+    }
+
+    private static int findDependencyIndex(ModInfo[] modInfos, String dependencyID)
+    {
+        for (int i=0; i<modInfos.length; ++i) {
+            if (modInfos[i].ID.equals(dependencyID)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private static ModInfo[] orderDependencies(ModInfo[] modInfos) throws CyclicDependencyException
+    {
+        GraphTS<ModInfo> g = new GraphTS<>();
+
+        for (final ModInfo info : modInfos) {
+            g.addVertex(info);
+        }
+
+        for (int i=0; i<modInfos.length; ++i) {
+            for (String dependency : modInfos[i].Dependencies) {
+                g.addEdge(findDependencyIndex(modInfos, dependency), i);
+            }
+        }
+
+        g.tsort();
+
+        return g.sortedArray.toArray(new ModInfo[g.sortedArray.size()]);
     }
 
     private static void checkFileInfo(File file)
