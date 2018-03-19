@@ -161,6 +161,8 @@ public class Loader {
                 ModInfo[] modInfos = buildInfoArray(modJars);
                 MODINFOS = modInfos;
 
+                checkDependencies(MODINFOS);
+
                 // Remove the base game jar from the search path
                 URL[] modOnlyUrls = new URL[modUrls.length - 1];
                 System.arraycopy(modUrls, 0, modOnlyUrls, 0, modOnlyUrls.length);
@@ -177,7 +179,7 @@ public class Loader {
                 }
                 // Find and inject mod patches
                 System.out.println("Finding patches...");
-                for (CtClass cls :Patcher.injectPatches(loader, pool, Patcher.findPatches(modOnlyUrls, MODINFOS))) {
+                for (CtClass cls : Patcher.injectPatches(loader, pool, Patcher.findPatches(modOnlyUrls, MODINFOS))) {
                     ctClasses.put(countSuperClasses(cls) + cls.getName(), cls);
                 }
 
@@ -189,7 +191,7 @@ public class Loader {
                 // Patch SpireEnums from mods
                 Patcher.patchEnums(loader, Loader.MODONLYURLS);
                 System.out.println("Done.");
-                
+
                 // Set Settings.isModded = true
                 System.out.printf("Setting isModded = true...");
                 System.out.flush();
@@ -237,6 +239,12 @@ public class Loader {
             Class<?> cls = loader.loadClass("com.megacrit.cardcrawl.desktop.DesktopLauncher");
             Method method = cls.getDeclaredMethod("main", String[].class);
             method.invoke(null, (Object) ARGS);
+        } catch (MissingDependencyException e) {
+            System.err.println("ERROR: " + e.getMessage());
+            JOptionPane.showMessageDialog(null, e.getMessage(), "Missing Dependency", JOptionPane.ERROR_MESSAGE);
+        } catch (DuplicateModIDException e) {
+            System.err.println("ERROR: " + e.getMessage());
+            JOptionPane.showMessageDialog(null, e.getMessage(), "Duplicate Mod ID", JOptionPane.ERROR_MESSAGE);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -295,6 +303,36 @@ public class Loader {
 
         if (files.length > 0) return files;
         return new File[0];
+    }
+
+    private static void checkDependencies(ModInfo[] modinfos) throws MissingDependencyException, DuplicateModIDException
+    {
+        Map<String, ModInfo> dependencyMap = new HashMap<>();
+        for (final ModInfo info : modinfos) {
+            if (info.ID != null) {
+                if (!dependencyMap.containsKey(info.ID)) {
+                    dependencyMap.put(info.ID, info);
+                } else {
+                    throw new DuplicateModIDException(dependencyMap.get(info.ID), info);
+                }
+            }
+        }
+
+        for (final ModInfo info : modinfos) {
+            System.out.println("Checking " + info.Name + " dependencies...");
+            for (String dependency : info.Dependencies) {
+                boolean has = false;
+                for (final ModInfo dependinfo : modinfos) {
+                    if (dependinfo.ID != null && dependinfo.ID.equals(dependency)) {
+                        has = true;
+                        break;
+                    }
+                }
+                if (!has) {
+                    throw new MissingDependencyException(info, dependency);
+                }
+            }
+        }
     }
 
     private static void checkFileInfo(File file)
