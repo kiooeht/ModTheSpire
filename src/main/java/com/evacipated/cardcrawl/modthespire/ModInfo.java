@@ -22,6 +22,7 @@ public class ModInfo implements Serializable {
      * 
      */
     private static final long serialVersionUID = 7452562412479584982L;
+    public transient URL jarURL;
     @SerializedName("modid")
     public String ID;
     @SerializedName("name")
@@ -34,6 +35,8 @@ public class ModInfo implements Serializable {
     public Version MTS_Version;
     @SerializedName("sts_version")
     public Date STS_Version;
+    @SerializedName("dependencies")
+    public String[] Dependencies;
 
     private ModInfo()
     {
@@ -42,6 +45,7 @@ public class ModInfo implements Serializable {
         Description = "";
         MTS_Version = new Version("0.0.0");
         STS_Version = null;
+        Dependencies = new String[]{};
     }
     
     private static void closeLoader(URLClassLoader loader)
@@ -58,7 +62,7 @@ public class ModInfo implements Serializable {
     public static ModInfo ReadModInfo(File mod_jar)
     {
         Gson gson = new GsonBuilder()
-            .excludeFieldsWithModifiers(Modifier.STATIC)
+            .excludeFieldsWithModifiers(Modifier.STATIC, Modifier.TRANSIENT)
             .registerTypeAdapter(Version.class, new VersionDeserializer())
             .setDateFormat("MM-dd-yyyy")
             .create();

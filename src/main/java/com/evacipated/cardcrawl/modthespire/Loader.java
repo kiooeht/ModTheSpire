@@ -35,7 +35,6 @@ public class Loader {
     private static String STS_JAR2 = "SlayTheSpire.jar";
     public static String COREPATCHES_JAR = "/corepatches.jar";
     public static ModInfo[] MODINFOS;
-    public static URL[] MODONLYURLS;
 
     static SpireConfig MTS_CONFIG;
     static Date STS_VERSION = null;
@@ -102,7 +101,12 @@ public class Loader {
         findGameVersion();
 
         EventQueue.invokeLater(() -> {
-            ex = new ModSelectWindow(getAllModFiles());
+            try {
+                ex = new ModSelectWindow(getAllModFiles());
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+                System.exit(-1);
+            }
             ex.setVisible(true);
 
             String java_version = System.getProperty("java.version");
@@ -153,21 +157,16 @@ public class Loader {
             System.out.println("Debug mode!");
         }
         try {
-            // Construct ClassLoader
-            URL[] modUrls = buildUrlArray(modJars);
-            MTSClassLoader loader = new MTSClassLoader(Loader.class.getResourceAsStream(COREPATCHES_JAR), modUrls, Loader.class.getClassLoader());
+            ModInfo[] modInfos = buildInfoArray(modJars);
+            checkDependencies(modInfos);
+            modInfos = orderDependencies(modInfos);
+            MODINFOS = modInfos;
+
+            printMTSInfo();
+
+            MTSClassLoader loader = new MTSClassLoader(Loader.class.getResourceAsStream(COREPATCHES_JAR), buildUrlArray(modInfos), Loader.class.getClassLoader());
 
             if (modJars.length > 0) {
-                ModInfo[] modInfos = buildInfoArray(modJars);
-                MODINFOS = modInfos;
-
-                printMTSInfo();
-
-                // Remove the base game jar from the search path
-                URL[] modOnlyUrls = new URL[modUrls.length - 1];
-                System.arraycopy(modUrls, 0, modOnlyUrls, 0, modOnlyUrls.length);
-                MODONLYURLS = modOnlyUrls;
-
                 ClassPool pool = ClassPool.getDefault();
                 pool.insertClassPath(new LoaderClassPath(loader));
                 loader.addStreamToClassPool(pool); // Inserts infront of above path
@@ -179,7 +178,7 @@ public class Loader {
                 }
                 // Find and inject mod patches
                 System.out.println("Finding patches...");
-                for (CtClass cls :Patcher.injectPatches(loader, pool, Patcher.findPatches(modOnlyUrls, MODINFOS))) {
+                for (CtClass cls : Patcher.injectPatches(loader, pool, Patcher.findPatches(MODINFOS))) {
                     ctClasses.put(countSuperClasses(cls) + cls.getName(), cls);
                 }
 
@@ -189,9 +188,9 @@ public class Loader {
                 System.out.printf("Patching enums...");
                 Patcher.patchEnums(loader, Loader.class.getResource(Loader.COREPATCHES_JAR));
                 // Patch SpireEnums from mods
-                Patcher.patchEnums(loader, Loader.MODONLYURLS);
+                Patcher.patchEnums(loader, modInfos);
                 System.out.println("Done.");
-                
+
                 // Set Settings.isModded = true
                 System.out.printf("Setting isModded = true...");
                 System.out.flush();
@@ -211,11 +210,11 @@ public class Loader {
 
                 // Initialize any mods that implement SpireInitializer.initialize()
                 System.out.println("Initializing mods...");
-                List<String> initialized = Patcher.initializeMods(loader, modOnlyUrls);
+                List<String> initialized = Patcher.initializeMods(loader, modInfos);
                 // DEPRECATED
                 // Initialize any mods which declare an initialization function
-                for (int i = 0; i < modUrls.length - 1; i++) {
-                    String modUrl = modUrls[i].toString();
+                for (int i = 0; i < modInfos.length - 1; i++) {
+                    String modUrl = modInfos[i].jarURL.toString();
                     String modName = modUrl.substring(modUrl.lastIndexOf('/') + 1, modUrl.length() - 4);
 
                     try {
@@ -239,6 +238,12 @@ public class Loader {
             Class<?> cls = loader.loadClass("com.megacrit.cardcrawl.desktop.DesktopLauncher");
             Method method = cls.getDeclaredMethod("main", String[].class);
             method.invoke(null, (Object) ARGS);
+        } catch (MissingDependencyException e) {
+            System.err.println("ERROR: " + e.getMessage());
+            JOptionPane.showMessageDialog(null, e.getMessage(), "Missing Dependency", JOptionPane.ERROR_MESSAGE);
+        } catch (DuplicateModIDException e) {
+            System.err.println("ERROR: " + e.getMessage());
+            JOptionPane.showMessageDialog(null, e.getMessage(), "Duplicate Mod ID", JOptionPane.ERROR_MESSAGE);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -265,20 +270,22 @@ public class Loader {
     }
 
     // buildUrlArray - builds the URL array to pass to the ClassLoader
-    private static URL[] buildUrlArray(File[] modJars) throws MalformedURLException {
-        URL[] urls = new URL[modJars.length + 1];
-        for (int i = 0; i < modJars.length; i++) {
-            urls[i] = modJars[i].toURI().toURL();
+    private static URL[] buildUrlArray(ModInfo[] modInfos) throws MalformedURLException {
+        URL[] urls = new URL[modInfos.length + 1];
+        for (int i = 0; i < modInfos.length; i++) {
+            urls[i] = modInfos[i].jarURL;
         }
 
-        urls[modJars.length] = new File(STS_JAR).toURI().toURL();
+        urls[modInfos.length] = new File(STS_JAR).toURI().toURL();
         return urls;
     }
 
-    public static ModInfo[] buildInfoArray(File[] modJars) {
+    public static ModInfo[] buildInfoArray(File[] modJars) throws MalformedURLException
+    {
         ModInfo[] infos = new ModInfo[modJars.length];
         for (int i = 0; i < modJars.length; ++i) {
             infos[i] = ModInfo.ReadModInfo(modJars[i]);
+            infos[i].jarURL = modJars[i].toURI().toURL();
         }
         return infos;
     }
@@ -315,6 +322,64 @@ public class Loader {
             System.out.printf(", ");
         }
         System.out.println();
+    }
+
+    private static void checkDependencies(ModInfo[] modinfos) throws MissingDependencyException, DuplicateModIDException
+    {
+        Map<String, ModInfo> dependencyMap = new HashMap<>();
+        for (final ModInfo info : modinfos) {
+            if (info.ID != null) {
+                if (!dependencyMap.containsKey(info.ID)) {
+                    dependencyMap.put(info.ID, info);
+                } else {
+                    throw new DuplicateModIDException(dependencyMap.get(info.ID), info);
+                }
+            }
+        }
+
+        for (final ModInfo info : modinfos) {
+            for (String dependency : info.Dependencies) {
+                boolean has = false;
+                for (final ModInfo dependinfo : modinfos) {
+                    if (dependinfo.ID != null && dependinfo.ID.equals(dependency)) {
+                        has = true;
+                        break;
+                    }
+                }
+                if (!has) {
+                    throw new MissingDependencyException(info, dependency);
+                }
+            }
+        }
+    }
+
+    private static int findDependencyIndex(ModInfo[] modInfos, String dependencyID)
+    {
+        for (int i=0; i<modInfos.length; ++i) {
+            if (modInfos[i].ID.equals(dependencyID)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private static ModInfo[] orderDependencies(ModInfo[] modInfos) throws CyclicDependencyException
+    {
+        GraphTS<ModInfo> g = new GraphTS<>();
+
+        for (final ModInfo info : modInfos) {
+            g.addVertex(info);
+        }
+
+        for (int i=0; i<modInfos.length; ++i) {
+            for (String dependency : modInfos[i].Dependencies) {
+                g.addEdge(findDependencyIndex(modInfos, dependency), i);
+            }
+        }
+
+        g.tsortStable();
+
+        return g.sortedArray.toArray(new ModInfo[g.sortedArray.size()]);
     }
 
     private static void checkFileInfo(File file)

@@ -5,6 +5,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.net.MalformedURLException;
 import java.util.Properties;
 
 public class ModSelectWindow extends JFrame {
@@ -38,7 +39,8 @@ public class ModSelectWindow extends JFrame {
         return properties;
     }
     
-    public ModSelectWindow(File[] modJars) {
+    public ModSelectWindow(File[] modJars) throws MalformedURLException
+    {
         mods = modJars;
         info = Loader.buildInfoArray(mods);
         readWindowPosSize();
