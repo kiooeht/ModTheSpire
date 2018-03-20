@@ -3,6 +3,7 @@
 * Change ModInfo to use JSON
 * Update checker for ModTheSpire
 * Warn if ModTheSpire is in the mod list and don't load it as a mod
+* Mod dependencies: Load dependencies first
 * Fix: Disable checkboxes for mods that need newer MTS version
 
 #### v2.5.0 ####
