@@ -357,7 +357,7 @@ public class Loader {
             }
         }
 
-        g.tsort();
+        g.tsortStable();
 
         return g.sortedArray.toArray(new ModInfo[g.sortedArray.size()]);
     }
