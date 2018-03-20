@@ -134,7 +134,7 @@ public class ModsScreen
                 hitboxes.get(i).clicked = false;
                 selectedMod = i;
                 if (baseModBadges != null) {
-                    modBadge_onClick(baseModBadges.get(Loader.MODONLYURLS[i]));
+                    modBadge_onClick(baseModBadges.get(Loader.MODINFOS[i].jarURL));
                 }
             }
         }
@@ -232,7 +232,7 @@ public class ModsScreen
         sb.setColor(Color.WHITE);
 
         float tmpY = 0;
-        for (int i=0; i<Loader.MODONLYURLS.length; ++i) {
+        for (int i=0; i<Loader.MODINFOS.length; ++i) {
             if (hitboxes.get(i).hovered) {
                 Color c = sb.getColor();
                 sb.setColor(1, 1, 1, (hitboxes.get(i).clickStarted ? 0.8f : 0.4f));
@@ -240,7 +240,7 @@ public class ModsScreen
                 sb.setColor(c);
             }
 
-            final URL modURL = Loader.MODONLYURLS[i];
+            final URL modURL = Loader.MODINFOS[i].jarURL;
             FontHelper.renderFontLeftTopAligned(sb, FontHelper.buttonLabelFont, Loader.MODINFOS[i].Name,
                 95.0f * Settings.scale,
                 tmpY + scrollY,
