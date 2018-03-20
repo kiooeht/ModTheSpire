@@ -18,13 +18,13 @@ public class Patcher {
     private static Map<Class<?>, EnumBusterReflect> enumBusterMap = new HashMap<>();
     private static TreeSet<PatchInfo> patchInfos = new TreeSet<>(new PatchInfoComparator());
 
-    public static List<String> initializeMods(ClassLoader loader, URL... urls) throws ClassNotFoundException, InvocationTargetException, IllegalAccessException
+    public static List<String> initializeMods(ClassLoader loader, ModInfo... modInfos) throws ClassNotFoundException, InvocationTargetException, IllegalAccessException
     {
         List<String> result = new ArrayList<>();
 
-        for (URL url : urls) {
-            if (annotationDBMap.containsKey(url)) {
-                Set<String> initializers = annotationDBMap.get(url).getAnnotationIndex().get(SpireInitializer.class.getName());
+        for (ModInfo info : modInfos) {
+            if (annotationDBMap.containsKey(info.jarURL)) {
+                Set<String> initializers = annotationDBMap.get(info.jarURL).getAnnotationIndex().get(SpireInitializer.class.getName());
                 if (initializers != null) {
                     for (String initializer : initializers) {
                         try {
@@ -37,7 +37,7 @@ public class Patcher {
                     }
                 }
             } else {
-                System.err.println(url + " Not in DB map. Something is very wrong");
+                System.err.println(info.jarURL + " Not in DB map. Something is very wrong");
             }
         }
 
@@ -47,6 +47,15 @@ public class Patcher {
     public static List<Iterable<String>> findPatches(URL[] urls) throws IOException
     {
         return findPatches(urls, null);
+    }
+
+    public static List<Iterable<String>> findPatches(ModInfo[] modInfos) throws IOException
+    {
+        URL[] urls = new URL[modInfos.length];
+        for (int i = 0; i < modInfos.length; i++) {
+            urls[i] = modInfos[i].jarURL;
+        }
+        return findPatches(urls, modInfos);
     }
 
     public static List<Iterable<String>> findPatches(URL[] urls, ModInfo[] modInfos) throws IOException
@@ -71,6 +80,15 @@ public class Patcher {
             }
         }
         return patchSetList;
+    }
+
+    public static void patchEnums(ClassLoader loader, ModInfo[] modInfos) throws IOException, ClassNotFoundException, NoSuchFieldException, IllegalAccessException
+    {
+        URL[] urls = new URL[modInfos.length];
+        for (int i = 0; i < modInfos.length; i++) {
+            urls[i] = modInfos[i].jarURL;
+        }
+        patchEnums(loader, urls);
     }
 
     public static void patchEnums(ClassLoader loader, URL... urls) throws IOException, ClassNotFoundException, NoSuchFieldException, IllegalAccessException

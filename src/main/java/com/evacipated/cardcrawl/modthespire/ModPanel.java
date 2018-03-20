@@ -40,6 +40,11 @@ public class ModPanel extends JPanel {
                 "You may encounter problems running it.</html>");
         }
     }
+
+    public boolean isSelected()
+    {
+        return checkBox.isEnabled() && checkBox.isSelected();
+    }
     
     public class InfoPanel extends JPanel {
         JPanel buttonPanel;
@@ -88,13 +93,9 @@ public class ModPanel extends JPanel {
                 infoPanel.add(description);
             }
 
-            if (info.Author != null && !info.Author.equals("")) {
-                String[] authors = info.Author.split(",");
-                for (int i=0; i<authors.length; ++i) {
-                    authors[i] = authors[i].trim();
-                }
-                String label = "Author" + (authors.length > 1 ? "s" : "") + ": ";
-                author = new JTextArea(label + String.join(", ", authors));
+            if (info.Authors != null && info.Authors.length > 0) {
+                String label = "Author" + (info.Authors.length > 1 ? "s" : "") + ": ";
+                author = new JTextArea(label + String.join(", ", info.Authors));
                 author.setAlignmentX(Component.LEFT_ALIGNMENT);
                 author.setLineWrap(true);
                 author.setWrapStyleWord(true);

@@ -44,11 +44,8 @@ public class CreditsModList {
             // Loaded mods
             for (ModInfo info : Loader.MODINFOS) {
                 lines.add(new CreditLine(info.Name, tmpY[0] -= 150.0F, true));
-                if (!info.Author.isEmpty()) {
-                    String[] modAuthors = info.Author.split(",");
-                    for (String author : modAuthors) {
-                        lines.add(new CreditLine(author, tmpY[0] -= 45.0F, false));
-                    }
+                for (String author : info.Authors) {
+                    lines.add(new CreditLine(author, tmpY[0] -= 45.0F, false));
                 }
             }
         } catch (NoSuchFieldException | IllegalAccessException e) {
