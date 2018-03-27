@@ -5,6 +5,7 @@ import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.LoaderClassPath;
 import javassist.NotFoundException;
+import org.apache.commons.lang3.SystemUtils;
 import org.objectweb.asm.ClassReader;
 
 import javax.swing.*;
@@ -81,19 +82,25 @@ public class Loader {
         {
             File tmp = new File(STS_JAR);
             if (!tmp.exists()) {
-                // Check if for the Mac version
-                tmp = new File(MAC_STS_JAR);
-                checkFileInfo(tmp);
-                if (!tmp.exists()) {
-                    checkFileInfo(new File("SlayTheSpire.app"));
-                    checkFileInfo(new File("SlayTheSpire.app/Contents"));
-                    checkFileInfo(new File("SlayTheSpire.app/Contents/Resources"));
-
-                    JOptionPane.showMessageDialog(null, "Unable to find '" + STS_JAR + "'");
-                    return;
+                // Search for Steam install
+                String steamJar = SteamSearch.findDesktopJar();
+                if (steamJar != null && new File(steamJar).exists()) {
+                    STS_JAR = steamJar;
                 } else {
-                    System.out.println("Using Mac version at: " + MAC_STS_JAR);
-                    STS_JAR = MAC_STS_JAR;
+                    // Check if for the Mac version
+                    tmp = new File(MAC_STS_JAR);
+                    checkFileInfo(tmp);
+                    if (!tmp.exists()) {
+                        checkFileInfo(new File("SlayTheSpire.app"));
+                        checkFileInfo(new File("SlayTheSpire.app/Contents"));
+                        checkFileInfo(new File("SlayTheSpire.app/Contents/Resources"));
+
+                        JOptionPane.showMessageDialog(null, "Unable to find '" + STS_JAR + "'");
+                        return;
+                    } else {
+                        System.out.println("Using Mac version at: " + MAC_STS_JAR);
+                        STS_JAR = MAC_STS_JAR;
+                    }
                 }
             }
         }
