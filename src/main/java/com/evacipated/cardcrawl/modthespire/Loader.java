@@ -5,7 +5,6 @@ import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.LoaderClassPath;
 import javassist.NotFoundException;
-import org.apache.commons.lang3.SystemUtils;
 import org.objectweb.asm.ClassReader;
 
 import javax.swing.*;
