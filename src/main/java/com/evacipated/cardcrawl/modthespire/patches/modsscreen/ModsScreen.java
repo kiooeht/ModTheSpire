@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.utils.ScissorStack;
 import com.evacipated.cardcrawl.modthespire.Loader;
+import com.evacipated.cardcrawl.modthespire.ModInfo;
 import com.evacipated.cardcrawl.modthespire.lib.SpireEnum;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.core.Settings;
@@ -14,6 +15,7 @@ import com.megacrit.cardcrawl.helpers.*;
 import com.megacrit.cardcrawl.screens.mainMenu.MainMenuScreen;
 import com.megacrit.cardcrawl.screens.mainMenu.MenuCancelButton;
 import com.megacrit.cardcrawl.screens.mainMenu.PatchNotesScreen;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.smartcardio.Card;
 import java.lang.reflect.Field;
@@ -39,6 +41,7 @@ public class ModsScreen
 
     private ArrayList<Hitbox> hitboxes = new ArrayList<>();
     private int selectedMod = -1;
+    private Hitbox configHb;
 
     static Map<URL, Object> baseModBadges;
     private static boolean justClosedModPanel = false;
@@ -85,6 +88,8 @@ public class ModsScreen
         for (int i=0; i<Loader.MODINFOS.length; ++i) {
             hitboxes.add(new Hitbox(430.0f * Settings.scale, 40.0f * Settings.scale));
         }
+
+        configHb = new Hitbox(100 * Settings.scale, 40 * Settings.scale);
     }
 
     public void open()
@@ -157,9 +162,13 @@ public class ModsScreen
                 if (hitboxes.get(i).clicked) {
                     hitboxes.get(i).clicked = false;
                     selectedMod = i;
-                    if (baseModBadges != null) {
-                        modBadge_onClick(baseModBadges.get(Loader.MODINFOS[i].jarURL));
-                    }
+                }
+            }
+
+            if (selectedMod >= 0 && baseModBadges.get(Loader.MODINFOS[selectedMod].jarURL) != null) {
+                configHb.update();
+                if (configHb.hovered && InputHelper.justClickedLeft) {
+                    modBadge_onClick(baseModBadges.get(Loader.MODINFOS[selectedMod].jarURL));
                 }
             }
         }
@@ -204,6 +213,8 @@ public class ModsScreen
             Settings.WIDTH / 2.0f,
             Settings.HEIGHT - 70.0f * Settings.scale,
             Settings.GOLD_COLOR);
+
+        renderModInfo(sb);
 
         renderModList(sb);
 
@@ -309,6 +320,53 @@ public class ModsScreen
         if (camera != null) {
             sb.flush();
             ScissorStack.popScissors();
+        }
+    }
+
+    private void renderModInfo(SpriteBatch sb)
+    {
+        // Draw bg rectangle
+        sb.setColor(new Color(0, 0, 0, 0.8f));
+        float screenPadding = 50 * Settings.scale;
+        float x = 600 * Settings.scale;
+        float y = 110 * Settings.scale;
+        sb.draw(ImageMaster.WHITE_SQUARE_IMG,
+            x, screenPadding,
+            Settings.WIDTH - x - screenPadding, Settings.HEIGHT - y - screenPadding);
+        sb.setColor(Color.WHITE);
+
+        float padding = 20 * Settings.scale;
+        if (selectedMod >= 0) {
+            ModInfo info = Loader.MODINFOS[selectedMod];
+            String text = info.Name;
+            text += " NL Version: " + (info.Version != null ? info.Version.get() : "<MISSING>");
+            text += " NL Mod ID: " + (info.ID != null ? info.ID : "<MISSING>");
+            text += " NL Author" + (info.Authors.length > 1 ? "s" : "") + ": " + StringUtils.join(info.Authors, ", ");
+            text += " NL NL " + info.Description;
+
+            FontHelper.renderSmartText(sb, FontHelper.buttonLabelFont,
+                text,
+                x + padding, Settings.HEIGHT - y - padding,
+                Settings.WIDTH - x - screenPadding,
+                26 * Settings.scale,
+                Settings.CREAM_COLOR);
+
+            if (baseModBadges != null) {
+                configHb.move(x - padding - 50 * Settings.scale, button.hb.y + (button.hb.height / 2.0f));
+
+                if (baseModBadges.get(Loader.MODINFOS[selectedMod].jarURL) != null) {
+                    configHb.render(sb);
+
+                    Color c = Settings.CREAM_COLOR;
+                    if (configHb.hovered) {
+                        c = Settings.GOLD_COLOR;
+                    }
+                    FontHelper.renderFontCentered(sb, FontHelper.buttonLabelFont,
+                        "Config",
+                        configHb.cX, configHb.cY,
+                        c);
+                }
+            }
         }
     }
 
