@@ -1,4 +1,4 @@
-package com.evacipated.cardcrawl.modthespire.patches.modsscreen;
+package com.evacipated.cardcrawl.modthespire.patches.modsscreen.BaseMod;
 
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
 

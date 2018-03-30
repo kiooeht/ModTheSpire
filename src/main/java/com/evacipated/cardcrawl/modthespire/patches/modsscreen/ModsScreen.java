@@ -15,6 +15,7 @@ import com.megacrit.cardcrawl.screens.mainMenu.MainMenuScreen;
 import com.megacrit.cardcrawl.screens.mainMenu.MenuCancelButton;
 import com.megacrit.cardcrawl.screens.mainMenu.PatchNotesScreen;
 
+import javax.smartcardio.Card;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -40,6 +41,7 @@ public class ModsScreen
     private int selectedMod = -1;
 
     static Map<URL, Object> baseModBadges;
+    private static boolean justClosedModPanel = false;
     private static Field ModBadge_x;
     private static Field ModBadge_y;
     private static Field ModBadge_modPanel;
@@ -93,48 +95,71 @@ public class ModsScreen
         CardCrawlGame.mainMenuScreen.darken();
         CardCrawlGame.mainMenuScreen.screen = MODS_LIST;
 
+        selectedMod = -1;
+
         scrollUpperBound = targetY;
         scrollLowerBound = Settings.HEIGHT - 600.0F * Settings.scale;
     }
 
     public void update()
     {
+        boolean baseModSettingsUp = false;
+        if (BaseMod_modSettingsUp != null) {
+            try {
+                baseModSettingsUp = (boolean) BaseMod_modSettingsUp.get(null);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
+
         button.update();
         if (button.hb.clicked || InputHelper.pressedEscape) {
+            button.hb.clicked = false;
             InputHelper.pressedEscape = false;
             try {
-                if (!(boolean)BaseMod_modSettingsUp.get(null)) {
+                if (!baseModSettingsUp) {
                     CardCrawlGame.mainMenuScreen.screen = MainMenuScreen.CurScreen.MAIN_MENU;
                     button.hide();
                     CardCrawlGame.mainMenuScreen.lighten();
+                } else {
+                    BaseMod_modSettingsUp.set(null, false);
+                    justClosedModPanel = true;
                 }
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
         }
-        updateScrolling();
 
         if (baseModBadges != null) {
             for (Map.Entry<URL, Object> entry : baseModBadges.entrySet()) {
                 modPanel_update(entry.getValue());
             }
+            if (justClosedModPanel) {
+                justClosedModPanel = false;
+                CardCrawlGame.mainMenuScreen.darken();
+                CardCrawlGame.mainMenuScreen.screen = MODS_LIST;
+                button.show(PatchNotesScreen.TEXT[0]);
+            }
         }
 
-        float tmpY = 0;
-        for (int i=0; i<hitboxes.size(); ++i) {
-            hitboxes.get(i).x = 90.0f * Settings.scale;
-            hitboxes.get(i).y = tmpY + scrollY - 30.0f * Settings.scale;
-            hitboxes.get(i).update();
-            if (hitboxes.get(i).hovered && InputHelper.isMouseDown) {
-                hitboxes.get(i).clickStarted = true;
-            }
-            tmpY -= 45.0f * Settings.scale;
+        if (!baseModSettingsUp) {
+            updateScrolling();
+            float tmpY = 0;
+            for (int i = 0; i < hitboxes.size(); ++i) {
+                hitboxes.get(i).x = 90.0f * Settings.scale;
+                hitboxes.get(i).y = tmpY + scrollY - 30.0f * Settings.scale;
+                hitboxes.get(i).update();
+                if (hitboxes.get(i).hovered && InputHelper.isMouseDown) {
+                    hitboxes.get(i).clickStarted = true;
+                }
+                tmpY -= 45.0f * Settings.scale;
 
-            if (hitboxes.get(i).clicked) {
-                hitboxes.get(i).clicked = false;
-                selectedMod = i;
-                if (baseModBadges != null) {
-                    modBadge_onClick(baseModBadges.get(Loader.MODINFOS[i].jarURL));
+                if (hitboxes.get(i).clicked) {
+                    hitboxes.get(i).clicked = false;
+                    selectedMod = i;
+                    if (baseModBadges != null) {
+                        modBadge_onClick(baseModBadges.get(Loader.MODINFOS[i].jarURL));
+                    }
                 }
             }
         }
@@ -186,10 +211,10 @@ public class ModsScreen
             if (baseModBadges != null && (boolean)BaseMod_modSettingsUp.get(null)) {
                 for (Map.Entry<URL, Object> entry : baseModBadges.entrySet()) {
                     try {
-                            MainMenuScreen.CurScreen tmpScreen = CardCrawlGame.mainMenuScreen.screen;
-                            CardCrawlGame.mainMenuScreen.screen = MainMenuScreen.CurScreen.MAIN_MENU;
-                            ModBadge_render.invoke(entry.getValue(), sb);
-                            CardCrawlGame.mainMenuScreen.screen = tmpScreen;
+                        MainMenuScreen.CurScreen tmpScreen = CardCrawlGame.mainMenuScreen.screen;
+                        CardCrawlGame.mainMenuScreen.screen = MainMenuScreen.CurScreen.MAIN_MENU;
+                        ModBadge_render.invoke(entry.getValue(), sb);
+                        CardCrawlGame.mainMenuScreen.screen = tmpScreen;
                     } catch (IllegalAccessException | InvocationTargetException e) {
                         e.printStackTrace();
                     }
@@ -296,23 +321,28 @@ public class ModsScreen
 
     private void modPanel_update(Object badge)
     {
-        try {
-            Object modPanel = ModBadge_modPanel.get(badge);
-            if (modPanel != null && (boolean)ModPanel_isUp.get(modPanel)) {
-                ModPanel_update.invoke(modPanel);
+        if (badge != null) {
+            try {
+                Object modPanel = ModBadge_modPanel.get(badge);
+                if (modPanel != null && (boolean) ModPanel_isUp.get(modPanel)) {
+                    ModPanel_update.invoke(modPanel);
+                }
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
             }
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            e.printStackTrace();
         }
     }
 
     private void modBadge_onClick(Object badge)
     {
-        try {
-            ModBadge_onClick.invoke(badge);
-            CardCrawlGame.mainMenuScreen.screen = MODS_LIST;
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            e.printStackTrace();
+        if (badge != null) {
+            try {
+                button.show("Close");
+                ModBadge_onClick.invoke(badge);
+                CardCrawlGame.mainMenuScreen.screen = MODS_LIST;
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
