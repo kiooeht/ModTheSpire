@@ -220,34 +220,36 @@ public class Patcher {
                 }
                 if (ctMethodToPatch == null)
                     continue;
+                
+                LocatorInfo locatorInfo = null;
 
+                CtMethod locatorM = ctPatchClass.getDeclaredMethod("Locator");
+            	locatorInfo = new LocatorInfo(ctMethodToPatch, loader.loadClass(cls_name).getDeclaredMethod(locatorM.getName()));
+                
                 for (CtMethod m : ctPatchClass.getDeclaredMethods()) {
                     PatchInfo p = null;
                     if (m.getName().equals("Prefix")) {
                         p = new PrefixPatchInfo(ctMethodToPatch, m);
                     } else if (m.getName().equals("Postfix")) {
                         p = new PostfixPatchInfo(ctMethodToPatch, m);
+                    } else if (m.getName().equals("Locator")) {
+                    	continue;
                     } else if (m.getName().equals("Insert")) {
                         SpireInsertPatch insertPatch = (SpireInsertPatch) m.getAnnotation(SpireInsertPatch.class);
-                        SpireLocatorPatch locatorPatch = (SpireLocatorPatch) m.getAnnotation(SpireLocatorPatch.class);
-                        if (insertPatch == null && locatorPatch == null) {
-                            throw new PatchingException("    ERROR: Insert missing SpireInsertPatch or SpireLocatorPatch info!");
+                        if (insertPatch == null) {
+                            throw new PatchingException("    ERROR: Insert missing SpireInsertPatch info!");
+                        }
+                    	
+                        if (locatorInfo != null) {
+                        	int abs_loc = locatorInfo.findLine();
+                        	p = new InsertPatchInfo(insertPatch, abs_loc, ctMethodToPatch, m);
+                    	} else if (insertPatch.loc() == -1 && insertPatch.rloc() == -1) {
+                			throw new PatchingException("    ERROR: SpireInsertPatch missing line number! Must specify either loc or rloc");
+                        } else if (insertPatch.loc() >= 0) {
+                            p = new InsertPatchInfo(insertPatch, insertPatch.loc(), ctMethodToPatch, m);
                         } else {
-                        	// handle insert patch
-                        	if (insertPatch != null) {
-                        		if (insertPatch.loc() == -1 && insertPatch.rloc() == -1) {
-                        			throw new PatchingException("    ERROR: SpireInsertPatch missing line number! Must specify either loc or rloc");
-                                } else if (insertPatch.loc() >= 0) {
-                                    p = new InsertPatchInfo(insertPatch, insertPatch.loc(), ctMethodToPatch, m);
-                                } else {
-                                    int abs_loc = ctMethodToPatch.getMethodInfo().getLineNumber(0) + insertPatch.rloc();
-                                    p = new InsertPatchInfo(insertPatch, abs_loc, ctMethodToPatch, m);
-                                }
-                        	// handle locator patch
-                        	} else if (locatorPatch != null) {
-                        		int abs_loc = LocatorPatchInfo.findLocation(ctMethodToPatch, locatorPatch);
-                        		p = new LocatorPatchInfo(locatorPatch, abs_loc, ctMethodToPatch, m);
-                        	}
+                            int abs_loc = ctMethodToPatch.getMethodInfo().getLineNumber(0) + insertPatch.rloc();
+                            p = new InsertPatchInfo(insertPatch, abs_loc, ctMethodToPatch, m);
                         }
                     } else if (m.getName().equals("Instrument")) {
                         p = new InstrumentPatchInfo(ctMethodToPatch, loader.loadClass(cls_name).getDeclaredMethod(m.getName()));
