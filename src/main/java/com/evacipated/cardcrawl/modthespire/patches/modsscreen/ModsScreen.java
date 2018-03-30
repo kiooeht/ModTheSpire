@@ -343,6 +343,9 @@ public class ModsScreen
             text += " NL Version: " + (info.Version != null ? info.Version.get() : "<MISSING>");
             text += " NL Mod ID: " + (info.ID != null ? info.ID : "<MISSING>");
             text += " NL Author" + (info.Authors.length > 1 ? "s" : "") + ": " + StringUtils.join(info.Authors, ", ");
+            if (info.Credits != null && !info.Credits.isEmpty()) {
+                text += " NL Credits: " + info.Credits;
+            }
             text += " NL NL " + info.Description;
 
             FontHelper.renderSmartText(sb, FontHelper.buttonLabelFont,
