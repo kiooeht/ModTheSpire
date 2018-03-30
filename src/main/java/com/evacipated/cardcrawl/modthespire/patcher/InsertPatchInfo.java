@@ -6,8 +6,8 @@ import javassist.*;
 
 public class InsertPatchInfo extends PatchInfo
 {
-    private SpireInsertPatch info;
-    private int loc;
+    protected SpireInsertPatch info;
+    protected int loc;
 
     public InsertPatchInfo(SpireInsertPatch info, int loc, CtBehavior ctMethodToPatch, CtMethod patchMethod)
     {
