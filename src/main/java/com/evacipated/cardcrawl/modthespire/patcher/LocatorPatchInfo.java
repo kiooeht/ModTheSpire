@@ -27,7 +27,7 @@ public class LocatorPatchInfo extends InsertPatchInfo {
 			public int rloc() {return 0;}
 
 			@Override
-			public String[] localvars() {return new String[] {};}
+			public String[] localvars() {return info.localvars();}
 		}, loc, ctMethodToPatch, patchMethod);
 	}
 	
