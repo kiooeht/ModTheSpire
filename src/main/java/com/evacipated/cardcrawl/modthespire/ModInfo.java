@@ -27,6 +27,8 @@ public class ModInfo implements Serializable {
     public String ID;
     @SerializedName("name")
     public String Name;
+    @SerializedName("version")
+    public Version Version;
     @SerializedName("author_list")
     public String[] Authors;
     @SerializedName("description")
