@@ -4,7 +4,6 @@ import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.io.File;
-import java.text.SimpleDateFormat;
 
 import javax.swing.*;
 import javax.swing.border.MatteBorder;
@@ -34,9 +33,8 @@ public class ModPanel extends JPanel {
         } else if (Loader.STS_VERSION != null && info.STS_Version != null && !Loader.STS_VERSION.equals(info.STS_Version)) {
             checkBox.setBackground(lightYellow);
             infoPanel.setBackground(lightYellow);
-            SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy");
-            setToolTipText("<html>This mod explicitly supports StS " + sdf.format(info.STS_Version) + ".<br/>" +
-                "You are running StS " + sdf.format(Loader.STS_VERSION) + ".<br/>" +
+            setToolTipText("<html>This mod explicitly supports StS " + info.STS_Version + ".<br/>" +
+                "You are running StS " + Loader.STS_VERSION + ".<br/>" +
                 "You may encounter problems running it.</html>");
         }
     }

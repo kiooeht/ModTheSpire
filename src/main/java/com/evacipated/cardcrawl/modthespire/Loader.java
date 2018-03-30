@@ -20,8 +20,6 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.text.ParsePosition;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 
@@ -37,7 +35,7 @@ public class Loader {
     public static ModInfo[] MODINFOS;
 
     static SpireConfig MTS_CONFIG;
-    static Date STS_VERSION = null;
+    static String STS_VERSION = null;
 
     private static Object ARGS;
     private static ModSelectWindow ex;
@@ -257,9 +255,10 @@ public class Loader {
 
     public static void setGameVersion(String versionString)
     {
-        SimpleDateFormat sdf = new SimpleDateFormat("(MM-dd-yyyy)");
-        sdf.setTimeZone(TimeZone.getTimeZone("PST"));
-        STS_VERSION = sdf.parse(versionString, new ParsePosition(0));
+        if (versionString.startsWith("(") && versionString.endsWith(")")) {
+            versionString = versionString.substring(1, versionString.length()-1);
+        }
+        STS_VERSION = versionString;
     }
 
     private static void findGameVersion()
@@ -315,8 +314,7 @@ public class Loader {
     private static void printMTSInfo()
     {
         System.out.println("Java version: " + System.getProperty("java.version"));
-        SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy");
-        System.out.println("Slay the Spire version: " + sdf.format(STS_VERSION));
+        System.out.println("Slay the Spire version: " + STS_VERSION);
         System.out.println("ModTheSpire version: " + MTS_VERSION.get());
         System.out.printf("Mod list: ");
         for (ModInfo info : MODINFOS) {

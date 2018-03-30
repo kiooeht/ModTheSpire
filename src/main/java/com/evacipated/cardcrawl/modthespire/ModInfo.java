@@ -11,11 +11,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.text.ParsePosition;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Properties;
-import java.util.TimeZone;
 
 public class ModInfo implements Serializable {
     /**
@@ -38,7 +34,7 @@ public class ModInfo implements Serializable {
     @SerializedName("mts_version")
     public Version MTS_Version;
     @SerializedName("sts_version")
-    public Date STS_Version;
+    public String STS_Version;
     @SerializedName("dependencies")
     public String[] Dependencies;
 
@@ -116,12 +112,7 @@ public class ModInfo implements Serializable {
                 info.MTS_Version = new Version(prop.getProperty("mts_version", "0.0.0"));
                 info.Description = prop.getProperty("description");
 
-                String stsVersionString = prop.getProperty("sts_version");
-                if (stsVersionString != null) {
-                    SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy");
-                    sdf.setTimeZone(TimeZone.getTimeZone("PST"));
-                    info.STS_Version = sdf.parse(stsVersionString, new ParsePosition(0));
-                }
+                info.STS_Version = prop.getProperty("sts_version");
                 inProp.close();
             }
         } catch (Exception e) {
