@@ -325,6 +325,9 @@ public class Loader {
             } else {
                 System.out.printf(info.ID);
             }
+            if (info.Version != null) {
+                System.out.printf(" (%s)", info.Version.get());
+            }
             System.out.printf(", ");
         }
         System.out.println();
