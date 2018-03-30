@@ -95,8 +95,7 @@ public class ModsScreen
     public void open()
     {
         button.show(PatchNotesScreen.TEXT[0]);
-        targetY = Settings.HEIGHT - 150.0F * Settings.scale;
-        scrollY = Settings.HEIGHT - 400.0F * Settings.scale;
+        scrollY = targetY = Settings.HEIGHT - 150.0F * Settings.scale;
         CardCrawlGame.mainMenuScreen.darken();
         CardCrawlGame.mainMenuScreen.screen = MODS_LIST;
 
@@ -178,21 +177,23 @@ public class ModsScreen
 
     private void updateScrolling()
     {
-        int y = InputHelper.mY;
-        if (!grabbedScreen) {
-            if (InputHelper.scrolledDown) {
-                targetY += Settings.SCROLL_SPEED;
-            } else if (InputHelper.scrolledUp) {
-                targetY -= Settings.SCROLL_SPEED;
+        if (hitboxes.size() > 16) {
+            int y = InputHelper.mY;
+            if (!grabbedScreen) {
+                if (InputHelper.scrolledDown) {
+                    targetY += Settings.SCROLL_SPEED;
+                } else if (InputHelper.scrolledUp) {
+                    targetY -= Settings.SCROLL_SPEED;
+                }
+                if (InputHelper.justClickedLeft) {
+                    grabbedScreen = true;
+                    grabStartY = y - targetY;
+                }
+            } else if (InputHelper.isMouseDown) {
+                targetY = y - grabStartY;
+            } else {
+                grabbedScreen = false;
             }
-            if (InputHelper.justClickedLeft) {
-                grabbedScreen = true;
-                grabStartY = y - targetY;
-            }
-        } else if (InputHelper.isMouseDown) {
-            targetY = y - grabStartY;
-        } else {
-            grabbedScreen = false;
         }
         scrollY = MathHelper.scrollSnapLerpSpeed(scrollY, targetY);
         resetScrolling();
