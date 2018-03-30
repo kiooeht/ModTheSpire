@@ -165,7 +165,7 @@ public class ModsScreen
                 }
             }
 
-            if (selectedMod >= 0 && baseModBadges.get(Loader.MODINFOS[selectedMod].jarURL) != null) {
+            if (baseModBadges != null && selectedMod >= 0 && baseModBadges.get(Loader.MODINFOS[selectedMod].jarURL) != null) {
                 configHb.update();
                 if (configHb.hovered && InputHelper.justClickedLeft) {
                     modBadge_onClick(baseModBadges.get(Loader.MODINFOS[selectedMod].jarURL));
