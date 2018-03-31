@@ -1,4 +1,4 @@
-package com.evacipated.cardcrawl.modthespire.lib;
+package com.evacipated.cardcrawl.modthespire.patcher;
 
 public enum Expectation {
 	TYPE_CAST, CONSTRUCTOR_CALL, FIELD_ACCESS, 

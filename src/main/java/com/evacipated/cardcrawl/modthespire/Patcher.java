@@ -246,15 +246,31 @@ public class Patcher {
                         }
                     	
                         if (locatorInfo != null) {
-                        	int abs_loc = locatorInfo.findLine();
-                        	p = new InsertPatchInfo(insertPatch, abs_loc, ctMethodToPatch, m);
+                        	int[] abs_locs = locatorInfo.findLines();
+                        	if (abs_locs.length < 1) {
+                        		throw new PatchingException("    ERROR: Locator must locate at least 1 line!");
+                        	}
+                        	int abs_loc = abs_locs[0];
+                        	if (abs_locs.length == 1) {
+                        		p = new InsertPatchInfo(insertPatch, abs_loc, new int[] {}, ctMethodToPatch, m);
+                        	} else {
+                        		int[] abs_locs_shortened = new int[abs_locs.length - 1];
+                        		for (int i = 1; i < abs_locs.length; i++) {
+                        			abs_locs_shortened[i - 1] = abs_locs[i];
+                        		}
+                        		p = new InsertPatchInfo(insertPatch, abs_loc, abs_locs_shortened, ctMethodToPatch, m);
+                        	}
                     	} else if (insertPatch.loc() == -1 && insertPatch.rloc() == -1) {
                 			throw new PatchingException("    ERROR: SpireInsertPatch missing line number! Must specify either loc or rloc");
                         } else if (insertPatch.loc() >= 0) {
-                            p = new InsertPatchInfo(insertPatch, insertPatch.loc(), ctMethodToPatch, m);
+                            p = new InsertPatchInfo(insertPatch, insertPatch.loc(), insertPatch.locs(), ctMethodToPatch, m);
                         } else {
                             int abs_loc = ctMethodToPatch.getMethodInfo().getLineNumber(0) + insertPatch.rloc();
-                            p = new InsertPatchInfo(insertPatch, abs_loc, ctMethodToPatch, m);
+                            int[] abs_locs = new int[insertPatch.rlocs().length];
+                            for (int i = 0; i< insertPatch.rlocs().length; i++) {
+                            	abs_locs[i] = ctMethodToPatch.getMethodInfo().getLineNumber(0) + insertPatch.rlocs()[i];
+                            }
+                            p = new InsertPatchInfo(insertPatch, abs_loc, abs_locs, ctMethodToPatch, m);
                         }
                     } else if (m.getName().equals("Instrument")) {
                         p = new InstrumentPatchInfo(ctMethodToPatch, loader.loadClass(cls_name).getDeclaredMethod(m.getName()));

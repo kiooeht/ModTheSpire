@@ -1,5 +1,7 @@
 package com.evacipated.cardcrawl.modthespire.lib;
 
+import com.evacipated.cardcrawl.modthespire.patcher.Expectation;
+
 import javassist.NotFoundException;
 import javassist.expr.Cast;
 import javassist.expr.ConstructorCall;

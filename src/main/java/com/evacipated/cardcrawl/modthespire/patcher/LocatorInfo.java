@@ -15,8 +15,8 @@ public class LocatorInfo {
 		this.finderMethod = finderMethod;
 	}
 	
-	public int findLine() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		return (int) finderMethod.invoke(null, ctMethodToPatch);
+	public int[] findLines() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		return (int[]) finderMethod.invoke(null, ctMethodToPatch);
 	}
 
 }

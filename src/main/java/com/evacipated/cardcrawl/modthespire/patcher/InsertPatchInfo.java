@@ -6,24 +6,37 @@ import javassist.*;
 
 public class InsertPatchInfo extends PatchInfo
 {
-    protected SpireInsertPatch info;
-    protected int loc;
+    private SpireInsertPatch info;
+    private int loc;
+    private int[] locs;
 
-    public InsertPatchInfo(SpireInsertPatch info, int loc, CtBehavior ctMethodToPatch, CtMethod patchMethod)
+    public InsertPatchInfo(SpireInsertPatch info, int loc, int[] locs, CtBehavior ctMethodToPatch, CtMethod patchMethod)
     {
         super(ctMethodToPatch, patchMethod);
         this.info = info;
         this.loc = loc;
+        this.locs = locs;
     }
 
     @Override
     protected String debugMsg()
     {
+    	StringBuilder msgBuilder = new StringBuilder("");
         if (info.loc() >= 0) {
-            return "Adding Insert @ " + loc + "...";
+            msgBuilder.append("Adding Insert @ " + loc + "...\n");
         } else {
-            return "Adding Insert @ r" + info.rloc() + " (abs:" + loc + ")...";
+            msgBuilder.append("Adding Insert @ r" + info.rloc() + " (abs:" + loc + ")...\n");
         }
+        
+        for (int i = 0; i < locs.length; i++) {
+        	if (info.locs()[i] >= 0) {
+        		msgBuilder.append("Adding Insert @ " + locs[i] + "...\n");
+        	} else {
+        		msgBuilder.append("Adding Insert @ r" + info.rlocs()[i] + " (abs:" + locs[i] + ")...\n");
+        	}
+        }
+        
+        return msgBuilder.toString();
     }
 
     @Override
@@ -31,11 +44,9 @@ public class InsertPatchInfo extends PatchInfo
     {
         return -2;
     }
-
-    @Override
-    public void doPatch() throws NotFoundException, ClassNotFoundException, CannotCompileException
-    {
-        CtClass[] insertParamTypes = patchMethod.getParameterTypes();
+    
+    private void doPatch(int loc) throws NotFoundException, ClassNotFoundException, CannotCompileException {
+       	CtClass[] insertParamTypes = patchMethod.getParameterTypes();
         Object[][] insertParamAnnotations = patchMethod.getParameterAnnotations();
         int insertParamsStartIndex = ctMethodToPatch.getParameterTypes().length;
         if (!Modifier.isStatic(ctMethodToPatch.getModifiers())) {
@@ -110,5 +121,14 @@ public class InsertPatchInfo extends PatchInfo
                 throw e;
             }
         }
+    }
+
+    @Override
+    public void doPatch() throws NotFoundException, ClassNotFoundException, CannotCompileException
+    {
+    	doPatch(loc);
+    	for (int i = 0; i < locs.length; i++) {
+    		doPatch(locs[i]);
+    	}
     }
 }
