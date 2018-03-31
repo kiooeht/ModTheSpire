@@ -171,11 +171,6 @@ public abstract class Matcher {
 		public boolean match(Expr toMatch) {
 			MethodCall expr = (MethodCall) toMatch;
 			
-			System.out.println("checking if: " + expr.getClassName() + " equals " + className + ", and if: " + expr.getMethodName()+ " equals " + methodName);
-			
-			System.out.println("was: " + (expr.getClassName().equals(className) &&
-					expr.getMethodName().equals(methodName)));
-			
 			return expr.getClassName().equals(className) &&
 					expr.getMethodName().equals(methodName);
 		}
