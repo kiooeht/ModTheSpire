@@ -4,7 +4,11 @@ import javassist.NotFoundException;
 import javassist.expr.Cast;
 import javassist.expr.ConstructorCall;
 import javassist.expr.Expr;
+import javassist.expr.FieldAccess;
+import javassist.expr.Handler;
+import javassist.expr.Instanceof;
 import javassist.expr.MethodCall;
+import javassist.expr.NewArray;
 import javassist.expr.NewExpr;
 
 public abstract class Matcher {
@@ -76,6 +80,81 @@ public abstract class Matcher {
 		
 	}
 	
+	public class FieldAccessMatcher extends Matcher {
+		
+		private String className, fieldName;
+		
+		public FieldAccessMatcher(String className, String fieldName) {
+			super(Expectation.FIELD_ACCESS);
+			
+			this.className = className;
+			this.fieldName = fieldName;
+		}
+		
+		public boolean match(Expr toMatch) {
+			FieldAccess expr = (FieldAccess) toMatch;
+			
+			return expr.getClassName().equals(className) &&
+					expr.getFieldName().equals(fieldName);
+		}
+		
+	}
+	
+	public class CatchClauseMatcher extends Matcher {
+		
+		private String exceptionType;
+		private boolean isFinallyClause;
+		
+		public CatchClauseMatcher(String exceptionType, boolean isFinallyClause) {
+			super(Expectation.CATCH_CLAUSE);
+			
+			this.exceptionType = exceptionType;
+			this.isFinallyClause = isFinallyClause;
+		}
+		
+		public boolean match(Expr toMatch) {
+			Handler expr = (Handler) toMatch;
+			
+			boolean result = false;
+			
+			try {
+				result = expr.getType().getName().equals(exceptionType) && 
+						expr.isFinally() == isFinallyClause;
+			} catch (NotFoundException e) {
+				// this is allowed to happen so eat it
+			}
+			
+			return result;
+		}
+		
+	}
+	
+	public class InstanceOfMatcher extends Matcher {
+		
+		private String comparedToType;
+		
+		public InstanceOfMatcher(String comparedToType) {
+			super(Expectation.INSTANCEOF);
+			
+			this.comparedToType = comparedToType;
+		}
+		
+		public boolean match(Expr toMatch) {
+			Instanceof expr = (Instanceof) toMatch;
+			
+			boolean result = false;
+			
+			try {
+				result = expr.getType().getName().equals(comparedToType);
+			} catch (NotFoundException e) {
+				// this is allowed to happen so eat it
+			}
+			
+			return result;
+		}
+		
+	}
+	
 	public class MethodMatcher extends Matcher {
 
 		private String className, methodName;
@@ -92,6 +171,32 @@ public abstract class Matcher {
 			
 			return expr.getClassName().equals(className) &&
 					expr.getMethodName().equals(methodName);
+		}
+		
+	}
+	
+	public class NewArrayMatcher extends Matcher {
+		
+		private String className;
+		
+		public NewArrayMatcher(String className) {
+			super(Expectation.ARRAY_CREATION);
+			
+			this.className = className;
+		}
+		
+		public boolean match(Expr toMatch) {
+			NewArray expr = (NewArray) toMatch;
+			
+			boolean result = false;
+			
+			try {
+				result = expr.getComponentType().getName().equals(className);
+			} catch (NotFoundException e) {
+				// this is allowed to happen so eat it
+			}
+			
+			return result;
 		}
 		
 	}
