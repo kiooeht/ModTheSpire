@@ -38,6 +38,8 @@ public class LineFinder {
 		}
 		
 		private void foundFinalMatch(int lineNumber) {
+			if (foundLocation) return;
+			
 			this.foundLocation = true;
 			this.location = lineNumber;
 		}
@@ -121,7 +123,7 @@ public class LineFinder {
 		MatchFinderExprEditor editor = new MatchFinderExprEditor(expectedMatches, finalMatch);
 		ctMethodToPatch.instrument(editor);
 		if (!editor.didFindLocation()) {
-			throw new PatchingException("    ERROR: Location matching given description could not be found!");
+			throw new PatchingException("    ERROR: Location matching given description could not be found for patch on " + ctMethodToPatch.getName() + "!");
 		}
 		return editor.getFoundLocation();
 	}
