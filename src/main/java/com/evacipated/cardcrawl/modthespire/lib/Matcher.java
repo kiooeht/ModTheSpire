@@ -25,7 +25,7 @@ public abstract class Matcher {
 	
 	public abstract boolean match(Expr toMatch);
 	
-	public class TypeCastMatcher extends Matcher {
+	public static class TypeCastMatcher extends Matcher {
 		
 		private String typeName;
 		
@@ -51,7 +51,7 @@ public abstract class Matcher {
 		
 	}
 	
-	public class ConstructorCallMatcher extends Matcher {
+	public static class ConstructorCallMatcher extends Matcher {
 
 		private String className, methodName;
 		private boolean checkMethodName;
@@ -80,7 +80,7 @@ public abstract class Matcher {
 		
 	}
 	
-	public class FieldAccessMatcher extends Matcher {
+	public static class FieldAccessMatcher extends Matcher {
 		
 		private String className, fieldName;
 		
@@ -100,7 +100,7 @@ public abstract class Matcher {
 		
 	}
 	
-	public class CatchClauseMatcher extends Matcher {
+	public static class CatchClauseMatcher extends Matcher {
 		
 		private String exceptionType;
 		private boolean isFinallyClause;
@@ -129,7 +129,7 @@ public abstract class Matcher {
 		
 	}
 	
-	public class InstanceOfMatcher extends Matcher {
+	public static class InstanceOfMatcher extends Matcher {
 		
 		private String comparedToType;
 		
@@ -155,11 +155,11 @@ public abstract class Matcher {
 		
 	}
 	
-	public class MethodMatcher extends Matcher {
+	public static class MethodCallMatcher extends Matcher {
 
 		private String className, methodName;
 		
-		public MethodMatcher(String className, String methodName) {
+		public MethodCallMatcher(String className, String methodName) {
 			super(Expectation.METHOD_CALL);
 			
 			this.className = className;
@@ -169,13 +169,18 @@ public abstract class Matcher {
 		public boolean match(Expr toMatch) {
 			MethodCall expr = (MethodCall) toMatch;
 			
+			System.out.println("checking if: " + expr.getClassName() + " equals " + className + ", and if: " + expr.getMethodName()+ " equals " + methodName);
+			
+			System.out.println("was: " + (expr.getClassName().equals(className) &&
+					expr.getMethodName().equals(methodName)));
+			
 			return expr.getClassName().equals(className) &&
 					expr.getMethodName().equals(methodName);
 		}
 		
 	}
 	
-	public class NewArrayMatcher extends Matcher {
+	public static class NewArrayMatcher extends Matcher {
 		
 		private String className;
 		
@@ -201,7 +206,7 @@ public abstract class Matcher {
 		
 	}
 	
-	public class NewExprMatcher extends Matcher {
+	public static class NewExprMatcher extends Matcher {
 
 		private String className;
 		
