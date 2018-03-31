@@ -224,7 +224,9 @@ public class Patcher {
                 LocatorInfo locatorInfo = null;
 
                 CtMethod locatorM = ctPatchClass.getDeclaredMethod("Locator");
-            	locatorInfo = new LocatorInfo(ctMethodToPatch, loader.loadClass(cls_name).getDeclaredMethod(locatorM.getName()));
+                if (locatorM != null) {
+                	locatorInfo = new LocatorInfo(ctMethodToPatch, loader.loadClass(cls_name).getDeclaredMethod(locatorM.getName()));
+                }
                 
                 for (CtMethod m : ctPatchClass.getDeclaredMethods()) {
                     PatchInfo p = null;
