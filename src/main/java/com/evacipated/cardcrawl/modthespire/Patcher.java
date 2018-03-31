@@ -221,11 +221,14 @@ public class Patcher {
                 if (ctMethodToPatch == null)
                     continue;
                 
-                LocatorInfo locatorInfo = null;
+                LocatorInfo locatorInfo;
 
-                CtMethod locatorM = ctPatchClass.getDeclaredMethod("Locator");
-                if (locatorM != null) {
-                	locatorInfo = new LocatorInfo(ctMethodToPatch, loader.loadClass(cls_name).getDeclaredMethod(locatorM.getName()));
+                CtMethod locatorM;
+                try {
+                	locatorM = ctPatchClass.getDeclaredMethod("Locator");
+                	locatorInfo = new LocatorInfo(ctMethodToPatch, loader.loadClass(cls_name).getDeclaredMethod(locatorM.getName(), CtBehavior.class));
+                } catch (NotFoundException e) {
+                	locatorInfo = null;
                 }
                 
                 for (CtMethod m : ctPatchClass.getDeclaredMethods()) {
