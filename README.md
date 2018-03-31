@@ -2,29 +2,31 @@
 ModTheSpire is a tool to load external mods for Slay the Spire without modifying the base game files.
 
 ## Usage ##
-### Windows ###
-#### Installation ####
-1. Download the latest Release
-2. Copy `ModTheSpire.jar` and `MTS.cmd` to your Slay the Spire install directory.
+### Installation ###
+1. Download the latest [Release](https://github.com/kiooeht/ModTheSpire/releases).
+2. Copy `ModTheSpire.jar` to your Slay the Spire install directory.
+    * For Windows, copy `MTS.cmd` to your Slay the Spire install directory.
 3. Create a `mods` directory. Place mod JAR files into the `mods` directory.
 
-#### Running Mods ####
-1. Run `MTS.cmd`.
+### Running Mods ###
+1. Run ModTheSpire.
+    * For Windows, run `MTS.cmd`.
+	* Or run `ModTheSpire.jar` with Java 8.
 2. Select the mod(s) you want to use.
 3. Press 'Play'.
 
 ---
 
 ## For Modders ##
-#### Requirements ####
+### Requirements ###
 * JDK 8
 * Maven
 
-#### General ####
+### General ###
 * ModTheSpire automatically sets the Settings.isModded flag to true, so there is no need to do that yourself.
 * [Wiki](https://github.com/kiooeht/ModTheSpire/wiki/SpirePatch)
 
-#### Building ####
+### Building ###
 1. Run `mvnw package`
 
 ---
