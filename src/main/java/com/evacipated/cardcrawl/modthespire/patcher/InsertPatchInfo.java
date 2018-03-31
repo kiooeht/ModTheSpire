@@ -1,20 +1,43 @@
 package com.evacipated.cardcrawl.modthespire.patcher;
 
+import java.util.List;
+
 import com.evacipated.cardcrawl.modthespire.Loader;
 import com.evacipated.cardcrawl.modthespire.lib.SpireInsertPatch;
 import javassist.*;
 
 public class InsertPatchInfo extends PatchInfo
 {
+	
+	public static class LineNumberAndPatchType {
+		public int lineNumber;
+		public int relativeLineNumber;
+		public InsertPatchType patchType;
+		
+		public LineNumberAndPatchType(int lineNumber) {
+			this.lineNumber = lineNumber;
+			this.patchType = InsertPatchType.ABSOLUTE;
+		}
+		
+		public LineNumberAndPatchType(int lineNumber, int relativeLineNumber) {
+			this.lineNumber = lineNumber;
+			this.relativeLineNumber = relativeLineNumber;
+			this.patchType = InsertPatchType.RELATIVE;
+		}
+		
+	}
+	
+	public static enum InsertPatchType {
+		ABSOLUTE, RELATIVE
+	}
+	
     private SpireInsertPatch info;
-    private int loc;
-    private int[] locs;
+    private List<LineNumberAndPatchType> locs;
 
-    public InsertPatchInfo(SpireInsertPatch info, int loc, int[] locs, CtBehavior ctMethodToPatch, CtMethod patchMethod)
+    public InsertPatchInfo(SpireInsertPatch info, List<LineNumberAndPatchType> locs, CtBehavior ctMethodToPatch, CtMethod patchMethod)
     {
         super(ctMethodToPatch, patchMethod);
         this.info = info;
-        this.loc = loc;
         this.locs = locs;
     }
 
@@ -22,20 +45,16 @@ public class InsertPatchInfo extends PatchInfo
     protected String debugMsg()
     {
     	StringBuilder msgBuilder = new StringBuilder("");
-        if (info.loc() >= 0) {
-            msgBuilder.append("Adding Insert @ " + loc + "...\n");
-        } else {
-            msgBuilder.append("Adding Insert @ r" + info.rloc() + " (abs:" + loc + ")...\n");
-        }
-        
-        for (int i = 0; i < locs.length; i++) {
-        	if (info.locs()[i] >= 0) {
-        		msgBuilder.append("Adding Insert @ " + locs[i] + "...\n");
-        	} else {
-        		msgBuilder.append("Adding Insert @ r" + info.rlocs()[i] + " (abs:" + locs[i] + ")...\n");
-        	}
-        }
-        
+    	for (LineNumberAndPatchType patchLoc : locs) {
+    		switch(patchLoc.patchType) {
+    		case ABSOLUTE:
+    			msgBuilder.append("Adding Insert @ " + patchLoc.lineNumber + "...\n");
+    			break;
+    		case RELATIVE:
+    			msgBuilder.append("Adding Insert @ r" + patchLoc.relativeLineNumber + " (abs:" + patchLoc.lineNumber + ")...\n");
+    			break;
+    		}
+    	}
         return msgBuilder.toString();
     }
 
@@ -126,9 +145,8 @@ public class InsertPatchInfo extends PatchInfo
     @Override
     public void doPatch() throws NotFoundException, ClassNotFoundException, CannotCompileException
     {
-    	doPatch(loc);
-    	for (int i = 0; i < locs.length; i++) {
-    		doPatch(locs[i]);
+    	for (LineNumberAndPatchType patchLoc : locs) {
+    		doPatch(patchLoc.lineNumber);
     	}
     }
 }

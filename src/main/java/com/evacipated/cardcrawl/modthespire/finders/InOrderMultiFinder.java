@@ -29,8 +29,6 @@ public class InOrderMultiFinder extends MatchFinderExprEditor {
 	}
 	
 	private void foundFinalMatch(int lineNumber) {
-		if (foundLocation) return;
-		
 		this.foundLocation = true;
 		this.locations.add(lineNumber);
 	}
