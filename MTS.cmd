@@ -1,1 +1,1 @@
-start  .\jre\bin\java.exe -jar .\ModTheSpire.jar
+start .\jre\bin\javaw.exe -jar .\ModTheSpire.jar
