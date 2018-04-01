@@ -7,6 +7,7 @@
 * Mod dependencies: Load dependencies first
 * Search for desktop-1.0.jar in Steam installation directory
 * Mod screen in game
+* Locator for Insert patches (test447)
 * Fix: Disable checkboxes for mods that need newer MTS version
 
 #### v2.5.0 ####
