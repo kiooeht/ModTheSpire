@@ -10,5 +10,7 @@ import java.lang.annotation.Target;
 public @interface SpireInsertPatch {
     int loc() default -1;
     int rloc() default -1;
+    int[] locs() default {};
+    int[] rlocs() default {};
     String[] localvars() default {};
 }

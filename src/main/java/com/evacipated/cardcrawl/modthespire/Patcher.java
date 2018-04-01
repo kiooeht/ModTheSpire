@@ -2,6 +2,8 @@ package com.evacipated.cardcrawl.modthespire;
 
 import com.evacipated.cardcrawl.modthespire.lib.*;
 import com.evacipated.cardcrawl.modthespire.patcher.*;
+import com.evacipated.cardcrawl.modthespire.patcher.InsertPatchInfo.LineNumberAndPatchType;
+
 import javassist.*;
 import org.scannotation.AnnotationDB;
 
@@ -142,6 +144,7 @@ public class Patcher {
             }
             p.doPatch();
         }
+        patchInfos.clear();
         System.out.println("Done.");
     }
 
@@ -235,18 +238,52 @@ public class Patcher {
                         p = new PrefixPatchInfo(ctMethodToPatch, m);
                     } else if (m.getName().equals("Postfix")) {
                         p = new PostfixPatchInfo(ctMethodToPatch, m);
+                    } else if (m.getName().equals("Locator")) {
+                    	continue;
                     } else if (m.getName().equals("Insert")) {
                         SpireInsertPatch insertPatch = (SpireInsertPatch) m.getAnnotation(SpireInsertPatch.class);
                         if (insertPatch == null) {
-                            System.err.println("    ERROR: Insert missing SpireInsertPatch info!");
-                        } else if (insertPatch.loc() == -1 && insertPatch.rloc() == -1) {
-                            System.err.println("    ERROR: SpireInsertPatch missing line number! Must specify either loc or rloc");
-                        } else if (insertPatch.loc() >= 0) {
-                            p = new InsertPatchInfo(insertPatch, insertPatch.loc(), ctMethodToPatch, m);
-                        } else {
-                            int abs_loc = ctMethodToPatch.getMethodInfo().getLineNumber(0) + insertPatch.rloc();
-                            p = new InsertPatchInfo(insertPatch, abs_loc, ctMethodToPatch, m);
+                            throw new PatchingException(m, "Insert missing SpireInsertPatch info!");
                         }
+
+                        LocatorInfo locatorInfo = null;
+                        for (CtClass nestedCtClass : ctPatchClass.getDeclaredClasses()) {
+                            if (nestedCtClass.getSuperclass().getName().equals(SpireInsertLocator.class.getName())) {
+                                locatorInfo = new LocatorInfo(ctMethodToPatch, loader.loadClass(nestedCtClass.getName()));
+                            }
+                        }
+
+                        if (insertPatch.loc() == -1 && insertPatch.rloc() == -1
+                            && insertPatch.locs().length == 0 && insertPatch.rlocs().length == 0
+                            && locatorInfo == null) {
+                			throw new PatchingException(m, "SpireInsertPatch missing line number! Must specify either loc, rloc, locs, rlocs, or a locator");
+                    	}
+                    	
+                        List<LineNumberAndPatchType> locs = new ArrayList<>();
+
+                        if (locatorInfo != null) {
+                        	int[] abs_locs = locatorInfo.findLines();
+                        	if (abs_locs.length < 1) {
+                        		throw new PatchingException(m, "Locator must locate at least 1 line!");
+                        	}
+                        	for (int i = 0; i < abs_locs.length; i++) {
+                        		locs.add(new LineNumberAndPatchType(abs_locs[i]));
+                        	}
+                        }
+                        
+                		if (insertPatch.loc() >= 0) locs.add(new LineNumberAndPatchType(insertPatch.loc()));
+                		if (insertPatch.rloc() >= 0) locs.add(new LineNumberAndPatchType(
+                				ctMethodToPatch.getMethodInfo().getLineNumber(0) + insertPatch.rloc(), insertPatch.rloc()));
+            			for (int i = 0; i < insertPatch.locs().length; i++) {
+            				locs.add(new LineNumberAndPatchType(insertPatch.locs()[i]));
+            			}
+            			for (int i = 0; i < insertPatch.rlocs().length; i++) {
+            				locs.add(new LineNumberAndPatchType(
+                				ctMethodToPatch.getMethodInfo().getLineNumber(0) + insertPatch.rlocs()[i], insertPatch.rlocs()[i]));
+            			}
+                		
+            			p = new InsertPatchInfo(insertPatch, locs, ctMethodToPatch, m);
+                    
                     } else if (m.getName().equals("Instrument")) {
                         p = new InstrumentPatchInfo(ctMethodToPatch, loader.loadClass(cls_name).getDeclaredMethod(m.getName()));
                     } else if (m.getName().equals("Replace")) {
