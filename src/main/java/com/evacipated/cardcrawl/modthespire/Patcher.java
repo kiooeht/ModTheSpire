@@ -144,6 +144,7 @@ public class Patcher {
             }
             p.doPatch();
         }
+        patchInfos.clear();
         System.out.println("Done.");
     }
 
@@ -230,17 +231,7 @@ public class Patcher {
                 }
                 if (ctMethodToPatch == null)
                     continue;
-                
-                LocatorInfo locatorInfo;
 
-                CtMethod locatorM;
-                try {
-                	locatorM = ctPatchClass.getDeclaredMethod("Locator");
-                	locatorInfo = new LocatorInfo(ctMethodToPatch, loader.loadClass(cls_name).getDeclaredMethod(locatorM.getName(), CtBehavior.class));
-                } catch (NotFoundException e) {
-                	locatorInfo = null;
-                }
-                
                 for (CtMethod m : ctPatchClass.getDeclaredMethods()) {
                     PatchInfo p = null;
                     if (m.getName().equals("Prefix")) {
@@ -252,19 +243,28 @@ public class Patcher {
                     } else if (m.getName().equals("Insert")) {
                         SpireInsertPatch insertPatch = (SpireInsertPatch) m.getAnnotation(SpireInsertPatch.class);
                         if (insertPatch == null) {
-                            throw new PatchingException("    ERROR: Insert missing SpireInsertPatch info!");
+                            throw new PatchingException(m, "Insert missing SpireInsertPatch info!");
                         }
-                        
-                        if (insertPatch.loc() == -1 && insertPatch.rloc() == -1 && insertPatch.locs().length == 0 && insertPatch.rlocs().length == 0 && locatorInfo == null) {
-                			throw new PatchingException("    ERROR: SpireInsertPatch missing line number! Must specify either loc, rloc, locs, rlocs, or a locator");
+
+                        LocatorInfo locatorInfo = null;
+                        for (CtClass nestedCtClass : ctPatchClass.getDeclaredClasses()) {
+                            if (nestedCtClass.getSuperclass().getName().equals(SpireInsertLocator.class.getName())) {
+                                locatorInfo = new LocatorInfo(ctMethodToPatch, loader.loadClass(nestedCtClass.getName()));
+                            }
+                        }
+
+                        if (insertPatch.loc() == -1 && insertPatch.rloc() == -1
+                            && insertPatch.locs().length == 0 && insertPatch.rlocs().length == 0
+                            && locatorInfo == null) {
+                			throw new PatchingException(m, "SpireInsertPatch missing line number! Must specify either loc, rloc, locs, rlocs, or a locator");
                     	}
                     	
                         List<LineNumberAndPatchType> locs = new ArrayList<>();
-                        
+
                         if (locatorInfo != null) {
                         	int[] abs_locs = locatorInfo.findLines();
                         	if (abs_locs.length < 1) {
-                        		throw new PatchingException("    ERROR: Locator must locate at least 1 line!");
+                        		throw new PatchingException(m, "Locator must locate at least 1 line!");
                         	}
                         	for (int i = 0; i < abs_locs.length; i++) {
                         		locs.add(new LineNumberAndPatchType(abs_locs[i]));

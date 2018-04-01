@@ -1,22 +1,21 @@
 package com.evacipated.cardcrawl.modthespire.patcher;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
+import com.evacipated.cardcrawl.modthespire.lib.SpireInsertLocator;
 import javassist.CtBehavior;
 
 public class LocatorInfo {
 	
 	private CtBehavior ctMethodToPatch;
-	private Method finderMethod;
+	private Class<?> finderClass;
 	
-	public LocatorInfo(CtBehavior ctMethodToPatch, Method finderMethod) {
+	public LocatorInfo(CtBehavior ctMethodToPatch, Class<?> finderClass) {
 		this.ctMethodToPatch = ctMethodToPatch;
-		this.finderMethod = finderMethod;
+		this.finderClass = finderClass;
 	}
 	
-	public int[] findLines() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-		return (int[]) finderMethod.invoke(null, ctMethodToPatch);
+	public int[] findLines() throws Exception {
+        SpireInsertLocator obj = (SpireInsertLocator)finderClass.newInstance();
+        return obj.Locate(ctMethodToPatch);
 	}
 
 }

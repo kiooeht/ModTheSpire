@@ -18,7 +18,7 @@ public class LineFinder {
 		MatchFinderExprEditor editor = new InOrderMultiFinder(expectedMatches, finalMatch);
 		ctMethodToPatch.instrument(editor);
 		if (!editor.didFindLocation()) {
-			throw new PatchingException("    ERROR: Location matching given description could not be found for patch on " + ctMethodToPatch.getName() + "!");
+			throw new PatchingException(ctMethodToPatch, "Location matching given description could not be found for patch");
 		}
 		return editor.getFoundLocations();
 	}
@@ -27,7 +27,7 @@ public class LineFinder {
 		MatchFinderExprEditor editor = new InOrderFinder(expectedMatches, finalMatch);
 		ctMethodToPatch.instrument(editor);
 		if (!editor.didFindLocation()) {
-			throw new PatchingException("    ERROR: Location matching given description could not be found for patch on " + ctMethodToPatch.getName() + "!");
+			throw new PatchingException(ctMethodToPatch, "Location matching given description could not be found for patch");
 		}
 		return editor.getFoundLocations();
 	}
