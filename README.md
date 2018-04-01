@@ -39,7 +39,7 @@ See [CHANGELOG](CHANGELOG.md)
 ## Contributors ##
 * kiooeht - Original author
 * t-larson - Multi-loading, mod initialization, some UI work
-* test447 - Some launcher UI work
+* test447 - Some launcher UI work, Locator
 * reckter - Maven setup
 * FlipskiZ - Mod initialization
 * pk27602017 - UTF-8 support in ModInfo

@@ -1,5 +1,5 @@
 ## Changelog ##
-#### dev ####
+#### v2.6.0 ####
 * Change ModInfo to use JSON
 * Update checker for ModTheSpire
 * Warn if ModTheSpire is in the mod list and don't load it as a mod
