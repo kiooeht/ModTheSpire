@@ -2,6 +2,8 @@ package com.evacipated.cardcrawl.modthespire;
 
 import com.evacipated.cardcrawl.modthespire.lib.*;
 import com.evacipated.cardcrawl.modthespire.patcher.*;
+import com.evacipated.cardcrawl.modthespire.patcher.InsertPatchInfo.LineNumberAndPatchType;
+
 import javassist.*;
 import org.scannotation.AnnotationDB;
 
@@ -18,13 +20,13 @@ public class Patcher {
     private static Map<Class<?>, EnumBusterReflect> enumBusterMap = new HashMap<>();
     private static TreeSet<PatchInfo> patchInfos = new TreeSet<>(new PatchInfoComparator());
 
-    public static List<String> initializeMods(ClassLoader loader, URL... urls) throws ClassNotFoundException, InvocationTargetException, IllegalAccessException
+    public static List<String> initializeMods(ClassLoader loader, ModInfo... modInfos) throws ClassNotFoundException, InvocationTargetException, IllegalAccessException
     {
         List<String> result = new ArrayList<>();
 
-        for (URL url : urls) {
-            if (annotationDBMap.containsKey(url)) {
-                Set<String> initializers = annotationDBMap.get(url).getAnnotationIndex().get(SpireInitializer.class.getName());
+        for (ModInfo info : modInfos) {
+            if (annotationDBMap.containsKey(info.jarURL)) {
+                Set<String> initializers = annotationDBMap.get(info.jarURL).getAnnotationIndex().get(SpireInitializer.class.getName());
                 if (initializers != null) {
                     for (String initializer : initializers) {
                         try {
@@ -37,7 +39,7 @@ public class Patcher {
                     }
                 }
             } else {
-                System.err.println(url + " Not in DB map. Something is very wrong");
+                System.err.println(info.jarURL + " Not in DB map. Something is very wrong");
             }
         }
 
@@ -47,6 +49,15 @@ public class Patcher {
     public static List<Iterable<String>> findPatches(URL[] urls) throws IOException
     {
         return findPatches(urls, null);
+    }
+
+    public static List<Iterable<String>> findPatches(ModInfo[] modInfos) throws IOException
+    {
+        URL[] urls = new URL[modInfos.length];
+        for (int i = 0; i < modInfos.length; i++) {
+            urls[i] = modInfos[i].jarURL;
+        }
+        return findPatches(urls, modInfos);
     }
 
     public static List<Iterable<String>> findPatches(URL[] urls, ModInfo[] modInfos) throws IOException
@@ -71,6 +82,15 @@ public class Patcher {
             }
         }
         return patchSetList;
+    }
+
+    public static void patchEnums(ClassLoader loader, ModInfo[] modInfos) throws IOException, ClassNotFoundException, NoSuchFieldException, IllegalAccessException
+    {
+        URL[] urls = new URL[modInfos.length];
+        for (int i = 0; i < modInfos.length; i++) {
+            urls[i] = modInfos[i].jarURL;
+        }
+        patchEnums(loader, urls);
     }
 
     public static void patchEnums(ClassLoader loader, URL... urls) throws IOException, ClassNotFoundException, NoSuchFieldException, IllegalAccessException
@@ -124,6 +144,7 @@ public class Patcher {
             }
             p.doPatch();
         }
+        patchInfos.clear();
         System.out.println("Done.");
     }
 
@@ -176,7 +197,15 @@ public class Patcher {
             }
 
             for (SpirePatch patch : patchArr) {
-                CtClass ctClsToPatch = pool.get(patch.cls());
+                CtClass ctClsToPatch;
+                try {
+                    ctClsToPatch = pool.get(patch.cls());
+                } catch (NotFoundException e) {
+                    if (patch.optional()) {
+                        continue;
+                    }
+                    throw e;
+                }
                 CtBehavior ctMethodToPatch = null;
                 try {
                     CtClass[] ctParamTypes = patchParamTypes(pool, patch);
@@ -209,18 +238,52 @@ public class Patcher {
                         p = new PrefixPatchInfo(ctMethodToPatch, m);
                     } else if (m.getName().equals("Postfix")) {
                         p = new PostfixPatchInfo(ctMethodToPatch, m);
+                    } else if (m.getName().equals("Locator")) {
+                    	continue;
                     } else if (m.getName().equals("Insert")) {
                         SpireInsertPatch insertPatch = (SpireInsertPatch) m.getAnnotation(SpireInsertPatch.class);
                         if (insertPatch == null) {
-                            System.err.println("    ERROR: Insert missing SpireInsertPatch info!");
-                        } else if (insertPatch.loc() == -1 && insertPatch.rloc() == -1) {
-                            System.err.println("    ERROR: SpireInsertPatch missing line number! Must specify either loc or rloc");
-                        } else if (insertPatch.loc() >= 0) {
-                            p = new InsertPatchInfo(insertPatch, insertPatch.loc(), ctMethodToPatch, m);
-                        } else {
-                            int abs_loc = ctMethodToPatch.getMethodInfo().getLineNumber(0) + insertPatch.rloc();
-                            p = new InsertPatchInfo(insertPatch, abs_loc, ctMethodToPatch, m);
+                            throw new PatchingException(m, "Insert missing SpireInsertPatch info!");
                         }
+
+                        LocatorInfo locatorInfo = null;
+                        for (CtClass nestedCtClass : ctPatchClass.getDeclaredClasses()) {
+                            if (nestedCtClass.getSuperclass().getName().equals(SpireInsertLocator.class.getName())) {
+                                locatorInfo = new LocatorInfo(ctMethodToPatch, loader.loadClass(nestedCtClass.getName()));
+                            }
+                        }
+
+                        if (insertPatch.loc() == -1 && insertPatch.rloc() == -1
+                            && insertPatch.locs().length == 0 && insertPatch.rlocs().length == 0
+                            && locatorInfo == null) {
+                			throw new PatchingException(m, "SpireInsertPatch missing line number! Must specify either loc, rloc, locs, rlocs, or a locator");
+                    	}
+                    	
+                        List<LineNumberAndPatchType> locs = new ArrayList<>();
+
+                        if (locatorInfo != null) {
+                        	int[] abs_locs = locatorInfo.findLines();
+                        	if (abs_locs.length < 1) {
+                        		throw new PatchingException(m, "Locator must locate at least 1 line!");
+                        	}
+                        	for (int i = 0; i < abs_locs.length; i++) {
+                        		locs.add(new LineNumberAndPatchType(abs_locs[i]));
+                        	}
+                        }
+                        
+                		if (insertPatch.loc() >= 0) locs.add(new LineNumberAndPatchType(insertPatch.loc()));
+                		if (insertPatch.rloc() >= 0) locs.add(new LineNumberAndPatchType(
+                				ctMethodToPatch.getMethodInfo().getLineNumber(0) + insertPatch.rloc(), insertPatch.rloc()));
+            			for (int i = 0; i < insertPatch.locs().length; i++) {
+            				locs.add(new LineNumberAndPatchType(insertPatch.locs()[i]));
+            			}
+            			for (int i = 0; i < insertPatch.rlocs().length; i++) {
+            				locs.add(new LineNumberAndPatchType(
+                				ctMethodToPatch.getMethodInfo().getLineNumber(0) + insertPatch.rlocs()[i], insertPatch.rlocs()[i]));
+            			}
+                		
+            			p = new InsertPatchInfo(insertPatch, locs, ctMethodToPatch, m);
+                    
                     } else if (m.getName().equals("Instrument")) {
                         p = new InstrumentPatchInfo(ctMethodToPatch, loader.loadClass(cls_name).getDeclaredMethod(m.getName()));
                     } else if (m.getName().equals("Replace")) {

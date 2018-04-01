@@ -9,4 +9,5 @@ public @interface SpirePatch {
     String cls();
     String method();
     String[] paramtypes() default {"DEFAULT"};
+    boolean optional() default false;
 }

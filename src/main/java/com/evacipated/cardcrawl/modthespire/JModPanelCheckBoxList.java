@@ -33,8 +33,10 @@ public class JModPanelCheckBoxList extends JList<ModPanel> {
                 int index = locationToIndex(e.getPoint());
                 if (index != -1) {
                     JCheckBox checkbox = ((ModPanel) getModel().getElementAt(index)).checkBox;
-                    checkbox.setSelected(!checkbox.isSelected());
-                    repaint();
+                    if (checkbox.isEnabled()) {
+                        checkbox.setSelected(!checkbox.isSelected());
+                        repaint();
+                    }
                 }
             }
         });
@@ -48,14 +50,14 @@ public class JModPanelCheckBoxList extends JList<ModPanel> {
     public File[] getCheckedMods() {
         int size = 0;
         for (int i = 0; i < getModel().getSize(); ++i) {
-            if (getModel().getElementAt(i).checkBox.isSelected()) {
+            if (getModel().getElementAt(i).isSelected()) {
                 ++size;
             }
         }
         File[] ret = new File[size];
         int j = 0;
         for (int i = 0; i < getModel().getSize(); ++i) {
-            if (getModel().getElementAt(i).checkBox.isSelected()) {
+            if (getModel().getElementAt(i).isSelected()) {
                 ret[j] = getModel().getElementAt(i).modFile;
                 ++j;
             }
@@ -71,8 +73,7 @@ public class JModPanelCheckBoxList extends JList<ModPanel> {
             // Drawing checkbox, change the appearance here
             value.setBackground(isSelected ? getSelectionBackground() : getBackground());
             value.setForeground(isSelected ? getSelectionForeground() : getForeground());
-            
-            checkbox.setEnabled(isEnabled());
+
             checkbox.setFont(getFont());
             checkbox.setFocusPainted(false);
             checkbox.setBorderPainted(false);
