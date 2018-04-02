@@ -304,12 +304,10 @@ public class Loader {
 	public static class JarHandler {
 		public void writeOut(String jarPathAndName, List<FilePathAndBytes> files) throws IOException {
 			File jarFile = new File(jarPathAndName);
-			File tempJarFile = new File(jarPathAndName + ".tmp");
-			JarFile jar = new JarFile(jarFile);
 			boolean jarWasUpdated = false;
 
 			try {
-				JarOutputStream tempJar = new JarOutputStream(new FileOutputStream(tempJarFile));
+				JarOutputStream tempJar = new JarOutputStream(new FileOutputStream(jarFile));
 
 				try {
 					// Open the given file.
@@ -334,6 +332,7 @@ public class Loader {
 
 						tempJar.putNextEntry(new JarEntry("stub"));
 					}
+					
 					jarWasUpdated = true;
 				} catch (Exception ex) {
 					System.out.println(ex);
@@ -346,35 +345,25 @@ public class Loader {
 					tempJar.close();
 				}
 			} finally {
-
-				jar.close();
-
-				if (!jarWasUpdated) {
-					tempJarFile.delete();
-				}
-			}
-
-			if (jarWasUpdated) {
-				if (jarFile.delete()) {
-					tempJarFile.renameTo(jarFile);
-					System.out.println(jarPathAndName + " updated.");
-				} else
-					System.out.println("Could Not Delete JAR File");
+				// do I need to do things here
 			}
 		}
 	}
     
-	private static void dumpJar(ClassLoader loader, ClassPool pool, String jarPath)
-			throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException,
-			NotFoundException, IOException, CannotCompileException {
+	private static void dumpJar(ClassLoader loader, ClassPool pool, String jarPath) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, IOException {
 		Iterator<Class<?>> loadedClasses = getClassList(loader);
 		List<FilePathAndBytes> files = new ArrayList<FilePathAndBytes>();
 		for (; loadedClasses.hasNext();) {
-			String className = loadedClasses.next().getName();
-			CtClass ctClass = pool.get(className);
-			byte[] b = ctClass.toBytecode();
-			String classPath = className.replaceAll(".", "/");
-			files.add(new FilePathAndBytes(classPath, b));
+				try {
+					String className = loadedClasses.next().getName();
+					CtClass ctClass;
+					ctClass = pool.get(className);
+					byte[] b = ctClass.toBytecode();
+					String classPath = className.replaceAll("\\.", "/") + ".class";
+					files.add(new FilePathAndBytes(classPath, b));
+				} catch (NotFoundException | IOException | CannotCompileException e) {
+					// eat it - just means this isn't a file we've loaded
+				}			
 		}
 		JarHandler handler = new JarHandler();
 		handler.writeOut(jarPath, files);
