@@ -231,6 +231,7 @@ public class Loader {
                 	System.out.printf("Dumping JAR...");
                 	dumpJar(loader, pool, STS_PATCHED_JAR);
                 	System.out.println("Done.");
+                	return;
                 }
 
                 // Initialize any mods that implement SpireInitializer.initialize()
