@@ -26,6 +26,11 @@ hs_err_pid*
 out/
 ModTheSpire.iml
 
+# Eclipse
+.classpath
+.project
+.settings/
+
 # maven build target
 target/
 
