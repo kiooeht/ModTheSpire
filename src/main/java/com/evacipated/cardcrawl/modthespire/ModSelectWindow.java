@@ -17,6 +17,8 @@ public class ModSelectWindow extends JFrame {
     private static final int DEFAULT_WIDTH = 300;
     private static final int DEFAULT_HEIGHT = 226;
     private static final String DEBUG_OPTION = "Debug";
+    private static final String PLAY_OPTION = "Play";
+    private static final String JAR_DUMP_OPTION = "Dump Patched Jar";
     private File[] mods;
     private ModInfo[] info;
     private boolean showingLog = false;
@@ -156,7 +158,9 @@ public class ModSelectWindow extends JFrame {
         this.getContentPane().add(modScroller, BorderLayout.CENTER);
 
         // Play button
-        JButton playBtn = new JButton("Play");
+        JButton playBtn = new JButton(
+        		Loader.OUT_JAR ? JAR_DUMP_OPTION : PLAY_OPTION
+        		);
         playBtn.addActionListener((ActionEvent event) -> {
             showingLog = true;
             playBtn.setEnabled(false);
