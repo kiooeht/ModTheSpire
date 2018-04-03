@@ -17,7 +17,6 @@ public class ModSelectWindow extends JFrame {
     private static final int DEFAULT_WIDTH = 300;
     private static final int DEFAULT_HEIGHT = 226;
     private static final String DEBUG_OPTION = "Debug";
-    private static final String JAR_OPTION = "Output to Jar";
     private File[] mods;
     private ModInfo[] info;
     private boolean showingLog = false;
@@ -25,7 +24,6 @@ public class ModSelectWindow extends JFrame {
     private boolean isCentered = false;
     private Rectangle location;
     private JPanel playPane;
-    private JPanel optionsPane;
 
     enum UpdateIconType
     {
@@ -198,8 +196,6 @@ public class ModSelectWindow extends JFrame {
         playPane = new JPanel();
         playPane.setLayout(new BorderLayout());
         playPane.add(playBtn, BorderLayout.CENTER);
-        optionsPane = new JPanel();
-        optionsPane.setLayout(new BorderLayout());
         JCheckBox debugCheck = new JCheckBox(DEBUG_OPTION);
         if (Loader.DEBUG) {
             debugCheck.setSelected(true);
@@ -213,23 +209,7 @@ public class ModSelectWindow extends JFrame {
                 e.printStackTrace();
             }
         });
-        optionsPane.add(debugCheck, BorderLayout.NORTH);
-
-        JCheckBox outputJarCheck = new JCheckBox(JAR_OPTION);
-        if (Loader.OUT_JAR) {
-        	outputJarCheck.setSelected(true);
-        }
-        outputJarCheck.addActionListener((ActionEvent event) -> {
-        	Loader.OUT_JAR = outputJarCheck.isSelected();
-        	Loader.MTS_CONFIG.setBool("out-jar", Loader.OUT_JAR);
-        	try {
-        		Loader.MTS_CONFIG.save();
-        	} catch (IOException e) {
-        		e.printStackTrace();
-        	}
-        });
-        optionsPane.add(outputJarCheck, BorderLayout.SOUTH);
-        playPane.add(optionsPane, BorderLayout.EAST);
+        playPane.add(debugCheck, BorderLayout.EAST);
         
         setUpdateIcon(UpdateIconType.NONE);
 
