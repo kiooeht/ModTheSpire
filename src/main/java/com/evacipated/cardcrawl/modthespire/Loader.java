@@ -1,6 +1,8 @@
 package com.evacipated.cardcrawl.modthespire;
 
 import com.evacipated.cardcrawl.modthespire.lib.SpireConfig;
+
+import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.LoaderClassPath;
@@ -11,6 +13,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,9 +25,13 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
 import java.util.List;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.jar.JarOutputStream;
 
 public class Loader {
     public static boolean DEBUG = false;
+    public static boolean OUT_JAR = false;
 
     public static Version MTS_VERSION;
     private static String MOD_DIR = "mods/";
@@ -32,6 +39,7 @@ public class Loader {
     private static String MAC_STS_JAR = "SlayTheSpire.app/Contents/Resources/" + STS_JAR;
     private static String STS_JAR2 = "SlayTheSpire.jar";
     public static String COREPATCHES_JAR = "/corepatches.jar";
+    public static String STS_PATCHED_JAR = "desktop-1.0-patched.jar";
     public static ModInfo[] MODINFOS;
 
     static SpireConfig MTS_CONFIG;
@@ -46,15 +54,21 @@ public class Loader {
         try {
             Properties defaults = new Properties();
             defaults.setProperty("debug", Boolean.toString(false));
+            defaults.setProperty("out-jar", Boolean.toString(false));
             defaults.putAll(ModSelectWindow.getDefaults());
             MTS_CONFIG = new SpireConfig(null, "ModTheSpire", defaults);
         } catch (IOException e) {
             e.printStackTrace();
         }
         DEBUG = MTS_CONFIG.getBool("debug");
+        OUT_JAR = MTS_CONFIG.getBool("out-jar");
 
         if (Arrays.asList(args).contains("--debug")) {
             DEBUG = true;
+        }
+        
+        if (Arrays.asList(args).contains("--out-jar")) {
+        	OUT_JAR = true;
         }
 
         try {
@@ -211,6 +225,14 @@ public class Loader {
                 String oldVersion = (String) VERSION_NUM.get(null);
                 VERSION_NUM.set(null, oldVersion + " [ModTheSpire " + MTS_VERSION.get() + "]");
                 System.out.println("Done.");
+                
+                // Output JAR if requested
+                if (Loader.OUT_JAR) {
+                	System.out.printf("Dumping JAR...");
+                	dumpJar(loader, pool, STS_PATCHED_JAR);
+                	System.out.println("Done.");
+                	return;
+                }
 
                 // Initialize any mods that implement SpireInitializer.initialize()
                 System.out.println("Initializing mods...");
@@ -252,6 +274,101 @@ public class Loader {
             e.printStackTrace();
         }
     }
+    
+    public static class FilePathAndBytes {
+    	public String path;
+    	public byte[] b;
+    	
+    	public FilePathAndBytes(String path, byte[] b) {
+    		this.path = path;
+    		this.b = b;
+    	}
+    }
+    
+    /* https://stackoverflow.com/questions/2548384/java-get-a-list-of-all-classes-loaded-in-the-jvm?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa */
+    private static Iterator<Class<?>> getClassList(ClassLoader CL)
+            throws NoSuchFieldException, SecurityException,
+            IllegalArgumentException, IllegalAccessException {
+            Class<?> CL_class = CL.getClass();
+            while (CL_class != java.lang.ClassLoader.class) {
+                CL_class = CL_class.getSuperclass();
+            }
+            java.lang.reflect.Field ClassLoader_classes_field = CL_class
+                    .getDeclaredField("classes");
+            ClassLoader_classes_field.setAccessible(true);
+            @SuppressWarnings("unchecked")
+			Vector<Class<?>> classes = (Vector<Class<?>>) ClassLoader_classes_field.get(CL);
+            return classes.iterator();
+    }
+    
+    /* https://stackoverflow.com/questions/22591903/javassist-how-to-inject-a-method-into-a-class-in-jar?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa */
+	public static class JarHandler {
+		public void writeOut(String jarPathAndName, List<FilePathAndBytes> files) throws IOException {
+			File jarFile = new File(jarPathAndName);
+			boolean jarWasUpdated = false;
+
+			try {
+				JarOutputStream tempJar = new JarOutputStream(new FileOutputStream(jarFile));
+
+				try {
+					// Open the given file.
+
+					try {
+						// Create a jar entry and add it to the temp jar.
+
+						for (FilePathAndBytes file : files) {
+							String fileName = file.path;
+							byte[] fileByteCode = file.b;
+							JarEntry entry = new JarEntry(fileName);
+							tempJar.putNextEntry(entry);
+							tempJar.write(fileByteCode);
+						}
+
+					} catch (Exception ex) {
+						System.out.println(ex);
+
+						// Add a stub entry here, so that the jar will close
+						// without an
+						// exception.
+
+						tempJar.putNextEntry(new JarEntry("stub"));
+					}
+					
+					jarWasUpdated = true;
+				} catch (Exception ex) {
+					System.out.println(ex);
+
+					// IMportant so the jar will close without an
+					// exception.
+
+					tempJar.putNextEntry(new JarEntry("stub"));
+				} finally {
+					tempJar.close();
+				}
+			} finally {
+				// do I need to do things here
+			}
+		}
+	}
+    
+	private static void dumpJar(ClassLoader loader, ClassPool pool, String jarPath) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, IOException {
+		Iterator<Class<?>> loadedClasses = getClassList(loader);
+		List<FilePathAndBytes> files = new ArrayList<FilePathAndBytes>();
+		for (; loadedClasses.hasNext();) {
+				try {
+					String className = loadedClasses.next().getName();
+					CtClass ctClass;
+					ctClass = pool.get(className);
+					byte[] b = ctClass.toBytecode();
+					String classPath = className.replaceAll("\\.", "/") + ".class";
+					files.add(new FilePathAndBytes(classPath, b));
+				} catch (NotFoundException | IOException | CannotCompileException e) {
+					// eat it - just means this isn't a file we've loaded
+				}			
+		}
+		JarHandler handler = new JarHandler();
+		handler.writeOut(jarPath, files);
+	}
 
     public static void setGameVersion(String versionString)
     {

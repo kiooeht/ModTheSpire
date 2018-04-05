@@ -17,7 +17,6 @@ import com.megacrit.cardcrawl.screens.mainMenu.MenuCancelButton;
 import com.megacrit.cardcrawl.screens.mainMenu.PatchNotesScreen;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.smartcardio.Card;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -27,8 +26,11 @@ import java.util.Map;
 
 public class ModsScreen
 {
-    @SpireEnum
-    public static MainMenuScreen.CurScreen MODS_LIST;
+    public static class Enum
+    {
+        @SpireEnum
+        public static MainMenuScreen.CurScreen MODS_LIST;
+    }
 
     private static final float START_Y = Settings.HEIGHT - 200.0F * Settings.scale;
     private float scrollY = START_Y;
@@ -97,7 +99,7 @@ public class ModsScreen
         button.show(PatchNotesScreen.TEXT[0]);
         scrollY = targetY = Settings.HEIGHT - 150.0F * Settings.scale;
         CardCrawlGame.mainMenuScreen.darken();
-        CardCrawlGame.mainMenuScreen.screen = MODS_LIST;
+        CardCrawlGame.mainMenuScreen.screen = Enum.MODS_LIST;
 
         selectedMod = -1;
 
@@ -141,7 +143,7 @@ public class ModsScreen
             if (justClosedModPanel) {
                 justClosedModPanel = false;
                 CardCrawlGame.mainMenuScreen.darken();
-                CardCrawlGame.mainMenuScreen.screen = MODS_LIST;
+                CardCrawlGame.mainMenuScreen.screen = Enum.MODS_LIST;
                 button.show(PatchNotesScreen.TEXT[0]);
             }
         }
@@ -401,7 +403,7 @@ public class ModsScreen
             try {
                 button.show("Close");
                 ModBadge_onClick.invoke(badge);
-                CardCrawlGame.mainMenuScreen.screen = MODS_LIST;
+                CardCrawlGame.mainMenuScreen.screen = Enum.MODS_LIST;
             } catch (IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace();
             }

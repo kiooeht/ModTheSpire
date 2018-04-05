@@ -1,23 +1,75 @@
 package com.evacipated.cardcrawl.modthespire;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.io.File;
+import java.util.ArrayList;
 
-import javax.swing.*;
+import javax.swing.BoxLayout;
+import javax.swing.JCheckBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
 import javax.swing.border.MatteBorder;
 
 @SuppressWarnings("serial")
 public class ModPanel extends JPanel {
     private static final Color lightRed = new Color(229,115,115);
+    private static final Color lightOrange = new Color(255, 159, 0); // orange peel (https://en.wikipedia.org/wiki/Shades_of_orange#Orange_peel)
     private static final Color lightYellow = new Color(255, 238, 88);
     public ModInfo info;
     public File modFile;
     public JCheckBox checkBox;
     private InfoPanel infoPanel;
     
-    public ModPanel(ModInfo info, File modFile, Dimension parentSize) {
+    private static boolean dependenciesChecked(ModInfo info, JModPanelCheckBoxList parent) {
+    	String[] dependencies = info.Dependencies;
+    	boolean[] checked = new boolean[dependencies.length]; // initializes to false
+    	for (int i = 0; i < parent.getModel().getSize(); i++) {
+    		ModPanel panel = parent.getModel().getElementAt(i);
+    		for (int j = 0; j < dependencies.length; j++) {
+    			if (panel.info != null && panel.info.ID != null && panel.info.ID.equals(dependencies[j]) && panel.checkBox.isSelected()) {
+    				checked[j] = true;
+    			}
+    		}
+    	}
+    	boolean allChecked = true;
+    	for (int i = 0; i < checked.length; i++) {
+    		if (!checked[i]) {
+    			allChecked = false;
+    		}
+    	}
+
+    	return allChecked;
+    }
+    
+    private static String[] missingDependencies(ModInfo info, JModPanelCheckBoxList parent) {
+    	String[] dependencies = info.Dependencies;
+    	boolean[] checked = new boolean[dependencies.length]; // initializes to false
+    	for (int i = 0; i < parent.getModel().getSize(); i++) {
+    		ModPanel panel = parent.getModel().getElementAt(i);
+    		for (int j = 0; j < dependencies.length; j++) {
+    			if (panel.info != null && panel.info.ID != null && panel.info.ID.equals(dependencies[j]) && panel.checkBox.isSelected()) {
+    				checked[j] = true;
+    			}
+    		}
+    	}
+    	java.util.List<String> missing = new ArrayList<String>();
+    	for (int i = 0; i < checked.length; i++) {
+    		if (!checked[i]) {
+    			missing.add(dependencies[i]);
+    		}
+    	}
+    	String[] returnType = new String[missing.size()];
+    	return missing.toArray(returnType);
+    }
+    
+    public ModPanel(ModInfo info, File modFile, Dimension parentSize, JModPanelCheckBoxList parent) {
         this.info = info;
         this.modFile = modFile;
         this.checkBox = new JCheckBox();
@@ -25,7 +77,13 @@ public class ModPanel extends JPanel {
         infoPanel = new InfoPanel(parentSize);
         this.add(infoPanel, BorderLayout.CENTER);
 
-        if (info.MTS_Version.compareTo(Loader.MTS_VERSION) > 0) {
+        checkBox.addItemListener((event) -> {
+        	parent.publishBoxChecked();
+        });
+    }
+    
+    public void recalcBackground(JModPanelCheckBoxList parent) {
+    	if (info.MTS_Version.compareTo(Loader.MTS_VERSION) > 0) {
             checkBox.setEnabled(false);
             checkBox.setBackground(lightRed);
             infoPanel.setBackground(lightRed);
@@ -36,6 +94,22 @@ public class ModPanel extends JPanel {
             setToolTipText("<html>This mod explicitly supports StS " + info.STS_Version + ".<br/>" +
                 "You are running StS " + Loader.STS_VERSION + ".<br/>" +
                 "You may encounter problems running it.</html>");
+        } else if (!dependenciesChecked(info, parent)) {
+        	checkBox.setBackground(lightOrange);
+        	infoPanel.setBackground(lightOrange);
+        	String[] missingDependencies = missingDependencies(info, parent);
+        	StringBuilder tooltip = new StringBuilder("");
+        	tooltip.append("This mod is missing the following dependencies: [");
+        	for (String dependency : missingDependencies) {
+        		tooltip.append(dependency);
+        		tooltip.append(", ");
+        	}
+        	tooltip.delete(tooltip.length() - 2, tooltip.length());
+        	tooltip.append("]");
+        	setToolTipText(tooltip.toString());
+        } else {
+        	checkBox.setBackground(null );
+        	infoPanel.setBackground(null);
         }
     }
 
@@ -126,11 +200,11 @@ public class ModPanel extends JPanel {
                 buttonPanel.setBackground(c);
             }
             if (author != null) {
-                author.setOpaque(c.equals(lightRed) || c.equals(lightYellow));
+                author.setOpaque(c != null && (c.equals(lightRed) || c.equals(lightYellow)));
                 author.setBackground(c);
             }
             if (description != null) {
-                description.setOpaque(c.equals(lightRed) || c.equals(lightYellow));
+                description.setOpaque(c != null && (c.equals(lightRed) || c.equals(lightYellow)));
                 description.setBackground(c);
             }
         }

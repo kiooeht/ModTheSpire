@@ -1,4 +1,7 @@
 ## Changelog ##
+#### dev ####
+* Option for modders to dump patched JAR for inspection (test447)
+
 #### v2.6.0 ####
 * Change ModInfo to use JSON
 * Update checker for ModTheSpire

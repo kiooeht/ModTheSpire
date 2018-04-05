@@ -18,7 +18,7 @@ public class MainMenuModList {
     {
         MainMenuScreen __instance = (MainMenuScreen)__obj_instance;
 
-        if (__instance.screen != ModsScreen.MODS_LIST) {
+        if (__instance.screen != ModsScreen.Enum.MODS_LIST) {
             float tmpy = 30.0F;
             for (int i = Loader.MODINFOS.length - 1; i >= 0; --i) {
                 FontHelper.renderFontRightTopAligned(

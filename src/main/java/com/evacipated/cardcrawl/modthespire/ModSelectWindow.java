@@ -9,12 +9,16 @@ import java.net.MalformedURLException;
 import java.util.Properties;
 
 public class ModSelectWindow extends JFrame {
-    /**
+    
+	/**
      * 
      */
     private static final long serialVersionUID = -8232997068791248057L;
     private static final int DEFAULT_WIDTH = 300;
     private static final int DEFAULT_HEIGHT = 226;
+    private static final String DEBUG_OPTION = "Debug";
+    private static final String PLAY_OPTION = "Play";
+    private static final String JAR_DUMP_OPTION = "Dump Patched Jar";
     private File[] mods;
     private ModInfo[] info;
     private boolean showingLog = false;
@@ -147,14 +151,16 @@ public class ModSelectWindow extends JFrame {
         // Mod List
         DefaultListModel<ModPanel> model = new DefaultListModel<>();
         JModPanelCheckBoxList modList = new JModPanelCheckBoxList(model);
-        LoadOrder.loadModsInOrder(model, mods, info, new Dimension(location.width, location.height));
+        LoadOrder.loadModsInOrder(model, mods, info, new Dimension(location.width, location.height), modList);
 
         JScrollPane modScroller = new JScrollPane(modList);
         this.getContentPane().setPreferredSize(new Dimension(location.width, location.height));
         this.getContentPane().add(modScroller, BorderLayout.CENTER);
 
         // Play button
-        JButton playBtn = new JButton("Play");
+        JButton playBtn = new JButton(
+        		Loader.OUT_JAR ? JAR_DUMP_OPTION : PLAY_OPTION
+        		);
         playBtn.addActionListener((ActionEvent event) -> {
             showingLog = true;
             playBtn.setEnabled(false);
@@ -194,7 +200,7 @@ public class ModSelectWindow extends JFrame {
         playPane = new JPanel();
         playPane.setLayout(new BorderLayout());
         playPane.add(playBtn, BorderLayout.CENTER);
-        JCheckBox debugCheck = new JCheckBox("Debug");
+        JCheckBox debugCheck = new JCheckBox(DEBUG_OPTION);
         if (Loader.DEBUG) {
             debugCheck.setSelected(true);
         }
@@ -208,7 +214,7 @@ public class ModSelectWindow extends JFrame {
             }
         });
         playPane.add(debugCheck, BorderLayout.EAST);
-
+        
         setUpdateIcon(UpdateIconType.NONE);
 
         add(playPane, BorderLayout.SOUTH);
