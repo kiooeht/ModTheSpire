@@ -54,7 +54,7 @@ public class ModPanel extends JPanel {
     	for (int i = 0; i < parent.getModel().getSize(); i++) {
     		ModPanel panel = parent.getModel().getElementAt(i);
     		for (int j = 0; j < dependencies.length; j++) {
-    			if (panel.info != null && panel.info.ID != null && panel.info.ID.equals(dependencies[j])) {
+    			if (panel.info != null && panel.info.ID != null && panel.info.ID.equals(dependencies[j]) && panel.checkBox.isSelected()) {
     				checked[j] = true;
     			}
     		}
