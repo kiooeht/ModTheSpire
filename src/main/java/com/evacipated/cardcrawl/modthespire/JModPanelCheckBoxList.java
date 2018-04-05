@@ -40,6 +40,15 @@ public class JModPanelCheckBoxList extends JList<ModPanel> {
                 }
             }
         });
+        
+        // force mods to calc their backgrounds
+        publishBoxChecked();
+    }
+    
+    public void publishBoxChecked() {
+    	for (int i = 0; i < getModel().getSize(); i++) {
+    		getModel().getElementAt(i).recalcBackground(this);
+    	}
     }
 
     public JModPanelCheckBoxList(DefaultListModel<ModPanel> model) {
