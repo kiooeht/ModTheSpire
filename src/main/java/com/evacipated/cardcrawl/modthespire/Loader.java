@@ -26,7 +26,6 @@ import java.net.URLClassLoader;
 import java.util.*;
 import java.util.List;
 import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 
 public class Loader {
@@ -305,7 +304,6 @@ public class Loader {
 	public static class JarHandler {
 		public void writeOut(String jarPathAndName, List<FilePathAndBytes> files) throws IOException {
 			File jarFile = new File(jarPathAndName);
-			boolean jarWasUpdated = false;
 
 			try {
 				JarOutputStream tempJar = new JarOutputStream(new FileOutputStream(jarFile));
@@ -334,7 +332,6 @@ public class Loader {
 						tempJar.putNextEntry(new JarEntry("stub"));
 					}
 					
-					jarWasUpdated = true;
 				} catch (Exception ex) {
 					System.out.println(ex);
 
