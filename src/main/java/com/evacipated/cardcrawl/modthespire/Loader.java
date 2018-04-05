@@ -33,13 +33,16 @@ public class Loader {
     public static boolean OUT_JAR = false;
 
     public static Version MTS_VERSION;
-    private static String MOD_DIR = "mods/";
+    public static String MOD_DIR = "mods/";
     public static String STS_JAR = "desktop-1.0.jar";
     private static String MAC_STS_JAR = "SlayTheSpire.app/Contents/Resources/" + STS_JAR;
     private static String STS_JAR2 = "SlayTheSpire.jar";
     public static String COREPATCHES_JAR = "/corepatches.jar";
     public static String STS_PATCHED_JAR = "desktop-1.0-patched.jar";
+    public static File[] MODFILES;
     public static ModInfo[] MODINFOS;
+    public static HashMap<ModInfo, AvailableUpdate> UPDATES;
+    public static HashMap<ModInfo, LoadState> LOADING;
 
     static SpireConfig MTS_CONFIG;
     static String STS_VERSION = null;
@@ -118,8 +121,9 @@ public class Loader {
         findGameVersion();
 
         EventQueue.invokeLater(() -> {
+        	MODFILES = getAllModFiles();
             try {
-                ex = new ModSelectWindow(getAllModFiles());
+                ex = new ModSelectWindow(MODFILES);
             } catch (MalformedURLException e) {
                 e.printStackTrace();
                 System.exit(-1);
@@ -144,8 +148,52 @@ public class Loader {
                         ex.setUpdateIcon(ModSelectWindow.UpdateIconType.UPTODATE);
                     }
                 } catch (IOException e) {
-                    // NOP
+                	System.out.println("Could not check for ModTheSpire updates - error polling Github API");
+            		e.printStackTrace();
                 }
+            }).start();
+            
+            
+            // Check for mod updates
+            new Thread(() -> {
+            	UPDATES = new HashMap<ModInfo, AvailableUpdate>();
+            	LOADING = new HashMap<ModInfo, LoadState>();
+            	
+            	System.out.println("Finding mod updates...");
+            	try {
+            		ModInfo[] infos = buildInfoArray(MODFILES);
+            		for (ModInfo info : infos) {
+            			LOADING.put(info, LoadState.LOADING);
+            		}
+            		
+            		for (ModInfo info : infos) {
+            			if (info.GithubAuthor.equals(ModInfo.BASE_GITHUB_AUTHOR) ||
+            					info.GithubReponame.equals(ModInfo.BASE_GITHUB_REPONAME)) {
+            				UPDATES.put(info, new AvailableUpdate(null, null, false));
+            				LOADING.put(info, LoadState.DONE);
+            				continue;
+            			}
+            			
+            			try {
+                			UpdateChecker updateChecker = new GithubUpdateChecker(info.GithubAuthor, info.GithubReponame);
+                			if (updateChecker.isNewerVersionAvailable(info.Version)) {
+                				UPDATES.put(info, new AvailableUpdate(
+                						updateChecker.getLatestReleaseURL(),
+                						updateChecker.getDownloadURL(),
+                						true));
+                			} else {
+                				UPDATES.put(info, new AvailableUpdate(null, null, false));
+                			}
+                			LOADING.put(info, LoadState.DONE);
+            			} catch (IOException e) {
+            				
+            			}
+            		}
+            		
+            	} catch (MalformedURLException e) {
+            		System.out.println("Could not check for mod updates - error reading mod info");
+            		e.printStackTrace();
+            	}
             }).start();
         });
     }

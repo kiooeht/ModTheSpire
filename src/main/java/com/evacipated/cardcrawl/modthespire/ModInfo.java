@@ -39,9 +39,12 @@ public class ModInfo implements Serializable {
     public String[] Dependencies;
     @SerializedName("github_author")
     public String GithubAuthor;
-    @SerializedName("github_name")
-    public String GithubName;
+    @SerializedName("github_reponame")
+    public String GithubReponame;
 
+    public static final String BASE_GITHUB_AUTHOR = "";
+    public static final String BASE_GITHUB_REPONAME = "";
+    
     private ModInfo()
     {
         Name = "";
@@ -50,8 +53,8 @@ public class ModInfo implements Serializable {
         MTS_Version = new Version("0.0.0");
         STS_Version = null;
         Dependencies = new String[]{};
-        GithubAuthor = "";
-        GithubName = "";
+        GithubAuthor = BASE_GITHUB_AUTHOR;
+        GithubReponame = BASE_GITHUB_REPONAME;
     }
     
     private static void closeLoader(URLClassLoader loader)
