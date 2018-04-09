@@ -80,6 +80,7 @@ public class ModPanel extends JPanel {
         checkBox.addItemListener((event) -> {
         	parent.publishBoxChecked();
         });
+        parent.publishBoxChecked();
     }
     
     public void recalcBackground(JModPanelCheckBoxList parent) {
