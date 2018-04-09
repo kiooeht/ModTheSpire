@@ -109,8 +109,8 @@ public class ModPanel extends JPanel {
                 "You are running StS " + Loader.STS_VERSION + ".<br/>" +
                 "You may encounter problems running it.</html>");
         } else {
-        	checkBox.setBackground(null );
-        	infoPanel.setBackground(null);
+            checkBox.setBackground(Color.WHITE);
+            infoPanel.setBackground(Color.WHITE);
         }
     }
 
@@ -134,6 +134,8 @@ public class ModPanel extends JPanel {
             this.add(buildInfoPanel(info, parentSize), BorderLayout.CENTER);
 
             this.setBorder(new MatteBorder(0, 0, 1, 0, Color.darkGray));
+            checkBox.setBackground(Color.WHITE);
+            setBackground(Color.WHITE);
         }
         
         public JPanel buildButtonPanel(ModInfo info, JCheckBox box) {
@@ -201,11 +203,11 @@ public class ModPanel extends JPanel {
                 buttonPanel.setBackground(c);
             }
             if (author != null) {
-                author.setOpaque(c != null && (c.equals(lightRed) || c.equals(lightYellow)));
+                author.setOpaque(true);
                 author.setBackground(c);
             }
             if (description != null) {
-                description.setOpaque(c != null && (c.equals(lightRed) || c.equals(lightYellow)));
+                description.setOpaque(true);
                 description.setBackground(c);
             }
         }
