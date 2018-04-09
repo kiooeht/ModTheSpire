@@ -89,25 +89,25 @@ public class ModPanel extends JPanel {
             checkBox.setBackground(lightRed);
             infoPanel.setBackground(lightRed);
             setToolTipText("This mod requires ModTheSpire v" + info.MTS_Version.get() + " or higher.");
+        } else if (checkBox.isSelected() && !dependenciesChecked(info, parent)) {
+            checkBox.setBackground(lightOrange);
+            infoPanel.setBackground(lightOrange);
+            String[] missingDependencies = missingDependencies(info, parent);
+            StringBuilder tooltip = new StringBuilder("");
+            tooltip.append("This mod is missing the following dependencies: [");
+            for (String dependency : missingDependencies) {
+                tooltip.append(dependency);
+                tooltip.append(", ");
+            }
+            tooltip.delete(tooltip.length() - 2, tooltip.length());
+            tooltip.append("]");
+            setToolTipText(tooltip.toString());
         } else if (Loader.STS_VERSION != null && info.STS_Version != null && !Loader.STS_VERSION.equals(info.STS_Version)) {
             checkBox.setBackground(lightYellow);
             infoPanel.setBackground(lightYellow);
             setToolTipText("<html>This mod explicitly supports StS " + info.STS_Version + ".<br/>" +
                 "You are running StS " + Loader.STS_VERSION + ".<br/>" +
                 "You may encounter problems running it.</html>");
-        } else if (!dependenciesChecked(info, parent)) {
-        	checkBox.setBackground(lightOrange);
-        	infoPanel.setBackground(lightOrange);
-        	String[] missingDependencies = missingDependencies(info, parent);
-        	StringBuilder tooltip = new StringBuilder("");
-        	tooltip.append("This mod is missing the following dependencies: [");
-        	for (String dependency : missingDependencies) {
-        		tooltip.append(dependency);
-        		tooltip.append(", ");
-        	}
-        	tooltip.delete(tooltip.length() - 2, tooltip.length());
-        	tooltip.append("]");
-        	setToolTipText(tooltip.toString());
         } else {
         	checkBox.setBackground(null );
         	infoPanel.setBackground(null);
