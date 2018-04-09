@@ -178,6 +178,9 @@ class ListItemTransferHandler extends TransferHandler {
             Object[] values = (Object[]) info.getTransferable().getTransferData(localObjectFlavor);
             for (int i = 0; i < values.length; i++) {
                 int idx = index++;
+                ((ModPanel)values[i]).checkBox.addItemListener((event) -> {
+                    ((JModPanelCheckBoxList)target).publishBoxChecked();
+                });
                 listModel.add(idx, values[i]);
                 target.addSelectionInterval(idx, idx);
             }
