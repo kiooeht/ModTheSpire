@@ -111,6 +111,7 @@ public class ModPanel extends JPanel {
         } else {
             checkBox.setBackground(Color.WHITE);
             infoPanel.setBackground(Color.WHITE);
+            setToolTipText(null);
         }
     }
 
