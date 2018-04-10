@@ -83,7 +83,7 @@ public class ModPanel extends JPanel {
         parent.publishBoxChecked();
     }
     
-    public void recalcBackground(JModPanelCheckBoxList parent) {
+    public void recalcModWarnings(JModPanelCheckBoxList parent) {
     	if (info.MTS_Version.compareTo(Loader.MTS_VERSION) > 0) {
             checkBox.setEnabled(false);
             checkBox.setBackground(lightRed);
@@ -94,12 +94,8 @@ public class ModPanel extends JPanel {
             infoPanel.setBackground(lightOrange);
             String[] missingDependencies = missingDependencies(info, parent);
             StringBuilder tooltip = new StringBuilder("");
-            tooltip.append("This mod is missing the following dependencies: [");
-            for (String dependency : missingDependencies) {
-                tooltip.append(dependency);
-                tooltip.append(", ");
-            }
-            tooltip.delete(tooltip.length() - 2, tooltip.length());
+            tooltip.append("Missing dependencies: [");
+            tooltip.append(String.join(", ", missingDependencies));
             tooltip.append("]");
             setToolTipText(tooltip.toString());
         } else if (Loader.STS_VERSION != null && info.STS_Version != null && !Loader.STS_VERSION.equals(info.STS_Version)) {
@@ -163,7 +159,7 @@ public class ModPanel extends JPanel {
                 description.setWrapStyleWord(true);
                 description.setEditable(false);
                 description.setBorder(null);
-                description.setOpaque(false);
+                description.setOpaque(true);
                 description.setFont(description.getFont().deriveFont(Font.PLAIN));
                 description.setSize(parentSize.width, description.getPreferredSize().height);
                 infoPanel.add(description);
@@ -177,7 +173,7 @@ public class ModPanel extends JPanel {
                 author.setWrapStyleWord(true);
                 author.setEditable(false);
                 author.setBorder(null);
-                author.setOpaque(false);
+                author.setOpaque(true);
                 author.setFont(author.getFont().deriveFont(Font.BOLD));
                 author.setSize(parentSize.width, author.getPreferredSize().height);
                 infoPanel.add(author);
@@ -188,7 +184,6 @@ public class ModPanel extends JPanel {
                     public void componentResized(ComponentEvent e)
                     {
                         super.componentResized(e);
-                        System.out.println("resized");
                     }
                 });
             }
@@ -204,11 +199,9 @@ public class ModPanel extends JPanel {
                 buttonPanel.setBackground(c);
             }
             if (author != null) {
-                author.setOpaque(true);
                 author.setBackground(c);
             }
             if (description != null) {
-                description.setOpaque(true);
                 description.setBackground(c);
             }
         }

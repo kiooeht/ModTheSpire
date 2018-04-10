@@ -47,7 +47,7 @@ public class JModPanelCheckBoxList extends JList<ModPanel> {
     
     public void publishBoxChecked() {
     	for (int i = 0; i < getModel().getSize(); i++) {
-    		getModel().getElementAt(i).recalcBackground(this);
+    		getModel().getElementAt(i).recalcModWarnings(this);
     	}
     }
 
