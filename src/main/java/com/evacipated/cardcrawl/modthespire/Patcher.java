@@ -137,12 +137,16 @@ public class Patcher {
         System.out.printf("Injecting patches...");
         if (Loader.DEBUG) {
             System.out.println();
+            System.out.println();
         }
         for (PatchInfo p : patchInfos) {
             if (Loader.DEBUG) {
                 p.debugPrint();
             }
             p.doPatch();
+            if (Loader.DEBUG) {
+                System.out.println();
+            }
         }
         patchInfos.clear();
         System.out.println("Done.");
@@ -184,7 +188,7 @@ public class Patcher {
         HashSet<CtClass> ctClasses = new HashSet<CtClass>();
         for (String cls_name : class_names) {
             CtClass ctPatchClass = pool.get(cls_name);
-
+            
             SpirePatch[] patchArr = null;
             SpirePatches patches = (SpirePatches) ctPatchClass.getAnnotation(SpirePatches.class);
             if (patches != null) {
@@ -239,7 +243,7 @@ public class Patcher {
                     } else if (m.getName().equals("Postfix")) {
                         p = new PostfixPatchInfo(ctMethodToPatch, m);
                     } else if (m.getName().equals("Locator")) {
-                    	continue;
+                        continue;
                     } else if (m.getName().equals("Insert")) {
                         SpireInsertPatch insertPatch = (SpireInsertPatch) m.getAnnotation(SpireInsertPatch.class);
                         if (insertPatch == null) {
@@ -256,33 +260,33 @@ public class Patcher {
                         if (insertPatch.loc() == -1 && insertPatch.rloc() == -1
                             && insertPatch.locs().length == 0 && insertPatch.rlocs().length == 0
                             && locatorInfo == null) {
-                			throw new PatchingException(m, "SpireInsertPatch missing line number! Must specify either loc, rloc, locs, rlocs, or a locator");
-                    	}
-                    	
+                            throw new PatchingException(m, "SpireInsertPatch missing line number! Must specify either loc, rloc, locs, rlocs, or a locator");
+                        }
+
                         List<LineNumberAndPatchType> locs = new ArrayList<>();
 
                         if (locatorInfo != null) {
-                        	int[] abs_locs = locatorInfo.findLines();
-                        	if (abs_locs.length < 1) {
-                        		throw new PatchingException(m, "Locator must locate at least 1 line!");
-                        	}
-                        	for (int i = 0; i < abs_locs.length; i++) {
-                        		locs.add(new LineNumberAndPatchType(abs_locs[i]));
-                        	}
+                            int[] abs_locs = locatorInfo.findLines();
+                            if (abs_locs.length < 1) {
+                                throw new PatchingException(m, "Locator must locate at least 1 line!");
+                            }
+                            for (int i = 0; i < abs_locs.length; i++) {
+                                locs.add(new LineNumberAndPatchType(abs_locs[i]));
+                            }
                         }
                         
-                		if (insertPatch.loc() >= 0) locs.add(new LineNumberAndPatchType(insertPatch.loc()));
-                		if (insertPatch.rloc() >= 0) locs.add(new LineNumberAndPatchType(
-                				ctMethodToPatch.getMethodInfo().getLineNumber(0) + insertPatch.rloc(), insertPatch.rloc()));
-            			for (int i = 0; i < insertPatch.locs().length; i++) {
-            				locs.add(new LineNumberAndPatchType(insertPatch.locs()[i]));
-            			}
-            			for (int i = 0; i < insertPatch.rlocs().length; i++) {
-            				locs.add(new LineNumberAndPatchType(
-                				ctMethodToPatch.getMethodInfo().getLineNumber(0) + insertPatch.rlocs()[i], insertPatch.rlocs()[i]));
-            			}
-                		
-            			p = new InsertPatchInfo(insertPatch, locs, ctMethodToPatch, m);
+                        if (insertPatch.loc() >= 0) locs.add(new LineNumberAndPatchType(insertPatch.loc()));
+                        if (insertPatch.rloc() >= 0) locs.add(new LineNumberAndPatchType(
+                                ctMethodToPatch.getMethodInfo().getLineNumber(0) + insertPatch.rloc(), insertPatch.rloc()));
+                        for (int i = 0; i < insertPatch.locs().length; i++) {
+                            locs.add(new LineNumberAndPatchType(insertPatch.locs()[i]));
+                        }
+                        for (int i = 0; i < insertPatch.rlocs().length; i++) {
+                            locs.add(new LineNumberAndPatchType(
+                                ctMethodToPatch.getMethodInfo().getLineNumber(0) + insertPatch.rlocs()[i], insertPatch.rlocs()[i]));
+                        }
+
+                        p = new InsertPatchInfo(insertPatch, locs, ctMethodToPatch, m);
                     
                     } else if (m.getName().equals("Instrument")) {
                         p = new InstrumentPatchInfo(ctMethodToPatch, loader.loadClass(cls_name).getDeclaredMethod(m.getName()));

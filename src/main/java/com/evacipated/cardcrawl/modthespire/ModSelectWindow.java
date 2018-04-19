@@ -10,7 +10,7 @@ import java.util.Properties;
 
 public class ModSelectWindow extends JFrame {
     
-	/**
+    /**
      * 
      */
     private static final long serialVersionUID = -8232997068791248057L;
@@ -159,8 +159,8 @@ public class ModSelectWindow extends JFrame {
 
         // Play button
         JButton playBtn = new JButton(
-        		Loader.OUT_JAR ? JAR_DUMP_OPTION : PLAY_OPTION
-        		);
+                Loader.OUT_JAR ? JAR_DUMP_OPTION : PLAY_OPTION
+                );
         playBtn.addActionListener((ActionEvent event) -> {
             showingLog = true;
             playBtn.setEnabled(false);

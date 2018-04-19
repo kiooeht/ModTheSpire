@@ -28,45 +28,45 @@ public class ModPanel extends JPanel {
     private InfoPanel infoPanel;
     
     private static boolean dependenciesChecked(ModInfo info, JModPanelCheckBoxList parent) {
-    	String[] dependencies = info.Dependencies;
-    	boolean[] checked = new boolean[dependencies.length]; // initializes to false
-    	for (int i = 0; i < parent.getModel().getSize(); i++) {
-    		ModPanel panel = parent.getModel().getElementAt(i);
-    		for (int j = 0; j < dependencies.length; j++) {
-    			if (panel.info != null && panel.info.ID != null && panel.info.ID.equals(dependencies[j]) && panel.checkBox.isSelected()) {
-    				checked[j] = true;
-    			}
-    		}
-    	}
-    	boolean allChecked = true;
-    	for (int i = 0; i < checked.length; i++) {
-    		if (!checked[i]) {
-    			allChecked = false;
-    		}
-    	}
+        String[] dependencies = info.Dependencies;
+        boolean[] checked = new boolean[dependencies.length]; // initializes to false
+        for (int i = 0; i < parent.getModel().getSize(); i++) {
+            ModPanel panel = parent.getModel().getElementAt(i);
+            for (int j = 0; j < dependencies.length; j++) {
+                if (panel.info != null && panel.info.ID != null && panel.info.ID.equals(dependencies[j]) && panel.checkBox.isSelected()) {
+                    checked[j] = true;
+                }
+            }
+        }
+        boolean allChecked = true;
+        for (int i = 0; i < checked.length; i++) {
+            if (!checked[i]) {
+                allChecked = false;
+            }
+        }
 
-    	return allChecked;
+        return allChecked;
     }
     
     private static String[] missingDependencies(ModInfo info, JModPanelCheckBoxList parent) {
-    	String[] dependencies = info.Dependencies;
-    	boolean[] checked = new boolean[dependencies.length]; // initializes to false
-    	for (int i = 0; i < parent.getModel().getSize(); i++) {
-    		ModPanel panel = parent.getModel().getElementAt(i);
-    		for (int j = 0; j < dependencies.length; j++) {
-    			if (panel.info != null && panel.info.ID != null && panel.info.ID.equals(dependencies[j]) && panel.checkBox.isSelected()) {
-    				checked[j] = true;
-    			}
-    		}
-    	}
-    	java.util.List<String> missing = new ArrayList<String>();
-    	for (int i = 0; i < checked.length; i++) {
-    		if (!checked[i]) {
-    			missing.add(dependencies[i]);
-    		}
-    	}
-    	String[] returnType = new String[missing.size()];
-    	return missing.toArray(returnType);
+        String[] dependencies = info.Dependencies;
+        boolean[] checked = new boolean[dependencies.length]; // initializes to false
+        for (int i = 0; i < parent.getModel().getSize(); i++) {
+            ModPanel panel = parent.getModel().getElementAt(i);
+            for (int j = 0; j < dependencies.length; j++) {
+                if (panel.info != null && panel.info.ID != null && panel.info.ID.equals(dependencies[j]) && panel.checkBox.isSelected()) {
+                    checked[j] = true;
+                }
+            }
+        }
+        java.util.List<String> missing = new ArrayList<String>();
+        for (int i = 0; i < checked.length; i++) {
+            if (!checked[i]) {
+                missing.add(dependencies[i]);
+            }
+        }
+        String[] returnType = new String[missing.size()];
+        return missing.toArray(returnType);
     }
     
     public ModPanel(ModInfo info, File modFile, Dimension parentSize, JModPanelCheckBoxList parent) {
@@ -78,13 +78,13 @@ public class ModPanel extends JPanel {
         this.add(infoPanel, BorderLayout.CENTER);
 
         checkBox.addItemListener((event) -> {
-        	parent.publishBoxChecked();
+            parent.publishBoxChecked();
         });
         parent.publishBoxChecked();
     }
     
     public void recalcModWarnings(JModPanelCheckBoxList parent) {
-    	if (info.MTS_Version.compareTo(Loader.MTS_VERSION) > 0) {
+        if (info.MTS_Version.compareTo(Loader.MTS_VERSION) > 0) {
             checkBox.setEnabled(false);
             checkBox.setBackground(lightRed);
             infoPanel.setBackground(lightRed);
