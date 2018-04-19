@@ -26,7 +26,6 @@ import java.net.URLClassLoader;
 import java.util.*;
 import java.util.List;
 import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 
 public class Loader {
@@ -172,7 +171,8 @@ public class Loader {
     // runMods - sets up the ClassLoader, sets the isModded flag and launches the game
     public static void runMods(File[] modJars) {
         if (Loader.DEBUG) {
-            System.out.println("Debug mode!");
+            System.out.println("Running with debug mode turned ON...");
+            System.out.println();
         }
         try {
             ModInfo[] modInfos = buildInfoArray(modJars);
@@ -185,6 +185,7 @@ public class Loader {
             MTSClassLoader loader = new MTSClassLoader(Loader.class.getResourceAsStream(COREPATCHES_JAR), buildUrlArray(modInfos), Loader.class.getClassLoader());
 
             if (modJars.length > 0) {
+            	System.out.println("Begin patching...");
                 ClassPool pool = ClassPool.getDefault();
                 pool.insertClassPath(new LoaderClassPath(loader));
                 loader.addStreamToClassPool(pool); // Inserts infront of above path
@@ -208,6 +209,7 @@ public class Loader {
                 // Patch SpireEnums from mods
                 Patcher.patchEnums(loader, modInfos);
                 System.out.println("Done.");
+                System.out.println();
 
                 // Set Settings.isModded = true
                 System.out.printf("Setting isModded = true...");
@@ -216,6 +218,7 @@ public class Loader {
                 Field isModded = Settings.getDeclaredField("isModded");
                 isModded.set(null, true);
                 System.out.println("Done.");
+                System.out.println();
 
                 // Add ModTheSpire section to CardCrawlGame.VERSION_NUM
                 System.out.printf("Adding ModTheSpire to version...");
@@ -225,6 +228,7 @@ public class Loader {
                 String oldVersion = (String) VERSION_NUM.get(null);
                 VERSION_NUM.set(null, oldVersion + " [ModTheSpire " + MTS_VERSION.get() + "]");
                 System.out.println("Done.");
+                System.out.println();
                 
                 // Output JAR if requested
                 if (Loader.OUT_JAR) {
@@ -258,6 +262,7 @@ public class Loader {
                     }
                 }
                 System.out.println("Done.");
+                System.out.println();
             }
 
             System.out.println("Starting game...");
@@ -305,7 +310,6 @@ public class Loader {
 	public static class JarHandler {
 		public void writeOut(String jarPathAndName, List<FilePathAndBytes> files) throws IOException {
 			File jarFile = new File(jarPathAndName);
-			boolean jarWasUpdated = false;
 
 			try {
 				JarOutputStream tempJar = new JarOutputStream(new FileOutputStream(jarFile));
@@ -334,7 +338,6 @@ public class Loader {
 						tempJar.putNextEntry(new JarEntry("stub"));
 					}
 					
-					jarWasUpdated = true;
 				} catch (Exception ex) {
 					System.out.println(ex);
 
@@ -430,20 +433,15 @@ public class Loader {
 
     private static void printMTSInfo()
     {
-        System.out.println("Java version: " + System.getProperty("java.version"));
-        System.out.println("Slay the Spire version: " + STS_VERSION);
-        System.out.println("ModTheSpire version: " + MTS_VERSION.get());
-        System.out.printf("Mod list: ");
+    	System.out.println("Version Info:");
+        System.out.printf(" - Java version (%s)\n", System.getProperty("java.version"));
+        System.out.printf(" - Slay the Spire (%s)\n", STS_VERSION);
+        System.out.printf(" - ModTheSpire (%s)\n", MTS_VERSION.get());
+        System.out.printf("Mod list:\n");
         for (ModInfo info : MODINFOS) {
-            if (info.ID == null || info.ID.isEmpty()) {
-                System.out.printf(info.Name);
-            } else {
-                System.out.printf(info.ID);
-            }
-            if (info.Version != null) {
-                System.out.printf(" (%s)", info.Version.get());
-            }
-            System.out.printf(", ");
+        	String modName = info.getName();
+            String version = info.getVersion();
+            System.out.printf(" - %s (%s)\n", modName, version);
         }
         System.out.println();
     }

@@ -14,6 +14,9 @@ import java.net.URLClassLoader;
 import java.util.Properties;
 
 public class ModInfo implements Serializable {
+	
+    public static String UNKNOWN_VERSION = "unknown version";
+	
     /**
      * 
      */
@@ -46,6 +49,22 @@ public class ModInfo implements Serializable {
         MTS_Version = new Version("0.0.0");
         STS_Version = null;
         Dependencies = new String[]{};
+    }
+    
+    public String getName() {
+        if (ID == null || ID.isEmpty()) {
+            return Name;
+        } else {
+            return ID;
+        }
+    }
+    
+    public String getVersion() {
+        if (Version != null) {
+            return Version.get();
+        } else {
+        	return UNKNOWN_VERSION;
+        }
     }
     
     private static void closeLoader(URLClassLoader loader)

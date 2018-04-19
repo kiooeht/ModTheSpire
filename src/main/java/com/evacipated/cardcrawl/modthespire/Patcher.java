@@ -137,12 +137,16 @@ public class Patcher {
         System.out.printf("Injecting patches...");
         if (Loader.DEBUG) {
             System.out.println();
+            System.out.println();
         }
         for (PatchInfo p : patchInfos) {
             if (Loader.DEBUG) {
                 p.debugPrint();
             }
             p.doPatch();
+            if (Loader.DEBUG) {
+            	System.out.println();
+            }
         }
         patchInfos.clear();
         System.out.println("Done.");
@@ -184,7 +188,7 @@ public class Patcher {
         HashSet<CtClass> ctClasses = new HashSet<CtClass>();
         for (String cls_name : class_names) {
             CtClass ctPatchClass = pool.get(cls_name);
-
+            
             SpirePatch[] patchArr = null;
             SpirePatches patches = (SpirePatches) ctPatchClass.getAnnotation(SpirePatches.class);
             if (patches != null) {

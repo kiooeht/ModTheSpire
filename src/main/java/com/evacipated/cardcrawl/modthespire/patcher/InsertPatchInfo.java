@@ -128,9 +128,6 @@ public class InsertPatchInfo extends PatchInfo
         }
         src += "}";
         src2 += "}";
-        if (Loader.DEBUG) {
-            System.out.println(src);
-        }
         try {
             ctMethodToPatch.insertAt(loc, src);
         } catch (CannotCompileException e) {
