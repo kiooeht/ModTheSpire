@@ -13,10 +13,8 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Properties;
 
-public class ModInfo implements Serializable {
-	
-    public static String UNKNOWN_VERSION = "unknown version";
-	
+public class ModInfo implements Serializable
+{
     /**
      * 
      */
@@ -50,20 +48,12 @@ public class ModInfo implements Serializable {
         STS_Version = null;
         Dependencies = new String[]{};
     }
-    
-    public String getName() {
+
+    public String getIDName() {
         if (ID == null || ID.isEmpty()) {
             return Name;
         } else {
             return ID;
-        }
-    }
-    
-    public String getVersion() {
-        if (Version != null) {
-            return Version.get();
-        } else {
-        	return UNKNOWN_VERSION;
         }
     }
     

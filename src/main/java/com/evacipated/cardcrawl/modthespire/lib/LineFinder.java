@@ -12,24 +12,24 @@ import javassist.CtBehavior;
 
 public class LineFinder {
 
-	private LineFinder() {}
-	
-	public static final int[] findAllInOrder(CtBehavior ctMethodToPatch, List<Matcher> expectedMatches, Matcher finalMatch) throws CannotCompileException, PatchingException {
-		MatchFinderExprEditor editor = new InOrderMultiFinder(expectedMatches, finalMatch);
-		ctMethodToPatch.instrument(editor);
-		if (!editor.didFindLocation()) {
-			throw new PatchingException(ctMethodToPatch, "Location matching given description could not be found for patch");
-		}
-		return editor.getFoundLocations();
-	}
-	
-	public static final int[] findInOrder(CtBehavior ctMethodToPatch, List<Matcher> expectedMatches, Matcher finalMatch) throws CannotCompileException, PatchingException {
-		MatchFinderExprEditor editor = new InOrderFinder(expectedMatches, finalMatch);
-		ctMethodToPatch.instrument(editor);
-		if (!editor.didFindLocation()) {
-			throw new PatchingException(ctMethodToPatch, "Location matching given description could not be found for patch");
-		}
-		return editor.getFoundLocations();
-	}
-	
+    private LineFinder() {}
+
+    public static final int[] findAllInOrder(CtBehavior ctMethodToPatch, List<Matcher> expectedMatches, Matcher finalMatch) throws CannotCompileException, PatchingException {
+        MatchFinderExprEditor editor = new InOrderMultiFinder(expectedMatches, finalMatch);
+        ctMethodToPatch.instrument(editor);
+        if (!editor.didFindLocation()) {
+            throw new PatchingException(ctMethodToPatch, "Location matching given description could not be found for patch");
+        }
+        return editor.getFoundLocations();
+    }
+
+    public static final int[] findInOrder(CtBehavior ctMethodToPatch, List<Matcher> expectedMatches, Matcher finalMatch) throws CannotCompileException, PatchingException {
+        MatchFinderExprEditor editor = new InOrderFinder(expectedMatches, finalMatch);
+        ctMethodToPatch.instrument(editor);
+        if (!editor.didFindLocation()) {
+            throw new PatchingException(ctMethodToPatch, "Location matching given description could not be found for patch");
+        }
+        return editor.getFoundLocations();
+    }
+
 }

@@ -25,12 +25,12 @@ public class LoadOrder {
     private static class ModDescriptor {
         public File mod;
         public ModInfo info;
-		public boolean checked;
+        public boolean checked;
         
         public ModDescriptor(File mod, ModInfo info, boolean checked) {
             this.mod = mod;
             this.info = info;
-			this.checked = checked;
+            this.checked = checked;
         }
     }
     
@@ -97,8 +97,8 @@ public class LoadOrder {
         
         // actually set them in order in the list
         for (ModDescriptor descriptor : loadOrder) {
-			ModPanel toAdd = new ModPanel(descriptor.info, descriptor.mod, parentSize, parent);
-			if (toAdd.checkBox.isEnabled()) {
+            ModPanel toAdd = new ModPanel(descriptor.info, descriptor.mod, parentSize, parent);
+            if (toAdd.checkBox.isEnabled()) {
                 toAdd.checkBox.setSelected(descriptor.checked);
             }
             model.addElement(toAdd);

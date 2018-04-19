@@ -3,10 +3,10 @@ package com.evacipated.cardcrawl.modthespire;
 import java.io.Serializable;
 
 public class Version implements Comparable<Version>, Serializable {
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 5018902128788111127L;
+    /**
+     *
+     */
+    private static final long serialVersionUID = 5018902128788111127L;
     private String version;
 
     public final String get() {

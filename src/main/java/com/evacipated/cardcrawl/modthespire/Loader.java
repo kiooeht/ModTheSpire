@@ -67,7 +67,7 @@ public class Loader {
         }
         
         if (Arrays.asList(args).contains("--out-jar")) {
-        	OUT_JAR = true;
+            OUT_JAR = true;
         }
 
         try {
@@ -185,7 +185,7 @@ public class Loader {
             MTSClassLoader loader = new MTSClassLoader(Loader.class.getResourceAsStream(COREPATCHES_JAR), buildUrlArray(modInfos), Loader.class.getClassLoader());
 
             if (modJars.length > 0) {
-            	System.out.println("Begin patching...");
+                System.out.println("Begin patching...");
                 ClassPool pool = ClassPool.getDefault();
                 pool.insertClassPath(new LoaderClassPath(loader));
                 loader.addStreamToClassPool(pool); // Inserts infront of above path
@@ -232,10 +232,10 @@ public class Loader {
                 
                 // Output JAR if requested
                 if (Loader.OUT_JAR) {
-                	System.out.printf("Dumping JAR...");
-                	dumpJar(loader, pool, STS_PATCHED_JAR);
-                	System.out.println("Done.");
-                	return;
+                    System.out.printf("Dumping JAR...");
+                    dumpJar(loader, pool, STS_PATCHED_JAR);
+                    System.out.println("Done.");
+                    return;
                 }
 
                 // Initialize any mods that implement SpireInitializer.initialize()
@@ -281,13 +281,13 @@ public class Loader {
     }
     
     public static class FilePathAndBytes {
-    	public String path;
-    	public byte[] b;
-    	
-    	public FilePathAndBytes(String path, byte[] b) {
-    		this.path = path;
-    		this.b = b;
-    	}
+        public String path;
+        public byte[] b;
+
+        public FilePathAndBytes(String path, byte[] b) {
+            this.path = path;
+            this.b = b;
+        }
     }
     
     /* https://stackoverflow.com/questions/2548384/java-get-a-list-of-all-classes-loaded-in-the-jvm?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa */
@@ -302,76 +302,76 @@ public class Loader {
                     .getDeclaredField("classes");
             ClassLoader_classes_field.setAccessible(true);
             @SuppressWarnings("unchecked")
-			Vector<Class<?>> classes = (Vector<Class<?>>) ClassLoader_classes_field.get(CL);
+            Vector<Class<?>> classes = (Vector<Class<?>>) ClassLoader_classes_field.get(CL);
             return classes.iterator();
     }
     
     /* https://stackoverflow.com/questions/22591903/javassist-how-to-inject-a-method-into-a-class-in-jar?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa */
-	public static class JarHandler {
-		public void writeOut(String jarPathAndName, List<FilePathAndBytes> files) throws IOException {
-			File jarFile = new File(jarPathAndName);
+    public static class JarHandler {
+        public void writeOut(String jarPathAndName, List<FilePathAndBytes> files) throws IOException {
+            File jarFile = new File(jarPathAndName);
 
-			try {
-				JarOutputStream tempJar = new JarOutputStream(new FileOutputStream(jarFile));
+            try {
+                JarOutputStream tempJar = new JarOutputStream(new FileOutputStream(jarFile));
 
-				try {
-					// Open the given file.
+                try {
+                    // Open the given file.
 
-					try {
-						// Create a jar entry and add it to the temp jar.
+                    try {
+                        // Create a jar entry and add it to the temp jar.
 
-						for (FilePathAndBytes file : files) {
-							String fileName = file.path;
-							byte[] fileByteCode = file.b;
-							JarEntry entry = new JarEntry(fileName);
-							tempJar.putNextEntry(entry);
-							tempJar.write(fileByteCode);
-						}
+                        for (FilePathAndBytes file : files) {
+                            String fileName = file.path;
+                            byte[] fileByteCode = file.b;
+                            JarEntry entry = new JarEntry(fileName);
+                            tempJar.putNextEntry(entry);
+                            tempJar.write(fileByteCode);
+                        }
 
-					} catch (Exception ex) {
-						System.out.println(ex);
+                    } catch (Exception ex) {
+                        System.out.println(ex);
 
-						// Add a stub entry here, so that the jar will close
-						// without an
-						// exception.
+                        // Add a stub entry here, so that the jar will close
+                        // without an
+                        // exception.
 
-						tempJar.putNextEntry(new JarEntry("stub"));
-					}
-					
-				} catch (Exception ex) {
-					System.out.println(ex);
+                        tempJar.putNextEntry(new JarEntry("stub"));
+                    }
 
-					// IMportant so the jar will close without an
-					// exception.
+                } catch (Exception ex) {
+                    System.out.println(ex);
 
-					tempJar.putNextEntry(new JarEntry("stub"));
-				} finally {
-					tempJar.close();
-				}
-			} finally {
-				// do I need to do things here
-			}
-		}
-	}
+                    // IMportant so the jar will close without an
+                    // exception.
+
+                    tempJar.putNextEntry(new JarEntry("stub"));
+                } finally {
+                    tempJar.close();
+                }
+            } finally {
+                // do I need to do things here
+            }
+        }
+    }
     
-	private static void dumpJar(ClassLoader loader, ClassPool pool, String jarPath) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, IOException {
-		Iterator<Class<?>> loadedClasses = getClassList(loader);
-		List<FilePathAndBytes> files = new ArrayList<FilePathAndBytes>();
-		for (; loadedClasses.hasNext();) {
-				try {
-					String className = loadedClasses.next().getName();
-					CtClass ctClass;
-					ctClass = pool.get(className);
-					byte[] b = ctClass.toBytecode();
-					String classPath = className.replaceAll("\\.", "/") + ".class";
-					files.add(new FilePathAndBytes(classPath, b));
-				} catch (NotFoundException | IOException | CannotCompileException e) {
-					// eat it - just means this isn't a file we've loaded
-				}			
-		}
-		JarHandler handler = new JarHandler();
-		handler.writeOut(jarPath, files);
-	}
+    private static void dumpJar(ClassLoader loader, ClassPool pool, String jarPath) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, IOException {
+        Iterator<Class<?>> loadedClasses = getClassList(loader);
+        List<FilePathAndBytes> files = new ArrayList<FilePathAndBytes>();
+        for (; loadedClasses.hasNext();) {
+                try {
+                    String className = loadedClasses.next().getName();
+                    CtClass ctClass;
+                    ctClass = pool.get(className);
+                    byte[] b = ctClass.toBytecode();
+                    String classPath = className.replaceAll("\\.", "/") + ".class";
+                    files.add(new FilePathAndBytes(classPath, b));
+                } catch (NotFoundException | IOException | CannotCompileException e) {
+                    // eat it - just means this isn't a file we've loaded
+                }
+        }
+        JarHandler handler = new JarHandler();
+        handler.writeOut(jarPath, files);
+    }
 
     public static void setGameVersion(String versionString)
     {
@@ -433,15 +433,17 @@ public class Loader {
 
     private static void printMTSInfo()
     {
-    	System.out.println("Version Info:");
+        System.out.println("Version Info:");
         System.out.printf(" - Java version (%s)\n", System.getProperty("java.version"));
         System.out.printf(" - Slay the Spire (%s)\n", STS_VERSION);
         System.out.printf(" - ModTheSpire (%s)\n", MTS_VERSION.get());
         System.out.printf("Mod list:\n");
         for (ModInfo info : MODINFOS) {
-        	String modName = info.getName();
-            String version = info.getVersion();
-            System.out.printf(" - %s (%s)\n", modName, version);
+            System.out.printf(" - %s", info.getIDName());
+            if (info.Version != null) {
+                System.out.printf(" (%s)", info.Version.get());
+            }
+            System.out.println();
         }
         System.out.println();
     }
