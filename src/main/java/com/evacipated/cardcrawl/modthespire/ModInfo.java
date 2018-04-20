@@ -95,7 +95,7 @@ public class ModInfo implements Serializable
             }
         }
 
-        return null;
+        return ReadModInfoOld(mod_jar);
     }
 
     private static ModInfo ReadModInfoOld(File mod_jar)
