@@ -89,7 +89,7 @@ public class ModSelectWindow extends JFrame {
 
     private void initUI() {
         setTitle("Mod The Spire " + Loader.MTS_VERSION.get());
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setResizable(true);
 
         ModSelectWindow tmpthis = this;
@@ -300,23 +300,37 @@ public class ModSelectWindow extends JFrame {
             }
             case UPDATE_AVAILABLE: {
                 JLabel label = new JLabel(new ImageIcon(getClass().getResource("/assets/warning.gif")), JLabel.CENTER);
-                label.setToolTipText("An update for ModTheSpire is available.");
+                if (Loader.MODUPDATES == null) {
+                    label.setToolTipText("An update for ModTheSpire is available.");
+                } else if (Loader.MODUPDATES.size() == 0) {
+                    label.setToolTipText("");
+                } else if (Loader.MODUPDATES.size() == 1) {
+                    label.setToolTipText(String.format("An update is available for %d mod", Loader.MODUPDATES.size()));
+                } else {
+                    label.setToolTipText(String.format("Updates are available for %d mods", Loader.MODUPDATES.size()));
+                }
                 label.setBorder(new EmptyBorder(0, 0, 0, 4));
                 playPane.add(label, BorderLayout.WEST);
                 label.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                JFrame frame = this;
                 label.addMouseListener(new MouseAdapter()
                 {
                     @Override
                     public void mouseClicked(MouseEvent e)
                     {
-                        Loader.openLatestReleaseURL();
+                        if (Loader.MODUPDATES == null) {
+                            Loader.openLatestReleaseURL();
+                        } else {
+                            UpdateWindow win = new UpdateWindow(frame);
+                            win.setVisible(true);
+                        }
                     }
                 });
                 break;
             }
             case UPTODATE: {
                 JLabel label = new JLabel(new ImageIcon(getClass().getResource("/assets/good.gif")), JLabel.CENTER);
-                label.setToolTipText("ModTheSpire is up to date.");
+                label.setToolTipText("Up to date.");
                 label.setBorder(new EmptyBorder(0, 0, 0, 4));
                 playPane.add(label, BorderLayout.WEST);
                 break;
