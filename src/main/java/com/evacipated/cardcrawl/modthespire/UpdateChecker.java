@@ -55,4 +55,6 @@ public abstract class UpdateChecker
     public abstract Version getLatestReleaseVersion() throws IOException;
 
     public abstract URL getLatestReleaseURL() throws IOException;
+
+    public abstract URL getLatestDownloadURL() throws IOException;
 }

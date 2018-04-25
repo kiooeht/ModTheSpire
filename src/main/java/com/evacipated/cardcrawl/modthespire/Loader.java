@@ -34,14 +34,14 @@ public class Loader {
     public static boolean OUT_JAR = false;
 
     public static Version MTS_VERSION;
-    private static String MOD_DIR = "mods/";
+    public static String MOD_DIR = "mods/";
     public static String STS_JAR = "desktop-1.0.jar";
     private static String MAC_STS_JAR = "SlayTheSpire.app/Contents/Resources/" + STS_JAR;
     private static String STS_JAR2 = "SlayTheSpire.jar";
     public static String COREPATCHES_JAR = "/corepatches.jar";
     public static String STS_PATCHED_JAR = "desktop-1.0-patched.jar";
     public static ModInfo[] MODINFOS;
-    static List<Pair<ModInfo, URL>> MODUPDATES;
+    static List<ModUpdate> MODUPDATES;
 
     static SpireConfig MTS_CONFIG;
     static String STS_VERSION = null;
@@ -165,7 +165,7 @@ public class Loader {
                     try {
                         UpdateChecker updateChecker = new GithubUpdateChecker(modInfos[i].UpdateJSON);
                         if (updateChecker.isNewerVersionAvailable(modInfos[i].Version)) {
-                            MODUPDATES.add(new Pair<>(modInfos[i], updateChecker.getLatestReleaseURL()));
+                            MODUPDATES.add(new ModUpdate(modInfos[i], updateChecker.getLatestReleaseURL(), updateChecker.getLatestDownloadURL()));
                             //modFiles[i],
                         }
                     } catch (IOException e) {

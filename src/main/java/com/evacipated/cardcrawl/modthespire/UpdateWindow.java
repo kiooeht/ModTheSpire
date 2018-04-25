@@ -40,8 +40,8 @@ class UpdateWindow extends JDialog
         JScrollPane modScroller = new JScrollPane(list);
         getContentPane().add(modScroller, BorderLayout.CENTER);
 
-        for (Pair<ModInfo, URL> info : Loader.MODUPDATES) {
-            model.addElement(info.getKey().Name);
+        for (ModUpdate update : Loader.MODUPDATES) {
+            model.addElement(update.info.Name);
         }
 
         String tmp;
@@ -53,7 +53,7 @@ class UpdateWindow extends JDialog
         getContentPane().add(new JLabel(tmp), BorderLayout.NORTH);
 
         JPanel btnPanel = new JPanel(new GridBagLayout());
-        JButton downloadBtn = new JButton("Download Updates");
+        JButton downloadBtn = new JButton("Download Updates and Restart ModTheSpire");
         JButton browserBtn = new JButton("Open Releases in Browser");
         GridBagConstraints c = new GridBagConstraints();
         c.fill = GridBagConstraints.HORIZONTAL;
@@ -66,13 +66,26 @@ class UpdateWindow extends JDialog
         // Open each update's release url in browser
         browserBtn.addActionListener((ActionEvent event) -> {
             if (Desktop.isDesktopSupported()) {
-                for (Pair<ModInfo, URL> info : Loader.MODUPDATES) {
+                for (ModUpdate update : Loader.MODUPDATES) {
                     try {
-                        Desktop.getDesktop().browse(info.getValue().toURI());
+                        Desktop.getDesktop().browse(update.releaseURL.toURI());
                     } catch (IOException | URISyntaxException e) {
                         e.printStackTrace();
                     }
                 }
+            }
+        });
+
+        // Download each update
+        downloadBtn.addActionListener((ActionEvent event) -> {
+            URL[] downloadURLs = new URL[Loader.MODUPDATES.size()];
+            for (int i=0; i<Loader.MODUPDATES.size(); ++i) {
+                downloadURLs[i] = Loader.MODUPDATES.get(i).downloadURL;
+            }
+            try {
+                DownloadAndRestarter.downloadAndRestart(downloadURLs);
+            } catch (IOException | URISyntaxException e) {
+                e.printStackTrace();
             }
         });
 
