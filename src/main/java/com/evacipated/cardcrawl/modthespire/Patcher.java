@@ -213,12 +213,13 @@ public class Patcher {
                 CtBehavior ctMethodToPatch = null;
                 try {
                     CtClass[] ctParamTypes = patchParamTypes(pool, patch);
-                    if (patch.method().equals("ctor")) {
-                        if (ctParamTypes == null)
+                    if (patch.method().equals(SpirePatch.CONSTRUCTOR) || patch.method().equals(SpirePatch.OLD_CONSTRUCTOR)) {
+                        if (ctParamTypes == null) {
                             ctMethodToPatch = ctClsToPatch.getDeclaredConstructors()[0];
-                        else
+                        } else {
                             ctMethodToPatch = ctClsToPatch.getDeclaredConstructor(ctParamTypes);
-                    } else if (patch.method().equals("<staticinit>")) {
+                        }
+                    } else if (patch.method().equals(SpirePatch.STATICINITIALIZER)) {
                         ctMethodToPatch = ctClsToPatch.getClassInitializer();
                         if (ctMethodToPatch == null) {
                             System.out.println("No class initializer, making one");

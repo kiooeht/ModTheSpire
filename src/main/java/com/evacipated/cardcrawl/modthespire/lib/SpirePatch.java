@@ -10,4 +10,9 @@ public @interface SpirePatch {
     String method();
     String[] paramtypes() default {"DEFAULT"};
     boolean optional() default false;
+
+    String CONSTRUCTOR = "<ctor>";
+    @Deprecated
+    String OLD_CONSTRUCTOR = "ctor";
+    String STATICINITIALIZER = "<staticinit>";
 }
