@@ -225,6 +225,10 @@ public class ModSelectWindow extends JFrame {
         } else {
             setLocation(location.getLocation());
         }
+
+        JRootPane rootPane = SwingUtilities.getRootPane(playBtn);
+        rootPane.setDefaultButton(playBtn);
+        EventQueue.invokeLater(playBtn::requestFocusInWindow);
     }
 
     void saveWindowDimensions(Dimension d)
