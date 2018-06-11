@@ -20,7 +20,7 @@ public class Version implements Comparable<Version>, Serializable {
             version = version.substring(1);
         }
         if(!version.matches("[0-9]+(\\.[0-9]+)*"))
-            throw new IllegalArgumentException("Invalid version format");
+            throw new IllegalArgumentException("Invalid version format: " + version);
         this.version = version;
     }
 

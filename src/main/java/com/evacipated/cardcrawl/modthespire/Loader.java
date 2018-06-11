@@ -146,6 +146,8 @@ public class Loader {
                         ex.setUpdateIcon(ModSelectWindow.UpdateIconType.UPDATE_AVAILABLE);
                         return;
                     }
+                } catch (IllegalArgumentException e) {
+                    System.out.println("ERROR: ModTheSpire: " + e.getMessage());
                 } catch (IOException e) {
                     // NOP
                 }
@@ -168,6 +170,8 @@ public class Loader {
                             MODUPDATES.add(new ModUpdate(modInfos[i], updateChecker.getLatestReleaseURL(), updateChecker.getLatestDownloadURL()));
                             //modFiles[i],
                         }
+                    } catch (IllegalArgumentException e) {
+                        System.out.println("ERROR: " + modInfos[i].Name + ": " + e.getMessage());
                     } catch (IOException e) {
                         // NOP
                     }
