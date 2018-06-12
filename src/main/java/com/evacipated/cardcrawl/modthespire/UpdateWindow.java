@@ -78,6 +78,7 @@ class UpdateWindow extends JDialog
 
         // Download each update
         downloadBtn.addActionListener((ActionEvent event) -> {
+            getContentPane().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
             URL[] downloadURLs = new URL[Loader.MODUPDATES.size()];
             for (int i=0; i<Loader.MODUPDATES.size(); ++i) {
                 downloadURLs[i] = Loader.MODUPDATES.get(i).downloadURL;
