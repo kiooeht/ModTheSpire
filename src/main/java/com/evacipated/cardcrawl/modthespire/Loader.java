@@ -1,23 +1,14 @@
 package com.evacipated.cardcrawl.modthespire;
 
 import com.evacipated.cardcrawl.modthespire.lib.SpireConfig;
-
-import javafx.util.Pair;
-import javassist.CannotCompileException;
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.LoaderClassPath;
-import javassist.NotFoundException;
+import javassist.*;
 import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.commons.EmptyVisitor;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowEvent;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -45,6 +36,7 @@ public class Loader {
 
     static SpireConfig MTS_CONFIG;
     static String STS_VERSION = null;
+    static boolean STS_BETA = false;
 
     private static Object ARGS;
     private static ModSelectWindow ex;
@@ -421,10 +413,17 @@ public class Loader {
     {
         try {
             URLClassLoader tmpLoader = new URLClassLoader(new URL[]{new File(STS_JAR).toURI().toURL()});
+            // Read CardCrawlGame.VERSION_NUM
             InputStream in = tmpLoader.getResourceAsStream("com/megacrit/cardcrawl/core/CardCrawlGame.class");
             ClassReader classReader = new ClassReader(in);
 
             classReader.accept(new GameVersionFinder(), 0);
+
+            // Read Settings.isBeta
+            InputStream in2 = tmpLoader.getResourceAsStream("com/megacrit/cardcrawl/core/Settings.class");
+            ClassReader classReader2 = new ClassReader(in2);
+
+            classReader2.accept(new GameBetaFinder(new EmptyVisitor()), 0);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -471,7 +470,11 @@ public class Loader {
     {
         System.out.println("Version Info:");
         System.out.printf(" - Java version (%s)\n", System.getProperty("java.version"));
-        System.out.printf(" - Slay the Spire (%s)\n", STS_VERSION);
+        System.out.printf(" - Slay the Spire (%s)", STS_VERSION);
+        if (STS_BETA) {
+            System.out.printf(" BETA");
+        }
+        System.out.printf("\n");
         System.out.printf(" - ModTheSpire (%s)\n", MTS_VERSION.get());
         System.out.printf("Mod list:\n");
         for (ModInfo info : MODINFOS) {

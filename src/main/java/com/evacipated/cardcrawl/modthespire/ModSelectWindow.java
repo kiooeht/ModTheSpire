@@ -219,6 +219,18 @@ public class ModSelectWindow extends JFrame {
 
         add(playPane, BorderLayout.SOUTH);
 
+        if (Loader.STS_BETA) {
+            JLabel betaLabel = new JLabel("Slay the Spire BETA");
+            betaLabel.setIcon(new ImageIcon(getClass().getResource("/assets/warning.gif")));
+            betaLabel.setToolTipText("<html>You are on the StS beta branch.<br/>ModTheSpire does not support the beta branch.<br/>You will likely encounter problems.</html>");
+            betaLabel.setHorizontalAlignment(JLabel.CENTER);
+            betaLabel.setOpaque(true);
+            betaLabel.setBackground(new Color(255, 159, 0));
+            betaLabel.setPreferredSize(new Dimension(betaLabel.getWidth(), 30));
+
+            add(betaLabel, BorderLayout.NORTH);
+        }
+
         pack();
         if (isCentered) {
             setLocationRelativeTo(null);
