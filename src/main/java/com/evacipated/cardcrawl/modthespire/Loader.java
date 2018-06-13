@@ -47,15 +47,15 @@ public class Loader {
         ARGS = args;
         try {
             Properties defaults = new Properties();
-            defaults.setProperty("debug", Boolean.toString(false));
-            defaults.setProperty("out-jar", Boolean.toString(false));
+            defaults.setProperty(SpireConfig.KEY_DEBUG, SpireConfig.VALUE_FALSE);
+            defaults.setProperty(SpireConfig.KEY_OUT_JAR, SpireConfig.VALUE_FALSE);
             defaults.putAll(ModSelectWindow.getDefaults());
             MTS_CONFIG = new SpireConfig(null, "ModTheSpire", defaults);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        DEBUG = MTS_CONFIG.getBool("debug");
-        OUT_JAR = MTS_CONFIG.getBool("out-jar");
+        DEBUG = MTS_CONFIG.getBool(SpireConfig.KEY_DEBUG);
+        OUT_JAR = MTS_CONFIG.getBool(SpireConfig.KEY_OUT_JAR);
 
         if (Arrays.asList(args).contains("--debug")) {
             DEBUG = true;
