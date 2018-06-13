@@ -1,6 +1,11 @@
 ## Changelog ##
 #### dev ####
 * Option for modders to dump patched JAR for inspection (test447)
+* Format logs nicer (test447)
+* Mod update checker (test447/kiooeht)
+* Make constants for patching constructors and static initializers
+* Make Play button default for keyboard use
+* Warning banner if using beta branch of StS
 
 #### v2.6.0 ####
 * Change ModInfo to use JSON
