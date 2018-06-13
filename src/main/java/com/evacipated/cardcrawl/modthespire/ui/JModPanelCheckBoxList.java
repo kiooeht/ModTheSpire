@@ -1,4 +1,4 @@
-package com.evacipated.cardcrawl.modthespire;
+package com.evacipated.cardcrawl.modthespire.ui;
 
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;

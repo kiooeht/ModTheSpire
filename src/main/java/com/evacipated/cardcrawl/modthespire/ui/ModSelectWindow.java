@@ -1,4 +1,8 @@
-package com.evacipated.cardcrawl.modthespire;
+package com.evacipated.cardcrawl.modthespire.ui;
+
+import com.evacipated.cardcrawl.modthespire.LoadOrder;
+import com.evacipated.cardcrawl.modthespire.Loader;
+import com.evacipated.cardcrawl.modthespire.ModInfo;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -27,7 +31,7 @@ public class ModSelectWindow extends JFrame {
     private Rectangle location;
     private JPanel playPane;
 
-    enum UpdateIconType
+    public enum UpdateIconType
     {
         NONE, CHECKING, UPDATE_AVAILABLE, UPTODATE
     }
@@ -298,7 +302,7 @@ public class ModSelectWindow extends JFrame {
         return false;
     }
 
-    synchronized void setUpdateIcon(UpdateIconType type)
+    public synchronized void setUpdateIcon(UpdateIconType type)
     {
         if (playPane.getComponentCount() > 2) {
             playPane.remove(2);

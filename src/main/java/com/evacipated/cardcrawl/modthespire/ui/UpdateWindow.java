@@ -1,5 +1,8 @@
-package com.evacipated.cardcrawl.modthespire;
+package com.evacipated.cardcrawl.modthespire.ui;
 
+import com.evacipated.cardcrawl.modthespire.DownloadAndRestarter;
+import com.evacipated.cardcrawl.modthespire.Loader;
+import com.evacipated.cardcrawl.modthespire.ModUpdate;
 import javafx.util.Pair;
 
 import javax.swing.*;

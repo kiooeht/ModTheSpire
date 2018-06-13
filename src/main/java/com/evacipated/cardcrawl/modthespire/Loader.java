@@ -1,6 +1,7 @@
 package com.evacipated.cardcrawl.modthespire;
 
 import com.evacipated.cardcrawl.modthespire.lib.SpireConfig;
+import com.evacipated.cardcrawl.modthespire.ui.ModSelectWindow;
 import javassist.*;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.commons.EmptyVisitor;
@@ -32,11 +33,11 @@ public class Loader {
     public static String COREPATCHES_JAR = "/corepatches.jar";
     public static String STS_PATCHED_JAR = "desktop-1.0-patched.jar";
     public static ModInfo[] MODINFOS;
-    static List<ModUpdate> MODUPDATES;
+    public static List<ModUpdate> MODUPDATES;
 
-    static SpireConfig MTS_CONFIG;
-    static String STS_VERSION = null;
-    static boolean STS_BETA = false;
+    public static SpireConfig MTS_CONFIG;
+    public static String STS_VERSION = null;
+    public static boolean STS_BETA = false;
 
     private static Object ARGS;
     private static ModSelectWindow ex;
