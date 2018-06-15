@@ -225,6 +225,8 @@ public class Patcher {
                             System.out.println("No class initializer, making one");
                             ctMethodToPatch = ctClsToPatch.makeClassInitializer();
                         }
+                    } else if (patch.method().equals(SpirePatch.CLASS)) {
+                        // TODO
                     } else {
                         if (ctParamTypes == null)
                             ctMethodToPatch = ctClsToPatch.getDeclaredMethod(patch.method());
