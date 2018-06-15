@@ -1,4 +1,8 @@
-package com.evacipated.cardcrawl.modthespire;
+package com.evacipated.cardcrawl.modthespire.ui;
+
+import com.evacipated.cardcrawl.modthespire.LoadOrder;
+import com.evacipated.cardcrawl.modthespire.Loader;
+import com.evacipated.cardcrawl.modthespire.ModInfo;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -9,12 +13,16 @@ import java.net.MalformedURLException;
 import java.util.Properties;
 
 public class ModSelectWindow extends JFrame {
+    
     /**
      * 
      */
     private static final long serialVersionUID = -8232997068791248057L;
     private static final int DEFAULT_WIDTH = 300;
     private static final int DEFAULT_HEIGHT = 226;
+    private static final String DEBUG_OPTION = "Debug";
+    private static final String PLAY_OPTION = "Play";
+    private static final String JAR_DUMP_OPTION = "Dump Patched Jar";
     private File[] mods;
     private ModInfo[] info;
     private boolean showingLog = false;
@@ -23,7 +31,7 @@ public class ModSelectWindow extends JFrame {
     private Rectangle location;
     private JPanel playPane;
 
-    enum UpdateIconType
+    public enum UpdateIconType
     {
         NONE, CHECKING, UPDATE_AVAILABLE, UPTODATE
     }
@@ -85,7 +93,7 @@ public class ModSelectWindow extends JFrame {
 
     private void initUI() {
         setTitle("Mod The Spire " + Loader.MTS_VERSION.get());
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setResizable(true);
 
         ModSelectWindow tmpthis = this;
@@ -147,14 +155,16 @@ public class ModSelectWindow extends JFrame {
         // Mod List
         DefaultListModel<ModPanel> model = new DefaultListModel<>();
         JModPanelCheckBoxList modList = new JModPanelCheckBoxList(model);
-        LoadOrder.loadModsInOrder(model, mods, info, new Dimension(location.width, location.height));
+        LoadOrder.loadModsInOrder(model, mods, info, new Dimension(location.width, location.height), modList);
 
         JScrollPane modScroller = new JScrollPane(modList);
         this.getContentPane().setPreferredSize(new Dimension(location.width, location.height));
         this.getContentPane().add(modScroller, BorderLayout.CENTER);
 
         // Play button
-        JButton playBtn = new JButton("Play");
+        JButton playBtn = new JButton(
+                Loader.OUT_JAR ? JAR_DUMP_OPTION : PLAY_OPTION
+                );
         playBtn.addActionListener((ActionEvent event) -> {
             showingLog = true;
             playBtn.setEnabled(false);
@@ -194,7 +204,7 @@ public class ModSelectWindow extends JFrame {
         playPane = new JPanel();
         playPane.setLayout(new BorderLayout());
         playPane.add(playBtn, BorderLayout.CENTER);
-        JCheckBox debugCheck = new JCheckBox("Debug");
+        JCheckBox debugCheck = new JCheckBox(DEBUG_OPTION);
         if (Loader.DEBUG) {
             debugCheck.setSelected(true);
         }
@@ -208,10 +218,22 @@ public class ModSelectWindow extends JFrame {
             }
         });
         playPane.add(debugCheck, BorderLayout.EAST);
-
+        
         setUpdateIcon(UpdateIconType.NONE);
 
         add(playPane, BorderLayout.SOUTH);
+
+        if (Loader.STS_BETA) {
+            JLabel betaLabel = new JLabel("Slay the Spire BETA");
+            betaLabel.setIcon(new ImageIcon(getClass().getResource("/assets/warning.gif")));
+            betaLabel.setToolTipText("<html>You are on the StS beta branch.<br/>ModTheSpire does not support the beta branch.<br/>You will likely encounter problems.</html>");
+            betaLabel.setHorizontalAlignment(JLabel.CENTER);
+            betaLabel.setOpaque(true);
+            betaLabel.setBackground(new Color(255, 159, 0));
+            betaLabel.setPreferredSize(new Dimension(betaLabel.getWidth(), 30));
+
+            add(betaLabel, BorderLayout.NORTH);
+        }
 
         pack();
         if (isCentered) {
@@ -219,6 +241,10 @@ public class ModSelectWindow extends JFrame {
         } else {
             setLocation(location.getLocation());
         }
+
+        JRootPane rootPane = SwingUtilities.getRootPane(playBtn);
+        rootPane.setDefaultButton(playBtn);
+        EventQueue.invokeLater(playBtn::requestFocusInWindow);
     }
 
     void saveWindowDimensions(Dimension d)
@@ -276,7 +302,7 @@ public class ModSelectWindow extends JFrame {
         return false;
     }
 
-    synchronized void setUpdateIcon(UpdateIconType type)
+    public synchronized void setUpdateIcon(UpdateIconType type)
     {
         if (playPane.getComponentCount() > 2) {
             playPane.remove(2);
@@ -294,23 +320,37 @@ public class ModSelectWindow extends JFrame {
             }
             case UPDATE_AVAILABLE: {
                 JLabel label = new JLabel(new ImageIcon(getClass().getResource("/assets/warning.gif")), JLabel.CENTER);
-                label.setToolTipText("An update for ModTheSpire is available.");
+                if (Loader.MODUPDATES == null) {
+                    label.setToolTipText("An update for ModTheSpire is available.");
+                } else if (Loader.MODUPDATES.size() == 0) {
+                    label.setToolTipText("");
+                } else if (Loader.MODUPDATES.size() == 1) {
+                    label.setToolTipText(String.format("An update is available for %d mod", Loader.MODUPDATES.size()));
+                } else {
+                    label.setToolTipText(String.format("Updates are available for %d mods", Loader.MODUPDATES.size()));
+                }
                 label.setBorder(new EmptyBorder(0, 0, 0, 4));
                 playPane.add(label, BorderLayout.WEST);
                 label.setCursor(new Cursor(Cursor.HAND_CURSOR));
+                JFrame frame = this;
                 label.addMouseListener(new MouseAdapter()
                 {
                     @Override
                     public void mouseClicked(MouseEvent e)
                     {
-                        Loader.openLatestReleaseURL();
+                        if (Loader.MODUPDATES == null) {
+                            Loader.openLatestReleaseURL();
+                        } else {
+                            UpdateWindow win = new UpdateWindow(frame);
+                            win.setVisible(true);
+                        }
                     }
                 });
                 break;
             }
             case UPTODATE: {
                 JLabel label = new JLabel(new ImageIcon(getClass().getResource("/assets/good.gif")), JLabel.CENTER);
-                label.setToolTipText("ModTheSpire is up to date.");
+                label.setToolTipText("Up to date.");
                 label.setBorder(new EmptyBorder(0, 0, 0, 4));
                 playPane.add(label, BorderLayout.WEST);
                 break;

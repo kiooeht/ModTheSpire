@@ -14,7 +14,7 @@ public class ModsScreenUpdateRender
     {
         public static void Postfix(MainMenuScreen __instance)
         {
-            if (__instance.screen == ModsScreen.MODS_LIST) {
+            if (__instance.screen == ModsScreen.Enum.MODS_LIST) {
                 ModMenuButton.modsScreen.update();
             }
         }
@@ -28,7 +28,7 @@ public class ModsScreenUpdateRender
     {
         public static void Postfix(MainMenuScreen __instance, SpriteBatch sb)
         {
-            if (__instance.screen == ModsScreen.MODS_LIST) {
+            if (__instance.screen == ModsScreen.Enum.MODS_LIST) {
                 ModMenuButton.modsScreen.render(sb);
             }
         }

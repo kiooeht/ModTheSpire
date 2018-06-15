@@ -1,19 +1,15 @@
 package com.evacipated.cardcrawl.modthespire;
 
 import com.evacipated.cardcrawl.modthespire.lib.SpireConfig;
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.LoaderClassPath;
-import javassist.NotFoundException;
+import com.evacipated.cardcrawl.modthespire.ui.ModSelectWindow;
+import javassist.*;
 import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.commons.EmptyVisitor;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowEvent;
-import java.io.File;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
@@ -22,20 +18,26 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
 import java.util.List;
+import java.util.jar.JarEntry;
+import java.util.jar.JarOutputStream;
 
 public class Loader {
     public static boolean DEBUG = false;
+    public static boolean OUT_JAR = false;
 
     public static Version MTS_VERSION;
-    private static String MOD_DIR = "mods/";
+    public static String MOD_DIR = "mods/";
     public static String STS_JAR = "desktop-1.0.jar";
     private static String MAC_STS_JAR = "SlayTheSpire.app/Contents/Resources/" + STS_JAR;
     private static String STS_JAR2 = "SlayTheSpire.jar";
     public static String COREPATCHES_JAR = "/corepatches.jar";
+    public static String STS_PATCHED_JAR = "desktop-1.0-patched.jar";
     public static ModInfo[] MODINFOS;
+    public static List<ModUpdate> MODUPDATES;
 
-    static SpireConfig MTS_CONFIG;
-    static String STS_VERSION = null;
+    public static SpireConfig MTS_CONFIG;
+    public static String STS_VERSION = null;
+    public static boolean STS_BETA = false;
 
     private static Object ARGS;
     private static ModSelectWindow ex;
@@ -46,15 +48,21 @@ public class Loader {
         try {
             Properties defaults = new Properties();
             defaults.setProperty("debug", Boolean.toString(false));
+            defaults.setProperty("out-jar", Boolean.toString(false));
             defaults.putAll(ModSelectWindow.getDefaults());
             MTS_CONFIG = new SpireConfig(null, "ModTheSpire", defaults);
         } catch (IOException e) {
             e.printStackTrace();
         }
         DEBUG = MTS_CONFIG.getBool("debug");
+        OUT_JAR = MTS_CONFIG.getBool("out-jar");
 
         if (Arrays.asList(args).contains("--debug")) {
             DEBUG = true;
+        }
+        
+        if (Arrays.asList(args).contains("--out-jar")) {
+            OUT_JAR = true;
         }
 
         try {
@@ -105,8 +113,9 @@ public class Loader {
         findGameVersion();
 
         EventQueue.invokeLater(() -> {
+            File[] modFiles = getAllModFiles();
             try {
-                ex = new ModSelectWindow(getAllModFiles());
+                ex = new ModSelectWindow(modFiles);
             } catch (MalformedURLException e) {
                 e.printStackTrace();
                 System.exit(-1);
@@ -119,19 +128,52 @@ public class Loader {
                 JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE);
             }
 
-            // Check for ModTheSpire update
+            // Check for updates
             new Thread(() -> {
                 ex.setUpdateIcon(ModSelectWindow.UpdateIconType.CHECKING);
                 try {
+                    // Check for ModTheSpire updates
                     UpdateChecker updateChecker = new GithubUpdateChecker("kiooeht", "ModTheSpire");
                     if (updateChecker.isNewerVersionAvailable(MTS_VERSION)) {
                         latestReleaseURL = updateChecker.getLatestReleaseURL();
                         ex.setUpdateIcon(ModSelectWindow.UpdateIconType.UPDATE_AVAILABLE);
-                    } else {
-                        ex.setUpdateIcon(ModSelectWindow.UpdateIconType.UPTODATE);
+                        return;
                     }
+                } catch (IllegalArgumentException e) {
+                    System.out.println("ERROR: ModTheSpire: " + e.getMessage());
                 } catch (IOException e) {
                     // NOP
+                }
+
+                // Check for mod updates
+                ModInfo[] modInfos = new ModInfo[0];
+                try {
+                    modInfos = buildInfoArray(modFiles);
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                }
+                MODUPDATES = new ArrayList<>();
+                for (int i=0; i<modInfos.length; ++i) {
+                    if (modInfos[i].UpdateJSON == null || modInfos[i].UpdateJSON.isEmpty()) {
+                        continue;
+                    }
+                    try {
+                        UpdateChecker updateChecker = new GithubUpdateChecker(modInfos[i].UpdateJSON);
+                        if (updateChecker.isNewerVersionAvailable(modInfos[i].Version)) {
+                            MODUPDATES.add(new ModUpdate(modInfos[i], updateChecker.getLatestReleaseURL(), updateChecker.getLatestDownloadURL()));
+                            //modFiles[i],
+                        }
+                    } catch (IllegalArgumentException e) {
+                        System.out.println("ERROR: " + modInfos[i].Name + ": " + e.getMessage());
+                    } catch (IOException e) {
+                        // NOP
+                    }
+                }
+
+                if (MODUPDATES.size() > 0) {
+                    ex.setUpdateIcon(ModSelectWindow.UpdateIconType.UPDATE_AVAILABLE);
+                } else {
+                    ex.setUpdateIcon(ModSelectWindow.UpdateIconType.UPTODATE);
                 }
             }).start();
         });
@@ -158,7 +200,8 @@ public class Loader {
     // runMods - sets up the ClassLoader, sets the isModded flag and launches the game
     public static void runMods(File[] modJars) {
         if (Loader.DEBUG) {
-            System.out.println("Debug mode!");
+            System.out.println("Running with debug mode turned ON...");
+            System.out.println();
         }
         try {
             ModInfo[] modInfos = buildInfoArray(modJars);
@@ -171,6 +214,7 @@ public class Loader {
             MTSClassLoader loader = new MTSClassLoader(Loader.class.getResourceAsStream(COREPATCHES_JAR), buildUrlArray(modInfos), Loader.class.getClassLoader());
 
             if (modJars.length > 0) {
+                System.out.println("Begin patching...");
                 ClassPool pool = ClassPool.getDefault();
                 pool.insertClassPath(new LoaderClassPath(loader));
                 loader.addStreamToClassPool(pool); // Inserts infront of above path
@@ -194,6 +238,7 @@ public class Loader {
                 // Patch SpireEnums from mods
                 Patcher.patchEnums(loader, modInfos);
                 System.out.println("Done.");
+                System.out.println();
 
                 // Set Settings.isModded = true
                 System.out.printf("Setting isModded = true...");
@@ -202,6 +247,7 @@ public class Loader {
                 Field isModded = Settings.getDeclaredField("isModded");
                 isModded.set(null, true);
                 System.out.println("Done.");
+                System.out.println();
 
                 // Add ModTheSpire section to CardCrawlGame.VERSION_NUM
                 System.out.printf("Adding ModTheSpire to version...");
@@ -211,6 +257,15 @@ public class Loader {
                 String oldVersion = (String) VERSION_NUM.get(null);
                 VERSION_NUM.set(null, oldVersion + " [ModTheSpire " + MTS_VERSION.get() + "]");
                 System.out.println("Done.");
+                System.out.println();
+                
+                // Output JAR if requested
+                if (Loader.OUT_JAR) {
+                    System.out.printf("Dumping JAR...");
+                    dumpJar(loader, pool, STS_PATCHED_JAR);
+                    System.out.println("Done.");
+                    return;
+                }
 
                 // Initialize any mods that implement SpireInitializer.initialize()
                 System.out.println("Initializing mods...");
@@ -236,6 +291,7 @@ public class Loader {
                     }
                 }
                 System.out.println("Done.");
+                System.out.println();
             }
 
             System.out.println("Starting game...");
@@ -252,6 +308,99 @@ public class Loader {
             e.printStackTrace();
         }
     }
+    
+    public static class FilePathAndBytes {
+        public String path;
+        public byte[] b;
+
+        public FilePathAndBytes(String path, byte[] b) {
+            this.path = path;
+            this.b = b;
+        }
+    }
+    
+    /* https://stackoverflow.com/questions/2548384/java-get-a-list-of-all-classes-loaded-in-the-jvm?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa */
+    private static Iterator<Class<?>> getClassList(ClassLoader CL)
+            throws NoSuchFieldException, SecurityException,
+            IllegalArgumentException, IllegalAccessException {
+            Class<?> CL_class = CL.getClass();
+            while (CL_class != java.lang.ClassLoader.class) {
+                CL_class = CL_class.getSuperclass();
+            }
+            java.lang.reflect.Field ClassLoader_classes_field = CL_class
+                    .getDeclaredField("classes");
+            ClassLoader_classes_field.setAccessible(true);
+            @SuppressWarnings("unchecked")
+            Vector<Class<?>> classes = (Vector<Class<?>>) ClassLoader_classes_field.get(CL);
+            return classes.iterator();
+    }
+    
+    /* https://stackoverflow.com/questions/22591903/javassist-how-to-inject-a-method-into-a-class-in-jar?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa */
+    public static class JarHandler {
+        public void writeOut(String jarPathAndName, List<FilePathAndBytes> files) throws IOException {
+            File jarFile = new File(jarPathAndName);
+
+            try {
+                JarOutputStream tempJar = new JarOutputStream(new FileOutputStream(jarFile));
+
+                try {
+                    // Open the given file.
+
+                    try {
+                        // Create a jar entry and add it to the temp jar.
+
+                        for (FilePathAndBytes file : files) {
+                            String fileName = file.path;
+                            byte[] fileByteCode = file.b;
+                            JarEntry entry = new JarEntry(fileName);
+                            tempJar.putNextEntry(entry);
+                            tempJar.write(fileByteCode);
+                        }
+
+                    } catch (Exception ex) {
+                        System.out.println(ex);
+
+                        // Add a stub entry here, so that the jar will close
+                        // without an
+                        // exception.
+
+                        tempJar.putNextEntry(new JarEntry("stub"));
+                    }
+
+                } catch (Exception ex) {
+                    System.out.println(ex);
+
+                    // IMportant so the jar will close without an
+                    // exception.
+
+                    tempJar.putNextEntry(new JarEntry("stub"));
+                } finally {
+                    tempJar.close();
+                }
+            } finally {
+                // do I need to do things here
+            }
+        }
+    }
+    
+    private static void dumpJar(ClassLoader loader, ClassPool pool, String jarPath) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, IOException {
+        Iterator<Class<?>> loadedClasses = getClassList(loader);
+        List<FilePathAndBytes> files = new ArrayList<FilePathAndBytes>();
+        for (; loadedClasses.hasNext();) {
+                try {
+                    String className = loadedClasses.next().getName();
+                    CtClass ctClass;
+                    ctClass = pool.get(className);
+                    byte[] b = ctClass.toBytecode();
+                    String classPath = className.replaceAll("\\.", "/") + ".class";
+                    files.add(new FilePathAndBytes(classPath, b));
+                } catch (NotFoundException | IOException | CannotCompileException e) {
+                    // eat it - just means this isn't a file we've loaded
+                }
+        }
+        JarHandler handler = new JarHandler();
+        handler.writeOut(jarPath, files);
+    }
 
     public static void setGameVersion(String versionString)
     {
@@ -265,10 +414,17 @@ public class Loader {
     {
         try {
             URLClassLoader tmpLoader = new URLClassLoader(new URL[]{new File(STS_JAR).toURI().toURL()});
+            // Read CardCrawlGame.VERSION_NUM
             InputStream in = tmpLoader.getResourceAsStream("com/megacrit/cardcrawl/core/CardCrawlGame.class");
             ClassReader classReader = new ClassReader(in);
 
             classReader.accept(new GameVersionFinder(), 0);
+
+            // Read Settings.isBeta
+            InputStream in2 = tmpLoader.getResourceAsStream("com/megacrit/cardcrawl/core/Settings.class");
+            ClassReader classReader2 = new ClassReader(in2);
+
+            classReader2.accept(new GameBetaFinder(new EmptyVisitor()), 0);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -313,20 +469,21 @@ public class Loader {
 
     private static void printMTSInfo()
     {
-        System.out.println("Java version: " + System.getProperty("java.version"));
-        System.out.println("Slay the Spire version: " + STS_VERSION);
-        System.out.println("ModTheSpire version: " + MTS_VERSION.get());
-        System.out.printf("Mod list: ");
+        System.out.println("Version Info:");
+        System.out.printf(" - Java version (%s)\n", System.getProperty("java.version"));
+        System.out.printf(" - Slay the Spire (%s)", STS_VERSION);
+        if (STS_BETA) {
+            System.out.printf(" BETA");
+        }
+        System.out.printf("\n");
+        System.out.printf(" - ModTheSpire (%s)\n", MTS_VERSION.get());
+        System.out.printf("Mod list:\n");
         for (ModInfo info : MODINFOS) {
-            if (info.ID == null || info.ID.isEmpty()) {
-                System.out.printf(info.Name);
-            } else {
-                System.out.printf(info.ID);
-            }
+            System.out.printf(" - %s", info.getIDName());
             if (info.Version != null) {
                 System.out.printf(" (%s)", info.Version.get());
             }
-            System.out.printf(", ");
+            System.out.println();
         }
         System.out.println();
     }

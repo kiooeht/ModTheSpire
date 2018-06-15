@@ -8,29 +8,29 @@ import javassist.*;
 
 public class InsertPatchInfo extends PatchInfo
 {
-	
-	public static class LineNumberAndPatchType {
-		public int lineNumber;
-		public int relativeLineNumber;
-		public InsertPatchType patchType;
-		
-		public LineNumberAndPatchType(int lineNumber) {
-			this.lineNumber = lineNumber;
-			this.patchType = InsertPatchType.ABSOLUTE;
-		}
-		
-		public LineNumberAndPatchType(int lineNumber, int relativeLineNumber) {
-			this.lineNumber = lineNumber;
-			this.relativeLineNumber = relativeLineNumber;
-			this.patchType = InsertPatchType.RELATIVE;
-		}
-		
-	}
-	
-	public static enum InsertPatchType {
-		ABSOLUTE, RELATIVE
-	}
-	
+
+    public static class LineNumberAndPatchType {
+        public int lineNumber;
+        public int relativeLineNumber;
+        public InsertPatchType patchType;
+
+        public LineNumberAndPatchType(int lineNumber) {
+            this.lineNumber = lineNumber;
+            this.patchType = InsertPatchType.ABSOLUTE;
+        }
+
+        public LineNumberAndPatchType(int lineNumber, int relativeLineNumber) {
+            this.lineNumber = lineNumber;
+            this.relativeLineNumber = relativeLineNumber;
+            this.patchType = InsertPatchType.RELATIVE;
+        }
+
+    }
+
+    public static enum InsertPatchType {
+        ABSOLUTE, RELATIVE
+    }
+
     private SpireInsertPatch info;
     private List<LineNumberAndPatchType> locs;
 
@@ -44,17 +44,17 @@ public class InsertPatchInfo extends PatchInfo
     @Override
     protected String debugMsg()
     {
-    	StringBuilder msgBuilder = new StringBuilder("");
-    	for (LineNumberAndPatchType patchLoc : locs) {
-    		switch(patchLoc.patchType) {
-    		case ABSOLUTE:
-    			msgBuilder.append("Adding Insert @ " + patchLoc.lineNumber + "...\n");
-    			break;
-    		case RELATIVE:
-    			msgBuilder.append("Adding Insert @ r" + patchLoc.relativeLineNumber + " (abs:" + patchLoc.lineNumber + ")...\n");
-    			break;
-    		}
-    	}
+        StringBuilder msgBuilder = new StringBuilder("");
+        for (LineNumberAndPatchType patchLoc : locs) {
+            switch(patchLoc.patchType) {
+            case ABSOLUTE:
+                msgBuilder.append("Adding Insert @ " + patchLoc.lineNumber + "...\n");
+                break;
+            case RELATIVE:
+                msgBuilder.append("Adding Insert @ r" + patchLoc.relativeLineNumber + " (abs:" + patchLoc.lineNumber + ")...\n");
+                break;
+            }
+        }
         return msgBuilder.toString();
     }
 
@@ -65,7 +65,7 @@ public class InsertPatchInfo extends PatchInfo
     }
     
     private void doPatch(int loc) throws NotFoundException, ClassNotFoundException, CannotCompileException {
-       	CtClass[] insertParamTypes = patchMethod.getParameterTypes();
+        CtClass[] insertParamTypes = patchMethod.getParameterTypes();
         Object[][] insertParamAnnotations = patchMethod.getParameterAnnotations();
         int insertParamsStartIndex = ctMethodToPatch.getParameterTypes().length;
         if (!Modifier.isStatic(ctMethodToPatch.getModifiers())) {
@@ -128,9 +128,6 @@ public class InsertPatchInfo extends PatchInfo
         }
         src += "}";
         src2 += "}";
-        if (Loader.DEBUG) {
-            System.out.println(src);
-        }
         try {
             ctMethodToPatch.insertAt(loc, src);
         } catch (CannotCompileException e) {
@@ -145,8 +142,8 @@ public class InsertPatchInfo extends PatchInfo
     @Override
     public void doPatch() throws NotFoundException, ClassNotFoundException, CannotCompileException
     {
-    	for (LineNumberAndPatchType patchLoc : locs) {
-    		doPatch(patchLoc.lineNumber);
-    	}
+        for (LineNumberAndPatchType patchLoc : locs) {
+            doPatch(patchLoc.lineNumber);
+        }
     }
 }

@@ -20,9 +20,9 @@ public abstract class PatchInfo
 
     public void debugPrint()
     {
-        System.out.println("Patch [" + patchClassName() + "]");
-        System.out.println("  Patching [" + ctMethodToPatch.getLongName() + "]");
-        System.out.printf("    ");
+        System.out.println("Patch Class: [" + patchClassName() + "]");
+        System.out.println(" - Patching [" + ctMethodToPatch.getLongName() + "]");
+        System.out.printf(" - ");
         System.out.println(debugMsg());
     }
 

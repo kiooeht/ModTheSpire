@@ -13,7 +13,8 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Properties;
 
-public class ModInfo implements Serializable {
+public class ModInfo implements Serializable
+{
     /**
      * 
      */
@@ -37,6 +38,8 @@ public class ModInfo implements Serializable {
     public String STS_Version;
     @SerializedName("dependencies")
     public String[] Dependencies;
+    @SerializedName("update_json")
+    public String UpdateJSON;
 
     private ModInfo()
     {
@@ -46,6 +49,15 @@ public class ModInfo implements Serializable {
         MTS_Version = new Version("0.0.0");
         STS_Version = null;
         Dependencies = new String[]{};
+        UpdateJSON = null;
+    }
+
+    public String getIDName() {
+        if (ID == null || ID.isEmpty()) {
+            return Name;
+        } else {
+            return ID;
+        }
     }
     
     private static void closeLoader(URLClassLoader loader)

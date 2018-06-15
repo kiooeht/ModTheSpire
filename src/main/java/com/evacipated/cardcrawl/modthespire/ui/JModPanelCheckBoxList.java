@@ -1,4 +1,4 @@
-package com.evacipated.cardcrawl.modthespire;
+package com.evacipated.cardcrawl.modthespire.ui;
 
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
@@ -40,6 +40,15 @@ public class JModPanelCheckBoxList extends JList<ModPanel> {
                 }
             }
         });
+        
+        // force mods to calc their backgrounds
+        publishBoxChecked();
+    }
+    
+    public void publishBoxChecked() {
+        for (int i = 0; i < getModel().getSize(); i++) {
+            getModel().getElementAt(i).recalcModWarnings(this);
+        }
     }
 
     public JModPanelCheckBoxList(DefaultListModel<ModPanel> model) {
@@ -169,6 +178,9 @@ class ListItemTransferHandler extends TransferHandler {
             Object[] values = (Object[]) info.getTransferable().getTransferData(localObjectFlavor);
             for (int i = 0; i < values.length; i++) {
                 int idx = index++;
+                ((ModPanel)values[i]).checkBox.addItemListener((event) -> {
+                    ((JModPanelCheckBoxList)target).publishBoxChecked();
+                });
                 listModel.add(idx, values[i]);
                 target.addSelectionInterval(idx, idx);
             }

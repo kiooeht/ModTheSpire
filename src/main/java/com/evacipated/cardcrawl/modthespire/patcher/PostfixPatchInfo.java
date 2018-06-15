@@ -1,6 +1,7 @@
 package com.evacipated.cardcrawl.modthespire.patcher;
 
 import com.evacipated.cardcrawl.modthespire.Loader;
+
 import javassist.*;
 
 public class PostfixPatchInfo extends PatchInfo

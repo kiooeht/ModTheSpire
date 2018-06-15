@@ -12,8 +12,8 @@ ModTheSpire is a tool to load external mods for Slay the Spire without modifying
 ### Running Mods ###
 1. Run ModTheSpire.
     * For Windows, run `MTS.cmd`.
-	* For Linux, run `MTS.sh`.
-	* Or run `ModTheSpire.jar` with Java 8.
+    * For Linux, run `MTS.sh`.
+    * Or run `ModTheSpire.jar` with Java 8.
 2. Select the mod(s) you want to use.
 3. Press 'Play'.
 
