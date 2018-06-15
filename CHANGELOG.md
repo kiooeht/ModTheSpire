@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v2.7.0 ####
 * Fix for week 29
 * Option for modders to dump patched JAR for inspection (test447)
 * Format logs nicer (test447)
