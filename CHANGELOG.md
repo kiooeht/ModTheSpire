@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Fix for week 29
 * Option for modders to dump patched JAR for inspection (test447)
 * Format logs nicer (test447)
 * Mod update checker (test447/kiooeht)
