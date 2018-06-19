@@ -226,7 +226,9 @@ public class Patcher {
                             ctMethodToPatch = ctClsToPatch.makeClassInitializer();
                         }
                     } else if (patch.method().equals(SpirePatch.CLASS)) {
-                        // TODO
+                        patchInfos.add(new ClassPatchInfo(ctClsToPatch, ctPatchClass));
+                        ctClasses.add(ctClsToPatch);
+                        ctClasses.add(ctPatchClass);
                     } else {
                         if (ctParamTypes == null)
                             ctMethodToPatch = ctClsToPatch.getDeclaredMethod(patch.method());
