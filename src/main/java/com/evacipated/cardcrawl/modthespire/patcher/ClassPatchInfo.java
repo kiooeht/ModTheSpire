@@ -1,6 +1,7 @@
 package com.evacipated.cardcrawl.modthespire.patcher;
 
 import com.evacipated.cardcrawl.modthespire.Loader;
+import com.evacipated.cardcrawl.modthespire.StaticSpireField;
 import com.evacipated.cardcrawl.modthespire.lib.SpireField;
 import javassist.*;
 
@@ -49,7 +50,9 @@ public class ClassPatchInfo extends PatchInfo
     public void doPatch() throws NotFoundException, CannotCompileException
     {
         for (CtField f : ctPatchClass.getDeclaredFields()) {
-            if (f.getType().getName().equals(SpireField.class.getCanonicalName())) {
+            boolean isStatic = f.getType().getName().equals(StaticSpireField.class.getCanonicalName());
+            boolean isSpireField = isStatic || f.getType().getName().equals(SpireField.class.getCanonicalName());
+            if (isSpireField) {
                 // Make the field
                 String fieldName = String.format("%s_%d", f.getName(), new Random().nextInt(1000));
                 String fieldType = f.getGenericSignature();
@@ -57,7 +60,9 @@ public class ClassPatchInfo extends PatchInfo
                 Matcher matcher = pattern.matcher(fieldType);
                 matcher.find();
                 fieldType = matcher.group(1).replace('/', '.');
-                String str = String.format("public %s %s;", fieldType, fieldName);
+                String str = String.format("public%s %s %s;",
+                    (isStatic ? " static" : ""),
+                    fieldType, fieldName);
                 if (Loader.DEBUG) {
                     System.out.println(" - Adding Field: " + str);
                 }
@@ -70,11 +75,11 @@ public class ClassPatchInfo extends PatchInfo
                 if (staticinit == null) {
                     staticinit = ctPatchClass.makeClassInitializer();
                 }
-                String src = String.format("{" +
-                        "if (%s == null) { %s = new %s(null); }" +
-                        "%s.initialize(%s, \"%s\");" +
+                String src = String.format("{\n" +
+                        "if (%s == null) { %s = new %s(null); }\n" +
+                        "%s.initialize(%s, \"%s\");\n" +
                         "}",
-                    f.getName(), f.getName(), SpireField.class.getCanonicalName(),
+                    f.getName(), f.getName(), (isStatic ? StaticSpireField.class.getCanonicalName() : SpireField.class.getCanonicalName()),
                     f.getName(), ctClassToPatch.getName() + ".class", fieldName);
                 staticinit.insertAfter(src);
             }
