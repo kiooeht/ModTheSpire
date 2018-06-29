@@ -15,4 +15,5 @@ public @interface SpirePatch {
     @Deprecated
     String OLD_CONSTRUCTOR = "ctor";
     String STATICINITIALIZER = "<staticinit>";
+    String CLASS = "<class>";
 }
