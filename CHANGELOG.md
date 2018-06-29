@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* SpireField: For adding new fields to existing classes
 
 #### v2.7.0 ####
 * Fix for week 29
