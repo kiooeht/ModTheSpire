@@ -5,6 +5,20 @@ import java.util.Properties;
 
 public class SpireConfig
 {
+    //Keys for use with properties
+    public static final String KEY_X = "x";
+    public static final String KEY_Y = "y";
+    public static final String KEY_WIDTH = "width";
+    public static final String KEY_HEIGHT = "height";
+    public static final String KEY_MAXIMIZE = "maximize";
+    public static final String KEY_DEBUG = "debug";
+    public static final String KEY_OUT_JAR = "out-jar";
+
+    //Values for use with properties
+    public static final String VALUE_CENTER = "center";
+    public static final String VALUE_TRUE = Boolean.toString(true);
+    public static final String VALUE_FALSE = Boolean.toString(false);
+
     private final static String EXTENSION = ".properties";
     private Properties properties;
     private File file;

@@ -3,6 +3,7 @@ package com.evacipated.cardcrawl.modthespire.ui;
 import com.evacipated.cardcrawl.modthespire.LoadOrder;
 import com.evacipated.cardcrawl.modthespire.Loader;
 import com.evacipated.cardcrawl.modthespire.ModInfo;
+import com.evacipated.cardcrawl.modthespire.lib.SpireConfig;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -13,9 +14,9 @@ import java.net.MalformedURLException;
 import java.util.Properties;
 
 public class ModSelectWindow extends JFrame {
-    
+
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = -8232997068791248057L;
     private static final int DEFAULT_WIDTH = 300;
@@ -39,21 +40,21 @@ public class ModSelectWindow extends JFrame {
     public static Properties getDefaults()
     {
         Properties properties = new Properties();
-        properties.setProperty("x", "center");
-        properties.setProperty("y", "center");
-        properties.setProperty("width", Integer.toString(DEFAULT_WIDTH));
-        properties.setProperty("height", Integer.toString(DEFAULT_HEIGHT));
-        properties.setProperty("maximize", Boolean.toString(false));
+        properties.setProperty(SpireConfig.KEY_X, SpireConfig.VALUE_CENTER);
+        properties.setProperty(SpireConfig.KEY_Y, SpireConfig.VALUE_CENTER);
+        properties.setProperty(SpireConfig.KEY_WIDTH, Integer.toString(DEFAULT_WIDTH));
+        properties.setProperty(SpireConfig.KEY_HEIGHT, Integer.toString(DEFAULT_HEIGHT));
+        properties.setProperty(SpireConfig.KEY_MAXIMIZE, SpireConfig.VALUE_FALSE);
         return properties;
     }
-    
+
     public ModSelectWindow(File[] modJars) throws MalformedURLException
     {
         mods = modJars;
         info = Loader.buildInfoArray(mods);
         readWindowPosSize();
         initUI();
-        if (Loader.MTS_CONFIG.getBool("maximize")) {
+        if (Loader.MTS_CONFIG.getBool(SpireConfig.KEY_MAXIMIZE)) {
             isMaximized = true;
             this.setExtendedState(this.getExtendedState() | JFrame.MAXIMIZED_BOTH);
         }
@@ -62,24 +63,24 @@ public class ModSelectWindow extends JFrame {
     private void readWindowPosSize()
     {
         // Sanity check values
-        if (Loader.MTS_CONFIG.getInt("width") < DEFAULT_WIDTH) {
-            Loader.MTS_CONFIG.setInt("width", DEFAULT_WIDTH);
+        if (Loader.MTS_CONFIG.getInt(SpireConfig.KEY_WIDTH) < DEFAULT_WIDTH) {
+            Loader.MTS_CONFIG.setInt(SpireConfig.KEY_WIDTH, DEFAULT_WIDTH);
         }
-        if (Loader.MTS_CONFIG.getInt("height") < DEFAULT_HEIGHT) {
-            Loader.MTS_CONFIG.setInt("height", DEFAULT_HEIGHT);
+        if (Loader.MTS_CONFIG.getInt(SpireConfig.KEY_HEIGHT) < DEFAULT_HEIGHT) {
+            Loader.MTS_CONFIG.setInt(SpireConfig.KEY_HEIGHT, DEFAULT_HEIGHT);
         }
         location = new Rectangle();
-        location.width = Loader.MTS_CONFIG.getInt("width");
-        location.height = Loader.MTS_CONFIG.getInt("height");
-        if (Loader.MTS_CONFIG.getString("x").equals("center") || Loader.MTS_CONFIG.getString("y").equals("center")) {
+        location.width = Loader.MTS_CONFIG.getInt(SpireConfig.KEY_WIDTH);
+        location.height = Loader.MTS_CONFIG.getInt(SpireConfig.KEY_HEIGHT);
+        if (Loader.MTS_CONFIG.getString(SpireConfig.KEY_X).equals(SpireConfig.VALUE_CENTER) || Loader.MTS_CONFIG.getString(SpireConfig.KEY_Y).equals(SpireConfig.VALUE_CENTER)) {
             isCentered = true;
         } else {
             isCentered = false;
-            location.x = Loader.MTS_CONFIG.getInt("x");
-            location.y = Loader.MTS_CONFIG.getInt("y");
+            location.x = Loader.MTS_CONFIG.getInt(SpireConfig.KEY_X);
+            location.y = Loader.MTS_CONFIG.getInt(SpireConfig.KEY_Y);
             if (!isInScreenBounds(location)) {
-                Loader.MTS_CONFIG.setString("x", "center");
-                Loader.MTS_CONFIG.setString("y", "center");
+                Loader.MTS_CONFIG.setString(SpireConfig.KEY_X, SpireConfig.VALUE_CENTER);
+                Loader.MTS_CONFIG.setString(SpireConfig.KEY_Y, SpireConfig.VALUE_CENTER);
                 isCentered = true;
             }
         }
@@ -210,7 +211,7 @@ public class ModSelectWindow extends JFrame {
         }
         debugCheck.addActionListener((ActionEvent event) -> {
             Loader.DEBUG = debugCheck.isSelected();
-            Loader.MTS_CONFIG.setBool("debug", Loader.DEBUG);
+            Loader.MTS_CONFIG.setBool(SpireConfig.KEY_DEBUG, Loader.DEBUG);
             try {
                 Loader.MTS_CONFIG.save();
             } catch (IOException e) {
@@ -249,8 +250,8 @@ public class ModSelectWindow extends JFrame {
 
     void saveWindowDimensions(Dimension d)
     {
-        Loader.MTS_CONFIG.setInt("width", d.width);
-        Loader.MTS_CONFIG.setInt("height", d.height);
+        Loader.MTS_CONFIG.setInt(SpireConfig.KEY_WIDTH, d.width);
+        Loader.MTS_CONFIG.setInt(SpireConfig.KEY_HEIGHT, d.height);
         try {
             Loader.MTS_CONFIG.save();
         } catch (IOException e) {
@@ -260,7 +261,7 @@ public class ModSelectWindow extends JFrame {
 
     void saveWindowMaximize()
     {
-        Loader.MTS_CONFIG.setBool("maximize", isMaximized);
+        Loader.MTS_CONFIG.setBool(SpireConfig.KEY_MAXIMIZE, isMaximized);
         try {
             Loader.MTS_CONFIG.save();
         } catch (IOException e) {
@@ -271,8 +272,8 @@ public class ModSelectWindow extends JFrame {
     void saveWindowLocation()
     {
         Point loc = getLocationOnScreen();
-        Loader.MTS_CONFIG.setInt("x", loc.x);
-        Loader.MTS_CONFIG.setInt("y", loc.y);
+        Loader.MTS_CONFIG.setInt(SpireConfig.KEY_X, loc.x);
+        Loader.MTS_CONFIG.setInt(SpireConfig.KEY_Y, loc.y);
         try {
             Loader.MTS_CONFIG.save();
         } catch (IOException e) {
