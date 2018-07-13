@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v2.8.0 ####
 * SpireField: For adding new fields to existing classes
 
 #### v2.7.0 ####
