@@ -1,1 +1,3 @@
 * text=auto
+*.cmd eol=crlf
+*.sh eol=lf
