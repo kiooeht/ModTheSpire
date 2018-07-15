@@ -1,7 +1,7 @@
 package com.evacipated.cardcrawl.modthespire.patcher;
 
 import com.evacipated.cardcrawl.modthespire.Loader;
-
+import com.evacipated.cardcrawl.modthespire.lib.SpireReturn;
 import javassist.*;
 
 public class PrefixPatchInfo extends PatchInfo
@@ -57,7 +57,23 @@ public class PrefixPatchInfo extends PatchInfo
             }
         }
 
-        src += funccall + ");\n";
+
+        CtClass returnType = patchMethod.getReturnType();
+        if (ctMethodToPatch instanceof CtMethod
+            && !returnType.equals(CtPrimitiveType.voidType)
+            && returnType.equals(returnType.getClassPool().get(SpireReturn.class.getName()))) {
+
+            funccall = SpireReturn.class.getName() + " opt = " + funccall + ");\n" +
+                "if (opt.isPresent()) { return";
+            if (!((CtMethod)ctMethodToPatch).getReturnType().equals(CtPrimitiveType.voidType)) {
+                funccall += " (" + ((CtMethod) ctMethodToPatch).getReturnType().getName() + ")opt.get()";
+            }
+            funccall += "; }\n";
+        } else {
+            funccall += ");\n";
+        }
+
+        src += funccall;
         String src2 = src;
         src += postcallsrc + "}";
         src2 += postcallsrc2 + "}";
