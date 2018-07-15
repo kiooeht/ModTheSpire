@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.evacipated.cardcrawl.modthespire.Loader;
 import com.evacipated.cardcrawl.modthespire.lib.SpireInsertPatch;
+import com.evacipated.cardcrawl.modthespire.lib.SpireReturn;
 import javassist.*;
 
 public class InsertPatchInfo extends PatchInfo
@@ -65,6 +66,15 @@ public class InsertPatchInfo extends PatchInfo
     }
     
     private void doPatch(int loc) throws NotFoundException, ClassNotFoundException, CannotCompileException {
+        CtClass returnType = patchMethod.getReturnType();
+        boolean hasEarlyReturn = false;
+        if (ctMethodToPatch instanceof CtMethod
+            && !returnType.equals(CtPrimitiveType.voidType)
+            && returnType.equals(returnType.getClassPool().get(SpireReturn.class.getName()))) {
+
+            hasEarlyReturn = true;
+        }
+
         CtClass[] insertParamTypes = patchMethod.getParameterTypes();
         Object[][] insertParamAnnotations = patchMethod.getParameterAnnotations();
         int insertParamsStartIndex = ctMethodToPatch.getParameterTypes().length;
@@ -88,6 +98,10 @@ public class InsertPatchInfo extends PatchInfo
             if (localVarTypeNames[i] != null) {
                 src += localVarTypeNames[i] + " __" + info.localvars()[i] + " = new " + localVarTypeNames[i] + "{" + info.localvars()[i] + "};\n";
             }
+        }
+
+        if (hasEarlyReturn) {
+            src += SpireReturn.class.getName() + " opt = ";
         }
 
         src += patchMethod.getDeclaringClass().getName() + "." + patchMethod.getName() + "(";
@@ -126,14 +140,36 @@ public class InsertPatchInfo extends PatchInfo
                 src2 += "__" + info.localvars()[i] + "[0];\n";
             }
         }
+
+        if (hasEarlyReturn) {
+            String earlyReturn = "if (opt.isPresent()) { return";
+            if (!((CtMethod) ctMethodToPatch).getReturnType().equals(CtPrimitiveType.voidType)) {
+                earlyReturn += " (" + ((CtMethod) ctMethodToPatch).getReturnType().getName() + ")opt.get()";
+            }
+            earlyReturn += "; }\n";
+
+            src += earlyReturn;
+            src2 += earlyReturn;
+        }
+
         src += "}";
         src2 += "}";
+
         try {
             ctMethodToPatch.insertAt(loc, src);
+            if (Loader.DEBUG) {
+                System.out.println(src);
+            }
         } catch (CannotCompileException e) {
             try {
                 ctMethodToPatch.insertAt(loc, src2);
+                if (Loader.DEBUG) {
+                    System.out.println(src2);
+                }
             } catch (CannotCompileException e2) {
+                if (Loader.DEBUG) {
+                    System.out.println(src);
+                }
                 throw e;
             }
         }
