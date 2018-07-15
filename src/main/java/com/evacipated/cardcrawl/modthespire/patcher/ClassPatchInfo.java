@@ -1,7 +1,7 @@
 package com.evacipated.cardcrawl.modthespire.patcher;
 
 import com.evacipated.cardcrawl.modthespire.Loader;
-import com.evacipated.cardcrawl.modthespire.StaticSpireField;
+import com.evacipated.cardcrawl.modthespire.lib.StaticSpireField;
 import com.evacipated.cardcrawl.modthespire.lib.SpireField;
 import javassist.*;
 

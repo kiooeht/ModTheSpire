@@ -1,6 +1,4 @@
-package com.evacipated.cardcrawl.modthespire;
-
-import com.evacipated.cardcrawl.modthespire.lib.SpireField;
+package com.evacipated.cardcrawl.modthespire.lib;
 
 public class StaticSpireField<T> extends SpireField<T>
 {
