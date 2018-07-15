@@ -15,7 +15,7 @@ public final class SpireReturn<T>
         value = null;
     }
 
-    public static<T> SpireReturn<T> go()
+    public static<T> SpireReturn<T> Continue()
     {
         @SuppressWarnings("unchecked")
         SpireReturn<T> t = (SpireReturn<T>) EMPTY;
@@ -28,7 +28,7 @@ public final class SpireReturn<T>
         this.value = value;
     }
 
-    public static<T> SpireReturn<T> stop(T value)
+    public static<T> SpireReturn<T> Return(T value)
     {
         return new SpireReturn<>(value);
     }
