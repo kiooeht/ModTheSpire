@@ -1,6 +1,7 @@
 ## Changelog ##
 #### dev ####
 * Allow Prefix patches to skip the original method
+* Allow Insert patches to skip the remainder of the original method
 
 #### v2.8.0 ####
 * SpireField: For adding new fields to existing classes
