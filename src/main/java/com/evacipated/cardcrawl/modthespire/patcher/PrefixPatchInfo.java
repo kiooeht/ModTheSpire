@@ -59,24 +59,38 @@ public class PrefixPatchInfo extends PatchInfo
 
 
         CtClass returnType = patchMethod.getReturnType();
+        boolean hasEarlyReturn = false;
         if (ctMethodToPatch instanceof CtMethod
             && !returnType.equals(CtPrimitiveType.voidType)
             && returnType.equals(returnType.getClassPool().get(SpireReturn.class.getName()))) {
 
-            funccall = SpireReturn.class.getName() + " opt = " + funccall + ");\n" +
-                "if (opt.isPresent()) { return";
-            if (!((CtMethod)ctMethodToPatch).getReturnType().equals(CtPrimitiveType.voidType)) {
-                funccall += " (" + ((CtMethod) ctMethodToPatch).getReturnType().getName() + ")opt.get()";
-            }
-            funccall += "; }\n";
+            hasEarlyReturn = true;
+        }
+
+        if (hasEarlyReturn) {
+            funccall = SpireReturn.class.getName() + " opt = " + funccall + ");\n";
         } else {
             funccall += ");\n";
         }
 
         src += funccall;
         String src2 = src;
-        src += postcallsrc + "}";
-        src2 += postcallsrc2 + "}";
+        src += postcallsrc;
+        src2 += postcallsrc2;
+
+        if (hasEarlyReturn) {
+            String earlyReturn = "if (opt.isPresent()) { return";
+            if (!((CtMethod)ctMethodToPatch).getReturnType().equals(CtPrimitiveType.voidType)) {
+                earlyReturn += " (" + ((CtMethod) ctMethodToPatch).getReturnType().getName() + ")opt.get()";
+            }
+            earlyReturn += "; }\n";
+
+            src += earlyReturn;
+            src2 += earlyReturn;
+        }
+
+        src += "}";
+        src2 += "}";
 
         if (Loader.DEBUG) {
             System.out.println(src);
