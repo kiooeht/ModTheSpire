@@ -43,6 +43,16 @@ public class Loader {
     private static ModSelectWindow ex;
     private static URL latestReleaseURL = null;
 
+    public static boolean isModLoaded(String modID)
+    {
+        for (int i=0; i<MODINFOS.length; ++i) {
+            if (MODINFOS[i].ID.equals(modID)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static void main(String[] args) {
         ARGS = args;
         try {
