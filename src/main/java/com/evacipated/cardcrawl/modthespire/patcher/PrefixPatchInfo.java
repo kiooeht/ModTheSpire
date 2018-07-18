@@ -81,7 +81,22 @@ public class PrefixPatchInfo extends PatchInfo
         if (hasEarlyReturn) {
             String earlyReturn = "if (opt.isPresent()) { return";
             if (!((CtMethod)ctMethodToPatch).getReturnType().equals(CtPrimitiveType.voidType)) {
-                earlyReturn += " (" + ((CtMethod) ctMethodToPatch).getReturnType().getName() + ")opt.get()";
+                CtClass toPatchReturnType = ((CtMethod) ctMethodToPatch).getReturnType();
+                String toPatchReturnTypeName = toPatchReturnType.getName();
+                if (toPatchReturnType.isPrimitive()) {
+                    if (toPatchReturnType.equals(CtPrimitiveType.intType)) {
+                        toPatchReturnTypeName = "Integer";
+                    } else if (toPatchReturnType.equals(CtPrimitiveType.charType)) {
+                        toPatchReturnTypeName = "Character";
+                    } else {
+                        toPatchReturnTypeName = toPatchReturnTypeName.substring(0, 1).toUpperCase() + toPatchReturnTypeName.substring(1);
+                    }
+                    earlyReturn += " (";
+                }
+                earlyReturn += " (" + toPatchReturnTypeName + ")opt.get()";
+                if (toPatchReturnType.isPrimitive()) {
+                    earlyReturn += ")." + toPatchReturnType.getName() + "Value()";
+                }
             }
             earlyReturn += "; }\n";
 
