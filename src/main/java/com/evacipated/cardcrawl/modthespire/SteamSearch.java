@@ -34,6 +34,7 @@ public class SteamSearch
         Path steamPath = getSteamPath();
         if (steamPath == null) {
             System.err.println("ERROR: Failed to find Steam installation.");
+            return;
         }
 
         if (containsAcfFile(steamPath)) {
@@ -67,16 +68,22 @@ public class SteamSearch
             }
             return steamPath;
         } else if (SystemUtils.IS_OS_MAC) {
-            steamPath = Paths.get("~/Library/Application Support/Steam/steamapps");
+            steamPath = Paths.get(SystemUtils.USER_HOME, "Library/Application Support/Steam/steamapps");
             if (!steamPath.toFile().exists()) {
                 steamPath = null;
             }
         } else if (SystemUtils.IS_OS_LINUX) {
-            steamPath = Paths.get("~/.steam/steam/SteamApps");
-            if (!steamPath.toFile().exists()) {
-                steamPath = Paths.get("~/.local/share/steam/SteamApps");
-                if (!steamPath.toFile().exists()) {
-                    steamPath = null;
+            Path[] possiblePaths = {
+                Paths.get(SystemUtils.USER_HOME, ".steam/steam/SteamApps"),
+                Paths.get(SystemUtils.USER_HOME, ".steam/steam/steamapps"),
+                Paths.get(SystemUtils.USER_HOME, ".local/share/steam/SteamApps"),
+                Paths.get(SystemUtils.USER_HOME, ".local/share/steam/steamapps")
+            };
+
+            for (Path p : possiblePaths) {
+                if (p.toFile().exists()) {
+                    steamPath = p;
+                    break;
                 }
             }
         }
