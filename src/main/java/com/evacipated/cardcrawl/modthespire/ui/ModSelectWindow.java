@@ -6,6 +6,7 @@ import com.evacipated.cardcrawl.modthespire.ModInfo;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.MatteBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
@@ -18,8 +19,8 @@ public class ModSelectWindow extends JFrame {
      * 
      */
     private static final long serialVersionUID = -8232997068791248057L;
-    private static final int DEFAULT_WIDTH = 300;
-    private static final int DEFAULT_HEIGHT = 226;
+    private static final int DEFAULT_WIDTH = 800;
+    private static final int DEFAULT_HEIGHT = 500;
     private static final String DEBUG_OPTION = "Debug";
     private static final String PLAY_OPTION = "Play";
     private static final String JAR_DUMP_OPTION = "Dump Patched Jar";
@@ -30,6 +31,7 @@ public class ModSelectWindow extends JFrame {
     private boolean isCentered = false;
     private Rectangle location;
     private JPanel playPane;
+    private JButton playBtn;
 
     public enum UpdateIconType
     {
@@ -52,6 +54,7 @@ public class ModSelectWindow extends JFrame {
         mods = modJars;
         info = Loader.buildInfoArray(mods);
         readWindowPosSize();
+        setupDetectMaximize();
         initUI();
         if (Loader.MTS_CONFIG.getBool("maximize")) {
             isMaximized = true;
@@ -91,11 +94,8 @@ public class ModSelectWindow extends JFrame {
         }
     }
 
-    private void initUI() {
-        setTitle("Mod The Spire " + Loader.MTS_VERSION.get());
-        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        setResizable(true);
-
+    private void setupDetectMaximize()
+    {
         ModSelectWindow tmpthis = this;
         this.addComponentListener(new ComponentAdapter()
         {
@@ -147,24 +147,53 @@ public class ModSelectWindow extends JFrame {
                 }
             }
         });
+    }
+
+    private void initUI()
+    {
+        setTitle("Mod The Spire " + Loader.MTS_VERSION.get());
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        setResizable(true);
 
         rootPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 
         setLayout(new BorderLayout());
+        getContentPane().setPreferredSize(new Dimension(location.width, location.height));
+
+        getContentPane().add(makeModListPanel(), BorderLayout.WEST);
+        getContentPane().add(makeInfoPanel(), BorderLayout.CENTER);
+
+        pack();
+        if (isCentered) {
+            setLocationRelativeTo(null);
+        } else {
+            setLocation(location.getLocation());
+        }
+
+        // Default focus Play button
+        JRootPane rootPane = SwingUtilities.getRootPane(playBtn);
+        rootPane.setDefaultButton(playBtn);
+        EventQueue.invokeLater(playBtn::requestFocusInWindow);
+    }
+
+    private JPanel makeModListPanel()
+    {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BorderLayout());
+        panel.setPreferredSize(new Dimension(220, 300));
 
         // Mod List
         DefaultListModel<ModPanel> model = new DefaultListModel<>();
         JModPanelCheckBoxList modList = new JModPanelCheckBoxList(model);
-        LoadOrder.loadModsInOrder(model, mods, info, new Dimension(location.width, location.height), modList);
+        LoadOrder.loadModsInOrder(model, mods, info, modList);
 
         JScrollPane modScroller = new JScrollPane(modList);
-        this.getContentPane().setPreferredSize(new Dimension(location.width, location.height));
-        this.getContentPane().add(modScroller, BorderLayout.CENTER);
+        panel.add(modScroller, BorderLayout.CENTER);
 
         // Play button
-        JButton playBtn = new JButton(
-                Loader.OUT_JAR ? JAR_DUMP_OPTION : PLAY_OPTION
-                );
+        playBtn = new JButton(
+            Loader.OUT_JAR ? JAR_DUMP_OPTION : PLAY_OPTION
+        );
         playBtn.addActionListener((ActionEvent event) -> {
             showingLog = true;
             playBtn.setEnabled(false);
@@ -185,7 +214,7 @@ public class ModSelectWindow extends JFrame {
             if (isCentered) {
                 setLocationRelativeTo(null);
             }
-            
+
             Thread tCfg = new Thread(() -> {
                 // Save new load order cfg
                 LoadOrder.saveCfg(modList.getCheckedMods());
@@ -200,10 +229,36 @@ public class ModSelectWindow extends JFrame {
             });
             t.start();
         });
+        panel.add(playBtn, BorderLayout.SOUTH);
 
-        playPane = new JPanel();
-        playPane.setLayout(new BorderLayout());
-        playPane.add(playBtn, BorderLayout.CENTER);
+        return panel;
+    }
+
+    private JPanel makeInfoPanel()
+    {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BorderLayout());
+
+        panel.add(makeStatusPanel(), BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    private JPanel makeStatusPanel()
+    {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BorderLayout());
+        panel.setBorder(new MatteBorder(1, 0, 0, 0, Color.darkGray));
+
+        // StS version
+        JLabel sts_version = new JLabel("Slay the Spire version: " + Loader.STS_VERSION);
+        if (Loader.STS_BETA) {
+            sts_version.setText(sts_version.getText() + " BETA");
+        }
+        sts_version.setHorizontalAlignment(SwingConstants.RIGHT);
+        panel.add(sts_version, BorderLayout.EAST);
+
+        // Debug checkbox
         JCheckBox debugCheck = new JCheckBox(DEBUG_OPTION);
         if (Loader.DEBUG) {
             debugCheck.setSelected(true);
@@ -217,34 +272,9 @@ public class ModSelectWindow extends JFrame {
                 e.printStackTrace();
             }
         });
-        playPane.add(debugCheck, BorderLayout.EAST);
-        
-        setUpdateIcon(UpdateIconType.NONE);
+        panel.add(debugCheck, BorderLayout.WEST);
 
-        add(playPane, BorderLayout.SOUTH);
-
-        if (Loader.STS_BETA) {
-            JLabel betaLabel = new JLabel("Slay the Spire BETA");
-            betaLabel.setIcon(new ImageIcon(getClass().getResource("/assets/warning.gif")));
-            betaLabel.setToolTipText("<html>You are on the StS beta branch.<br/>ModTheSpire does not support the beta branch.<br/>You will likely encounter problems.</html>");
-            betaLabel.setHorizontalAlignment(JLabel.CENTER);
-            betaLabel.setOpaque(true);
-            betaLabel.setBackground(new Color(255, 159, 0));
-            betaLabel.setPreferredSize(new Dimension(betaLabel.getWidth(), 30));
-
-            add(betaLabel, BorderLayout.NORTH);
-        }
-
-        pack();
-        if (isCentered) {
-            setLocationRelativeTo(null);
-        } else {
-            setLocation(location.getLocation());
-        }
-
-        JRootPane rootPane = SwingUtilities.getRootPane(playBtn);
-        rootPane.setDefaultButton(playBtn);
-        EventQueue.invokeLater(playBtn::requestFocusInWindow);
+        return panel;
     }
 
     void saveWindowDimensions(Dimension d)

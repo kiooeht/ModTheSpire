@@ -13,15 +13,13 @@ import java.awt.event.ComponentEvent;
 import java.io.File;
 import java.util.ArrayList;
 
-import javax.swing.BoxLayout;
-import javax.swing.JCheckBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextArea;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
 
 @SuppressWarnings("serial")
-public class ModPanel extends JPanel {
+public class ModPanel extends JPanel
+{
     private static final Color lightRed = new Color(229,115,115);
     private static final Color lightOrange = new Color(255, 159, 0); // orange peel (https://en.wikipedia.org/wiki/Shades_of_orange#Orange_peel)
     private static final Color lightYellow = new Color(255, 238, 88);
@@ -72,13 +70,17 @@ public class ModPanel extends JPanel {
         return missing.toArray(returnType);
     }
     
-    public ModPanel(ModInfo info, File modFile, Dimension parentSize, JModPanelCheckBoxList parent) {
+    public ModPanel(ModInfo info, File modFile, JModPanelCheckBoxList parent) {
         this.info = info;
         this.modFile = modFile;
-        this.checkBox = new JCheckBox();
-        this.setLayout(new BorderLayout());
-        infoPanel = new InfoPanel(parentSize);
-        this.add(infoPanel, BorderLayout.CENTER);
+        checkBox = new JCheckBox();
+        setLayout(new BorderLayout());
+        infoPanel = new InfoPanel();
+
+        add(checkBox, BorderLayout.WEST);
+        add(infoPanel, BorderLayout.CENTER);
+
+        setBorder(new MatteBorder(0, 0, 1, 0, Color.darkGray));
 
         checkBox.addItemListener((event) -> {
             parent.publishBoxChecked();
@@ -119,110 +121,56 @@ public class ModPanel extends JPanel {
         return checkBox.isEnabled() && checkBox.isSelected();
     }
     
-    public class InfoPanel extends JPanel {
-        JPanel buttonPanel;
-        JTextArea description;
-        JTextArea author;
+    public class InfoPanel extends JPanel
+    {
+        JLabel name = new JLabel();
+        JLabel version = new JLabel();
+        JLabel update = new JLabel();
 
-        public InfoPanel(Dimension parentSize) {
-            this.setLayout(new BorderLayout());
-            
-            buttonPanel = buildButtonPanel(info, checkBox);
-            buttonPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-            this.add(buttonPanel, BorderLayout.NORTH);
+        public InfoPanel()
+        {
+            setLayout(new BorderLayout());
 
-            this.add(buildInfoPanel(info, parentSize), BorderLayout.CENTER);
+            name.setOpaque(true);
+            name.setText(info.Name);
+            name.setFont(name.getFont().deriveFont(14.0f));
+            add(name, BorderLayout.CENTER);
 
-            this.setBorder(new MatteBorder(0, 0, 1, 0, Color.darkGray));
+            version.setOpaque(true);
+            version.setFont(name.getFont().deriveFont(10.0f));
+            if (info.Version != null) {
+                version.setText(info.Version.get());
+            } else {
+                version.setText("missing version");
+            }
+            add(version, BorderLayout.SOUTH);
+
+
+            update.setIcon(new ImageIcon(getClass().getResource("/assets/good.gif")));
+            update.setHorizontalAlignment(JLabel.CENTER);
+            update.setVerticalAlignment(JLabel.BOTTOM);
+            update.setOpaque(true);
+            update.setToolTipText("Up to date.");
+            update.setBorder(new EmptyBorder(0, 0, 0, 4));
+            add(update, BorderLayout.EAST);
+
             checkBox.setBackground(Color.WHITE);
             setBackground(Color.WHITE);
-        }
-        
-        public JPanel buildButtonPanel(ModInfo info, JCheckBox box) {
-            JPanel buttonPanel = new JPanel(new BorderLayout());
-            String nameString = ((info.Name != null) ? info.Name : "");
-            
-            JLabel name = new JLabel(nameString, JLabel.LEFT);
-            name.setFont(name.getFont().deriveFont(14.0F));
-            
-            buttonPanel.add(name, BorderLayout.WEST);
-            buttonPanel.add(box, BorderLayout.EAST);
-            return buttonPanel;
-        }
-
-        public JPanel buildInfoPanel(ModInfo info, Dimension parentSize)
-        {
-            JPanel infoPanel = new JPanel();
-            infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
-
-            if (info.Description != null && !info.Description.equals("")) {
-                description = new JTextArea(info.Description);
-                description.setAlignmentX(Component.LEFT_ALIGNMENT);
-                description.setLineWrap(true);
-                description.setWrapStyleWord(true);
-                description.setEditable(false);
-                description.setBorder(null);
-                description.setOpaque(true);
-                description.setFont(description.getFont().deriveFont(Font.PLAIN));
-                description.setSize(parentSize.width, description.getPreferredSize().height);
-                infoPanel.add(description);
-            }
-
-            if (info.Authors != null && info.Authors.length > 0) {
-                String label = "Author" + (info.Authors.length > 1 ? "s" : "") + ": ";
-                author = new JTextArea(label + String.join(", ", info.Authors));
-                author.setAlignmentX(Component.LEFT_ALIGNMENT);
-                author.setLineWrap(true);
-                author.setWrapStyleWord(true);
-                author.setEditable(false);
-                author.setBorder(null);
-                author.setOpaque(true);
-                author.setFont(author.getFont().deriveFont(Font.BOLD));
-                author.setSize(parentSize.width, author.getPreferredSize().height);
-                infoPanel.add(author);
-
-                author.addComponentListener(new ComponentAdapter()
-                {
-                    @Override
-                    public void componentResized(ComponentEvent e)
-                    {
-                        super.componentResized(e);
-                    }
-                });
-            }
-
-            return infoPanel;
         }
 
         @Override
         public void setBackground(Color c)
         {
             super.setBackground(c);
-            if (buttonPanel != null) {
-                buttonPanel.setBackground(c);
+            if (name != null) {
+                name.setBackground(c);
             }
-            if (author != null) {
-                author.setBackground(c);
+            if (version != null) {
+                version.setBackground(c);
             }
-            if (description != null) {
-                description.setBackground(c);
+            if (update != null) {
+                update.setBackground(c);
             }
-        }
-
-        @Override
-        public Dimension getPreferredSize()
-        {
-            int height = 0;
-            if (buttonPanel != null) {
-                height += buttonPanel.getPreferredSize().height;
-            }
-            if (description != null) {
-                height += description.getPreferredSize().height;
-            }
-            if (author != null) {
-                height += author.getPreferredSize().height;
-            }
-            return new Dimension(-1, height);
         }
     }
     

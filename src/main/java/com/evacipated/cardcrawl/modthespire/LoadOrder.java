@@ -36,18 +36,18 @@ public class LoadOrder {
         }
     }
     
-    public static void defaultLoad(DefaultListModel<ModPanel> model, File[] mods, ModInfo[] info, Dimension parentSize, JModPanelCheckBoxList parent) {
+    public static void defaultLoad(DefaultListModel<ModPanel> model, File[] mods, ModInfo[] info, JModPanelCheckBoxList parent) {
         for (int i = 0; i < info.length; i++) {
-            model.addElement(new ModPanel(info[i], mods[i], parentSize, parent));
+            model.addElement(new ModPanel(info[i], mods[i], parent));
         }
         return;
     }
     
-    public static void loadModsInOrder(DefaultListModel<ModPanel> model, File[] mods, ModInfo[] info, Dimension parentSize, JModPanelCheckBoxList parent) {
+    public static void loadModsInOrder(DefaultListModel<ModPanel> model, File[] mods, ModInfo[] info, JModPanelCheckBoxList parent) {
         File cfg_file = new File(CFG_FILE);
         
         if (!cfg_file.exists()) {
-            defaultLoad(model, mods, info, parentSize, parent);
+            defaultLoad(model, mods, info, parent);
             return;
         }
         
@@ -59,7 +59,7 @@ public class LoadOrder {
             System.out.println("could not load config file: " + CFG_FILE);
             System.out.println("exception was: " + e.toString());
             e.printStackTrace();
-            defaultLoad(model, mods, info, parentSize, parent);
+            defaultLoad(model, mods, info, parent);
             return;
         }
         
@@ -99,7 +99,7 @@ public class LoadOrder {
         
         // actually set them in order in the list
         for (ModDescriptor descriptor : loadOrder) {
-            ModPanel toAdd = new ModPanel(descriptor.info, descriptor.mod, parentSize, parent);
+            ModPanel toAdd = new ModPanel(descriptor.info, descriptor.mod, parent);
             if (toAdd.checkBox.isEnabled()) {
                 toAdd.checkBox.setSelected(descriptor.checked);
             }
