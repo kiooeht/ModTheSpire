@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v2.9.0 ####
 * Allow Prefix patches to skip the original method
 * Allow Insert patches to skip the remainder of the original method
 * Method for mods to check if another mod is loaded
