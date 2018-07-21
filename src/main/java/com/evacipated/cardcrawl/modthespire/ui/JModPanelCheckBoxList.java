@@ -19,8 +19,10 @@ import javax.swing.border.EmptyBorder;
 @SuppressWarnings("serial")
 public class JModPanelCheckBoxList extends JList<ModPanel> {
     protected static Border noFocusBorder = new EmptyBorder(1, 1, 1, 1);
+    private ModSelectWindow parent;
 
-    public JModPanelCheckBoxList() {
+    public JModPanelCheckBoxList(ModSelectWindow parent) {
+        this.parent = parent;
         // enable drag and drop
         setDragEnabled(true);
         setDropMode(DropMode.INSERT);
@@ -28,14 +30,19 @@ public class JModPanelCheckBoxList extends JList<ModPanel> {
         setTransferHandler(new ListItemTransferHandler());
 
         setCellRenderer(new CellRenderer());
+
         addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 int index = locationToIndex(e.getPoint());
                 if (index != -1) {
-                    JCheckBox checkbox = ((ModPanel) getModel().getElementAt(index)).checkBox;
-                    if (checkbox.isEnabled()) {
-                        checkbox.setSelected(!checkbox.isSelected());
-                        repaint();
+                    ModPanel modPanel = getModel().getElementAt(index);
+                    parent.setModInfo(modPanel.info);
+
+                    if (e.getX() <= modPanel.checkBox.getWidth()) {
+                        if (modPanel.checkBox.isEnabled()) {
+                            modPanel.checkBox.setSelected(!modPanel.checkBox.isSelected());
+                            repaint();
+                        }
                     }
                 }
             }
@@ -51,8 +58,8 @@ public class JModPanelCheckBoxList extends JList<ModPanel> {
         }
     }
 
-    public JModPanelCheckBoxList(DefaultListModel<ModPanel> model) {
-        this();
+    public JModPanelCheckBoxList(ModSelectWindow parent, DefaultListModel<ModPanel> model) {
+        this(parent);
         setModel(model);
     }
     

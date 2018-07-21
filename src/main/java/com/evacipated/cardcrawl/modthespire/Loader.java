@@ -138,6 +138,7 @@ public class Loader {
                 JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE);
             }
 
+            /*
             // Check for updates
             new Thread(() -> {
                 ex.setUpdateIcon(ModSelectWindow.UpdateIconType.CHECKING);
@@ -186,6 +187,7 @@ public class Loader {
                     ex.setUpdateIcon(ModSelectWindow.UpdateIconType.UPTODATE);
                 }
             }).start();
+            //*/
         });
     }
 

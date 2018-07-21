@@ -3,13 +3,11 @@ package com.evacipated.cardcrawl.modthespire.ui;
 import com.evacipated.cardcrawl.modthespire.Loader;
 import com.evacipated.cardcrawl.modthespire.ModInfo;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.Font;
+import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.ArrayList;
 
@@ -27,6 +25,7 @@ public class ModPanel extends JPanel
     public File modFile;
     public JCheckBox checkBox;
     private InfoPanel infoPanel;
+    private JLabel update = new JLabel();
     
     private static boolean dependenciesChecked(ModInfo info, JModPanelCheckBoxList parent) {
         String[] dependencies = info.Dependencies;
@@ -80,6 +79,18 @@ public class ModPanel extends JPanel
         add(checkBox, BorderLayout.WEST);
         add(infoPanel, BorderLayout.CENTER);
 
+        // Update icon
+        update.setHorizontalAlignment(JLabel.CENTER);
+        update.setVerticalAlignment(JLabel.CENTER);
+        update.setOpaque(true);
+        update.setBorder(new EmptyBorder(0, 0, 0, 4));
+        if (info.UpdateJSON != null && !info.UpdateJSON.isEmpty()) {
+            setUpdateIcon(ModSelectWindow.UpdateIconType.UPTODATE);
+        } else {
+            setUpdateIcon(ModSelectWindow.UpdateIconType.NONE);
+        }
+        add(update, BorderLayout.EAST);
+
         setBorder(new MatteBorder(0, 0, 1, 0, Color.darkGray));
 
         checkBox.addItemListener((event) -> {
@@ -93,26 +104,30 @@ public class ModPanel extends JPanel
             checkBox.setEnabled(false);
             checkBox.setBackground(lightRed);
             infoPanel.setBackground(lightRed);
-            setToolTipText("This mod requires ModTheSpire v" + info.MTS_Version.get() + " or higher.");
+            //setToolTipText("This mod requires ModTheSpire v" + info.MTS_Version.get() + " or higher.");
         } else if (checkBox.isSelected() && !dependenciesChecked(info, parent)) {
             checkBox.setBackground(lightOrange);
             infoPanel.setBackground(lightOrange);
             String[] missingDependencies = missingDependencies(info, parent);
             StringBuilder tooltip = new StringBuilder("");
+            /*
             tooltip.append("Missing dependencies: [");
             tooltip.append(String.join(", ", missingDependencies));
             tooltip.append("]");
             setToolTipText(tooltip.toString());
+            //*/
         } else if (Loader.STS_VERSION != null && info.STS_Version != null && !Loader.STS_VERSION.equals(info.STS_Version)) {
             checkBox.setBackground(lightYellow);
             infoPanel.setBackground(lightYellow);
+            /*
             setToolTipText("<html>This mod explicitly supports StS " + info.STS_Version + ".<br/>" +
                 "You are running StS " + Loader.STS_VERSION + ".<br/>" +
                 "You may encounter problems running it.</html>");
+            //*/
         } else {
             checkBox.setBackground(Color.WHITE);
             infoPanel.setBackground(Color.WHITE);
-            setToolTipText(null);
+            //setToolTipText(null);
         }
     }
 
@@ -120,12 +135,50 @@ public class ModPanel extends JPanel
     {
         return checkBox.isEnabled() && checkBox.isSelected();
     }
+
+    public synchronized void setUpdateIcon(ModSelectWindow.UpdateIconType type)
+    {
+        switch (type) {
+            case NONE:
+                update.setIcon(null);
+                break;
+            case CHECKING: {
+                update.setIcon(new ImageIcon(getClass().getResource("/assets/ajax-loader.gif")));
+                break;
+            }
+            case UPDATE_AVAILABLE: {
+                update.setIcon(new ImageIcon(getClass().getResource("/assets/warning.gif")));
+                    /*
+                    JFrame frame = this;
+                    update.addMouseListener(new MouseAdapter()
+                    {
+                        @Override
+                        public void mouseClicked(MouseEvent e)
+                        {
+                            if (Loader.MODUPDATES == null) {
+                                Loader.openLatestReleaseURL();
+                            } else {
+                                UpdateWindow win = new UpdateWindow(frame);
+                                win.setVisible(true);
+                            }
+                        }
+                    });
+                    //*/
+                break;
+            }
+            case UPTODATE: {
+                update.setIcon(new ImageIcon(getClass().getResource("/assets/good.gif")));
+                break;
+            }
+        }
+        revalidate();
+        repaint();
+    }
     
     public class InfoPanel extends JPanel
     {
         JLabel name = new JLabel();
         JLabel version = new JLabel();
-        JLabel update = new JLabel();
 
         public InfoPanel()
         {
@@ -133,26 +186,17 @@ public class ModPanel extends JPanel
 
             name.setOpaque(true);
             name.setText(info.Name);
-            name.setFont(name.getFont().deriveFont(14.0f));
+            name.setFont(name.getFont().deriveFont(13.0f).deriveFont(Font.BOLD));
             add(name, BorderLayout.CENTER);
 
             version.setOpaque(true);
-            version.setFont(name.getFont().deriveFont(10.0f));
+            version.setFont(version.getFont().deriveFont(10.0f).deriveFont(Font.PLAIN));
             if (info.Version != null) {
                 version.setText(info.Version.get());
             } else {
                 version.setText("missing version");
             }
             add(version, BorderLayout.SOUTH);
-
-
-            update.setIcon(new ImageIcon(getClass().getResource("/assets/good.gif")));
-            update.setHorizontalAlignment(JLabel.CENTER);
-            update.setVerticalAlignment(JLabel.BOTTOM);
-            update.setOpaque(true);
-            update.setToolTipText("Up to date.");
-            update.setBorder(new EmptyBorder(0, 0, 0, 4));
-            add(update, BorderLayout.EAST);
 
             checkBox.setBackground(Color.WHITE);
             setBackground(Color.WHITE);

@@ -7,16 +7,17 @@ import com.evacipated.cardcrawl.modthespire.ModInfo;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.util.Properties;
 
-public class ModSelectWindow extends JFrame {
-    
+public class ModSelectWindow extends JFrame
+{
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = -8232997068791248057L;
     private static final int DEFAULT_WIDTH = 800;
@@ -30,8 +31,19 @@ public class ModSelectWindow extends JFrame {
     private boolean isMaximized = false;
     private boolean isCentered = false;
     private Rectangle location;
-    private JPanel playPane;
     private JButton playBtn;
+
+    private TitledBorder name;
+    private JTextArea authors;
+    private JLabel modVersion;
+    private JLabel status;
+    private JLabel mtsVersion;
+    private JLabel stsVersion;
+    private JTextArea description;
+    private JTextArea credits;
+
+    private JLabel mtsUpdateBanner;
+    private JLabel betaWarningBanner;
 
     public enum UpdateIconType
     {
@@ -51,6 +63,18 @@ public class ModSelectWindow extends JFrame {
     
     public ModSelectWindow(File[] modJars) throws MalformedURLException
     {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (UnsupportedLookAndFeelException e) {
+            e.printStackTrace();
+        }
+
         mods = modJars;
         info = Loader.buildInfoArray(mods);
         readWindowPosSize();
@@ -162,6 +186,7 @@ public class ModSelectWindow extends JFrame {
 
         getContentPane().add(makeModListPanel(), BorderLayout.WEST);
         getContentPane().add(makeInfoPanel(), BorderLayout.CENTER);
+        getContentPane().add(makeTopPanel(), BorderLayout.NORTH);
 
         pack();
         if (isCentered) {
@@ -184,7 +209,7 @@ public class ModSelectWindow extends JFrame {
 
         // Mod List
         DefaultListModel<ModPanel> model = new DefaultListModel<>();
-        JModPanelCheckBoxList modList = new JModPanelCheckBoxList(model);
+        JModPanelCheckBoxList modList = new JModPanelCheckBoxList(this, model);
         LoadOrder.loadModsInOrder(model, mods, info, modList);
 
         JScrollPane modScroller = new JScrollPane(modList);
@@ -229,7 +254,31 @@ public class ModSelectWindow extends JFrame {
             });
             t.start();
         });
+        if (Loader.STS_BETA) {
+            playBtn.setEnabled(false);
+        }
         panel.add(playBtn, BorderLayout.SOUTH);
+
+        // Open mod directory
+        JButton openFolderBtn = new JButton(UIManager.getIcon("FileView.directoryIcon"));
+        openFolderBtn.setToolTipText("Open Mods Directory");
+        openFolderBtn.addActionListener((ActionEvent event) -> {
+            try {
+                Desktop.getDesktop().open(new File(Loader.MOD_DIR));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        // Settings button
+        JButton settingsBtn = new JButton("Settings");
+        settingsBtn.addActionListener((ActionEvent event) -> {
+            // TODO
+        });
+
+        JPanel topPanel = new JPanel(new GridLayout(0, 1));
+        //topPanel.add(settingsBtn);
+        topPanel.add(openFolderBtn);
+        panel.add(topPanel, BorderLayout.NORTH);
 
         return panel;
     }
@@ -239,9 +288,96 @@ public class ModSelectWindow extends JFrame {
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
 
+        // Bottom status panel
         panel.add(makeStatusPanel(), BorderLayout.SOUTH);
 
+        // Main info panel
+        JPanel infoPanel = new JPanel();
+        name = BorderFactory.createTitledBorder("Mod Info");
+        name.setTitleFont(name.getTitleFont().deriveFont(Font.BOLD));
+        infoPanel.setBorder(BorderFactory.createCompoundBorder(
+            name,
+            BorderFactory.createEmptyBorder(5, 5, 5, 5)
+        ));
+        infoPanel.setLayout(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.BOTH;
+
+        c.gridx = 1;
+        c.gridy = 0;
+        c.anchor = GridBagConstraints.WEST;
+        c.weightx = 1;
+
+        authors = makeInfoTextAreaField("Author(s)", " ");
+        infoPanel.add(authors, c);
+
+        c.gridy = 1;
+        modVersion = makeInfoLabelField("Version", " ");
+        infoPanel.add(modVersion, c);
+
+        /*
+        c.gridy = 2;
+        status = makeInfoLabelField("Status", " ");
+        infoPanel.add(status, c);
+        //*/
+
+        c.gridy = 3;
+        mtsVersion = makeInfoLabelField("ModTheSpire Version", " ");
+        infoPanel.add(mtsVersion, c);
+
+        c.gridy = 4;
+        stsVersion = makeInfoLabelField("Slay the Spire Version", " ");
+        infoPanel.add(stsVersion, c);
+
+        c.gridy = 5;
+        credits = makeInfoTextAreaField("Additional Credits", " ");
+        infoPanel.add(credits, c);
+
+        c.gridx = 0;
+        c.gridy = 0;
+        c.gridheight = 7;
+        c.weightx = 1;
+        c.weighty = 1;
+        description = makeInfoTextAreaField("Description", " ");
+        infoPanel.add(description, c);
+
+        panel.add(infoPanel, BorderLayout.CENTER);
+
         return panel;
+    }
+
+    private JLabel makeInfoLabelField(String title, String value)
+    {
+        JLabel label = new JLabel(value);
+
+        TitledBorder border = BorderFactory.createTitledBorder(title);
+        border.setTitleFont(border.getTitleFont().deriveFont(Font.BOLD));
+        label.setFont(label.getFont().deriveFont(Font.PLAIN));
+        label.setBorder(BorderFactory.createCompoundBorder(
+            border,
+            BorderFactory.createEmptyBorder(5, 5, 5, 5)
+        ));
+
+        return label;
+    }
+
+    private JTextArea makeInfoTextAreaField(String title, String value)
+    {
+        JTextArea label = new JTextArea(value);
+
+        TitledBorder border = BorderFactory.createTitledBorder(title);
+        border.setTitleFont(border.getTitleFont().deriveFont(Font.BOLD));
+        label.setBorder(BorderFactory.createCompoundBorder(
+            border,
+            BorderFactory.createEmptyBorder(5, 5, 5, 5)
+        ));
+        label.setEditable(false);
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        label.setLineWrap(true);
+        label.setOpaque(false);
+        label.setFont(border.getTitleFont().deriveFont(Font.PLAIN).deriveFont(11.0f));
+
+        return label;
     }
 
     private JPanel makeStatusPanel()
@@ -273,6 +409,30 @@ public class ModSelectWindow extends JFrame {
             }
         });
         panel.add(debugCheck, BorderLayout.WEST);
+
+        return panel;
+    }
+
+    private JPanel makeTopPanel()
+    {
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridLayout(0, 1));
+
+        if (Loader.STS_BETA) {
+            betaWarningBanner = new JLabel();
+            betaWarningBanner.setIcon(new ImageIcon(getClass().getResource("/assets/warning.gif")));
+            betaWarningBanner.setText("<html>" +
+                "You are on the Slay the Spire beta branch.<br/>" +
+                "ModTheSpire does not support the beta branch.<br/>" +
+                "Switch to the main branch to use ModTheSpire." +
+                "</html>");
+            betaWarningBanner.setHorizontalAlignment(JLabel.CENTER);
+            betaWarningBanner.setOpaque(true);
+            betaWarningBanner.setBackground(new Color(255, 159, 0));
+            betaWarningBanner.setBorder(new EmptyBorder(5, 5, 5, 5));
+            //betaWarningBanner.setPreferredSize(new Dimension(betaWarningBanner.getWidth(), 30));
+            panel.add(betaWarningBanner);
+        }
 
         return panel;
     }
@@ -332,61 +492,28 @@ public class ModSelectWindow extends JFrame {
         return false;
     }
 
-    public synchronized void setUpdateIcon(UpdateIconType type)
+    void setModInfo(ModInfo info)
     {
-        if (playPane.getComponentCount() > 2) {
-            playPane.remove(2);
+        name.setTitle(info.Name);
+        authors.setText(String.join(", ", info.Authors));
+        if (info.Version != null) {
+            modVersion.setText(info.Version.get());
+        } else {
+            modVersion.setText(" ");
         }
-        switch (type) {
-            case NONE:
-                playPane.add(Box.createRigidArea(new Dimension(20, 16)), BorderLayout.WEST);
-                break;
-            case CHECKING: {
-                JLabel label = new JLabel(new ImageIcon(getClass().getResource("/assets/ajax-loader.gif")), JLabel.CENTER);
-                label.setToolTipText("Checking for updates...");
-                label.setBorder(new EmptyBorder(0, 0, 0, 4));
-                playPane.add(label, BorderLayout.WEST);
-                break;
-            }
-            case UPDATE_AVAILABLE: {
-                JLabel label = new JLabel(new ImageIcon(getClass().getResource("/assets/warning.gif")), JLabel.CENTER);
-                if (Loader.MODUPDATES == null) {
-                    label.setToolTipText("An update for ModTheSpire is available.");
-                } else if (Loader.MODUPDATES.size() == 0) {
-                    label.setToolTipText("");
-                } else if (Loader.MODUPDATES.size() == 1) {
-                    label.setToolTipText(String.format("An update is available for %d mod", Loader.MODUPDATES.size()));
-                } else {
-                    label.setToolTipText(String.format("Updates are available for %d mods", Loader.MODUPDATES.size()));
-                }
-                label.setBorder(new EmptyBorder(0, 0, 0, 4));
-                playPane.add(label, BorderLayout.WEST);
-                label.setCursor(new Cursor(Cursor.HAND_CURSOR));
-                JFrame frame = this;
-                label.addMouseListener(new MouseAdapter()
-                {
-                    @Override
-                    public void mouseClicked(MouseEvent e)
-                    {
-                        if (Loader.MODUPDATES == null) {
-                            Loader.openLatestReleaseURL();
-                        } else {
-                            UpdateWindow win = new UpdateWindow(frame);
-                            win.setVisible(true);
-                        }
-                    }
-                });
-                break;
-            }
-            case UPTODATE: {
-                JLabel label = new JLabel(new ImageIcon(getClass().getResource("/assets/good.gif")), JLabel.CENTER);
-                label.setToolTipText("Up to date.");
-                label.setBorder(new EmptyBorder(0, 0, 0, 4));
-                playPane.add(label, BorderLayout.WEST);
-                break;
-            }
+        if (info.MTS_Version != null) {
+            mtsVersion.setText(info.MTS_Version.get() + "+");
+        } else {
+            mtsVersion.setText(" ");
         }
-        revalidate();
+        if (info.STS_Version != null && !info.STS_Version.isEmpty()) {
+            stsVersion.setText(info.STS_Version);
+        } else {
+            stsVersion.setText(" ");
+        }
+        description.setText(info.Description);
+        credits.setText(info.Credits);
+
         repaint();
     }
 }
