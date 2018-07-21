@@ -1,6 +1,9 @@
 ## Changelog ##
 #### dev ####
 
+#### v2.9.1 ####
+* Patch to always enable Custom mode
+
 #### v2.9.0 ####
 * Allow Prefix patches to skip the original method
 * Allow Insert patches to skip the remainder of the original method
