@@ -1,8 +1,6 @@
 package com.evacipated.cardcrawl.modthespire.ui;
 
-import com.evacipated.cardcrawl.modthespire.LoadOrder;
-import com.evacipated.cardcrawl.modthespire.Loader;
-import com.evacipated.cardcrawl.modthespire.ModInfo;
+import com.evacipated.cardcrawl.modthespire.*;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -12,6 +10,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Properties;
 
 public class ModSelectWindow extends JFrame
@@ -42,6 +42,7 @@ public class ModSelectWindow extends JFrame
     private JTextArea description;
     private JTextArea credits;
 
+    private JPanel bannerNoticePanel;
     private JLabel mtsUpdateBanner;
     private JLabel betaWarningBanner;
 
@@ -175,7 +176,7 @@ public class ModSelectWindow extends JFrame
 
     private void initUI()
     {
-        setTitle("Mod The Spire " + Loader.MTS_VERSION.get());
+        setTitle("ModTheSpire " + Loader.MTS_VERSION.get());
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setResizable(true);
 
@@ -415,12 +416,12 @@ public class ModSelectWindow extends JFrame
 
     private JPanel makeTopPanel()
     {
-        JPanel panel = new JPanel();
-        panel.setLayout(new GridLayout(0, 1));
+        bannerNoticePanel = new JPanel();
+        bannerNoticePanel.setLayout(new GridLayout(0, 1));
 
         if (Loader.STS_BETA) {
             betaWarningBanner = new JLabel();
-            betaWarningBanner.setIcon(new ImageIcon(getClass().getResource("/assets/warning.gif")));
+            betaWarningBanner.setIcon(new ImageIcon(getClass().getResource("/assets/error.gif")));
             betaWarningBanner.setText("<html>" +
                 "You are on the Slay the Spire beta branch.<br/>" +
                 "ModTheSpire does not support the beta branch.<br/>" +
@@ -428,13 +429,45 @@ public class ModSelectWindow extends JFrame
                 "</html>");
             betaWarningBanner.setHorizontalAlignment(JLabel.CENTER);
             betaWarningBanner.setOpaque(true);
-            betaWarningBanner.setBackground(new Color(255, 159, 0));
+            betaWarningBanner.setBackground(new Color(255, 80, 80));
             betaWarningBanner.setBorder(new EmptyBorder(5, 5, 5, 5));
-            //betaWarningBanner.setPreferredSize(new Dimension(betaWarningBanner.getWidth(), 30));
-            panel.add(betaWarningBanner);
+            bannerNoticePanel.add(betaWarningBanner);
         }
 
-        return panel;
+        mtsUpdateBanner = new JLabel();
+        mtsUpdateBanner.setIcon(new ImageIcon(getClass().getResource("/assets/warning.gif")));
+        mtsUpdateBanner.setText("<html>" +
+            "An update for ModTheSpire is available.<br/>" +
+            "Click here to open the download page." +
+            "</html>");
+        mtsUpdateBanner.setHorizontalAlignment(JLabel.CENTER);
+        mtsUpdateBanner.setOpaque(true);
+        mtsUpdateBanner.setBackground(new Color(255, 193, 7));
+        mtsUpdateBanner.setBorder(new EmptyBorder(5, 5, 5, 5));
+        mtsUpdateBanner.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        return bannerNoticePanel;
+    }
+
+    private void setMTSUpdateAvailable(URL url)
+    {
+        bannerNoticePanel.addMouseListener(new MouseAdapter()
+        {
+            @Override
+            public void mouseClicked(MouseEvent e)
+            {
+                if (Desktop.isDesktopSupported()) {
+                    try {
+                        Desktop.getDesktop().browse(url.toURI());
+                    } catch (IOException | URISyntaxException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            }
+        });
+        bannerNoticePanel.add(mtsUpdateBanner);
+        pack();
+        repaint();
     }
 
     void saveWindowDimensions(Dimension d)
@@ -515,5 +548,24 @@ public class ModSelectWindow extends JFrame
         credits.setText(info.Credits);
 
         repaint();
+    }
+
+    public void startCheckingForUpdates()
+    {
+        new Thread(() -> {
+            try {
+                // Check for ModTheSpire updates
+                UpdateChecker updateChecker = new GithubUpdateChecker("kiooeht", "ModTheSpire");
+                if (updateChecker.isNewerVersionAvailable(Loader.MTS_VERSION)) {
+                    URL latestReleaseURL = updateChecker.getLatestReleaseURL();
+                    setMTSUpdateAvailable(latestReleaseURL);
+                    return;
+                }
+            } catch (IllegalArgumentException e) {
+                System.out.println("ERROR: ModTheSpire: " + e.getMessage());
+            } catch (IOException e) {
+                // NOP
+            }
+        }).start();
     }
 }

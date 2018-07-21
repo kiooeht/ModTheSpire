@@ -41,7 +41,6 @@ public class Loader {
 
     private static Object ARGS;
     private static ModSelectWindow ex;
-    private static URL latestReleaseURL = null;
 
     public static boolean isModLoaded(String modID)
     {
@@ -138,6 +137,7 @@ public class Loader {
                 JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE);
             }
 
+            ex.startCheckingForUpdates();
             /*
             // Check for updates
             new Thread(() -> {
@@ -194,19 +194,6 @@ public class Loader {
     public static void closeWindow()
     {
         ex.dispatchEvent(new WindowEvent(ex, WindowEvent.WINDOW_CLOSING));
-    }
-
-    public static void openLatestReleaseURL()
-    {
-        if (latestReleaseURL != null) {
-            if (Desktop.isDesktopSupported()) {
-                try {
-                    Desktop.getDesktop().browse(latestReleaseURL.toURI());
-                } catch (IOException | URISyntaxException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
     }
 
     // runMods - sets up the ClassLoader, sets the isModded flag and launches the game
