@@ -81,6 +81,9 @@ public class ClassPatchInfo extends PatchInfo
                         "}",
                     f.getName(), f.getName(), (isStatic ? StaticSpireField.class.getCanonicalName() : SpireField.class.getCanonicalName()),
                     f.getName(), ctClassToPatch.getName() + ".class", fieldName);
+                if (Loader.DEBUG) {
+                    System.out.println(src);
+                }
                 staticinit.insertAfter(src);
             }
         }
