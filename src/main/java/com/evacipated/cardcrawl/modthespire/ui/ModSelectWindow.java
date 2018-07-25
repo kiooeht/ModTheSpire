@@ -12,6 +12,8 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 public class ModSelectWindow extends JFrame
@@ -33,6 +35,8 @@ public class ModSelectWindow extends JFrame
     private Rectangle location;
     private JButton playBtn;
 
+    private DefaultListModel<ModPanel> model;
+
     private TitledBorder name;
     private JTextArea authors;
     private JLabel modVersion;
@@ -45,6 +49,8 @@ public class ModSelectWindow extends JFrame
     private JPanel bannerNoticePanel;
     private JLabel mtsUpdateBanner;
     private JLabel betaWarningBanner;
+
+    static List<ModUpdate> MODUPDATES;
 
     public enum UpdateIconType
     {
@@ -209,9 +215,10 @@ public class ModSelectWindow extends JFrame
         panel.setPreferredSize(new Dimension(220, 300));
 
         // Mod List
-        DefaultListModel<ModPanel> model = new DefaultListModel<>();
+        model = new DefaultListModel<>();
         JModPanelCheckBoxList modList = new JModPanelCheckBoxList(this, model);
         LoadOrder.loadModsInOrder(model, mods, info, modList);
+        modList.publishBoxChecked();
 
         JScrollPane modScroller = new JScrollPane(modList);
         panel.add(modScroller, BorderLayout.CENTER);
@@ -550,7 +557,7 @@ public class ModSelectWindow extends JFrame
         repaint();
     }
 
-    public void startCheckingForUpdates()
+    public void startCheckingForUpdates(ModInfo[] modInfos)
     {
         new Thread(() -> {
             try {
@@ -565,6 +572,35 @@ public class ModSelectWindow extends JFrame
                 System.out.println("ERROR: ModTheSpire: " + e.getMessage());
             } catch (IOException e) {
                 // NOP
+            }
+
+            // Check for mod updates
+            MODUPDATES = new ArrayList<>();
+            for (int i=0; i<modInfos.length; ++i) {
+                if (modInfos[i].UpdateJSON == null || modInfos[i].UpdateJSON.isEmpty()) {
+                    continue;
+                }
+                try {
+                    UpdateChecker updateChecker = new GithubUpdateChecker(modInfos[i].UpdateJSON);
+                    if (updateChecker.isNewerVersionAvailable(modInfos[i].Version)) {
+                        MODUPDATES.add(new ModUpdate(modInfos[i], updateChecker.getLatestReleaseURL(), updateChecker.getLatestDownloadURL()));
+                        for (int j=0; j<model.size(); ++j) {
+                            System.out.println(model.get(j).info.ID);
+                            if (modInfos[i] != null && model.get(j).info != null
+                                && modInfos[i].ID != null && model.get(j).info.ID != null
+                                && model.get(j).info.ID.equals(modInfos[i].ID))
+                            {
+                                model.get(j).setUpdateIcon(UpdateIconType.UPDATE_AVAILABLE);
+                                break;
+                            }
+                        }
+                    }
+                } catch (IllegalArgumentException e) {
+                    System.out.println("ERROR: " + modInfos[i].Name + ": " + e.getMessage());
+                } catch (IOException e) {
+                    // NOP
+                    System.out.println(e);
+                }
             }
         }).start();
     }

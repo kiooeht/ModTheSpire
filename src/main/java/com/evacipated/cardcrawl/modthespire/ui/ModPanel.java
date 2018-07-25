@@ -3,17 +3,12 @@ package com.evacipated.cardcrawl.modthespire.ui;
 import com.evacipated.cardcrawl.modthespire.Loader;
 import com.evacipated.cardcrawl.modthespire.ModInfo;
 
-import java.awt.*;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.io.File;
-import java.util.ArrayList;
-
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
+import java.awt.*;
+import java.io.File;
+import java.util.ArrayList;
 
 @SuppressWarnings("serial")
 public class ModPanel extends JPanel
@@ -26,6 +21,7 @@ public class ModPanel extends JPanel
     public JCheckBox checkBox;
     private InfoPanel infoPanel;
     private JLabel update = new JLabel();
+    private JModPanelCheckBoxList parent;
     
     private static boolean dependenciesChecked(ModInfo info, JModPanelCheckBoxList parent) {
         String[] dependencies = info.Dependencies;
@@ -70,6 +66,7 @@ public class ModPanel extends JPanel
     }
     
     public ModPanel(ModInfo info, File modFile, JModPanelCheckBoxList parent) {
+        this.parent = parent;
         this.info = info;
         this.modFile = modFile;
         checkBox = new JCheckBox();
@@ -171,8 +168,7 @@ public class ModPanel extends JPanel
                 break;
             }
         }
-        revalidate();
-        repaint();
+        parent.repaint();
     }
     
     public class InfoPanel extends JPanel

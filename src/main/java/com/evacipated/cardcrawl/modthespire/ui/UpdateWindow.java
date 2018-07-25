@@ -24,7 +24,7 @@ class UpdateWindow extends JDialog
 
     private void initUI()
     {
-        if (Loader.MODUPDATES.size() == 1) {
+        if (ModSelectWindow.MODUPDATES.size() == 1) {
             setTitle("Update Available");
         } else {
             setTitle("Updates Available");
@@ -43,12 +43,12 @@ class UpdateWindow extends JDialog
         JScrollPane modScroller = new JScrollPane(list);
         getContentPane().add(modScroller, BorderLayout.CENTER);
 
-        for (ModUpdate update : Loader.MODUPDATES) {
+        for (ModUpdate update : ModSelectWindow.MODUPDATES) {
             model.addElement(update.info.Name);
         }
 
         String tmp;
-        if (Loader.MODUPDATES.size() == 1) {
+        if (ModSelectWindow.MODUPDATES.size() == 1) {
             tmp = "The following mod has an update available:";
         } else {
             tmp = "The following mods have updates available:";
@@ -69,7 +69,7 @@ class UpdateWindow extends JDialog
         // Open each update's release url in browser
         browserBtn.addActionListener((ActionEvent event) -> {
             if (Desktop.isDesktopSupported()) {
-                for (ModUpdate update : Loader.MODUPDATES) {
+                for (ModUpdate update : ModSelectWindow.MODUPDATES) {
                     try {
                         Desktop.getDesktop().browse(update.releaseURL.toURI());
                     } catch (IOException | URISyntaxException e) {
@@ -82,9 +82,9 @@ class UpdateWindow extends JDialog
         // Download each update
         downloadBtn.addActionListener((ActionEvent event) -> {
             getContentPane().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-            URL[] downloadURLs = new URL[Loader.MODUPDATES.size()];
-            for (int i=0; i<Loader.MODUPDATES.size(); ++i) {
-                downloadURLs[i] = Loader.MODUPDATES.get(i).downloadURL;
+            URL[] downloadURLs = new URL[ModSelectWindow.MODUPDATES.size()];
+            for (int i=0; i<ModSelectWindow.MODUPDATES.size(); ++i) {
+                downloadURLs[i] = ModSelectWindow.MODUPDATES.get(i).downloadURL;
             }
             try {
                 DownloadAndRestarter.downloadAndRestart(downloadURLs);

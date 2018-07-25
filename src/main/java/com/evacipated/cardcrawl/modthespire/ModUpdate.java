@@ -8,7 +8,7 @@ public class ModUpdate
     public URL releaseURL;
     public URL downloadURL;
 
-    ModUpdate(ModInfo info, URL releaseURL, URL downloadURL)
+    public ModUpdate(ModInfo info, URL releaseURL, URL downloadURL)
     {
         this.info = info;
         this.releaseURL = releaseURL;

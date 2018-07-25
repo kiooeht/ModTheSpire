@@ -33,7 +33,6 @@ public class Loader {
     public static String COREPATCHES_JAR = "/corepatches.jar";
     public static String STS_PATCHED_JAR = "desktop-1.0-patched.jar";
     public static ModInfo[] MODINFOS;
-    public static List<ModUpdate> MODUPDATES;
 
     public static SpireConfig MTS_CONFIG;
     public static String STS_VERSION = null;
@@ -137,57 +136,13 @@ public class Loader {
                 JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE);
             }
 
-            ex.startCheckingForUpdates();
-            /*
-            // Check for updates
-            new Thread(() -> {
-                ex.setUpdateIcon(ModSelectWindow.UpdateIconType.CHECKING);
-                try {
-                    // Check for ModTheSpire updates
-                    UpdateChecker updateChecker = new GithubUpdateChecker("kiooeht", "ModTheSpire");
-                    if (updateChecker.isNewerVersionAvailable(MTS_VERSION)) {
-                        latestReleaseURL = updateChecker.getLatestReleaseURL();
-                        ex.setUpdateIcon(ModSelectWindow.UpdateIconType.UPDATE_AVAILABLE);
-                        return;
-                    }
-                } catch (IllegalArgumentException e) {
-                    System.out.println("ERROR: ModTheSpire: " + e.getMessage());
-                } catch (IOException e) {
-                    // NOP
-                }
-
-                // Check for mod updates
-                ModInfo[] modInfos = new ModInfo[0];
-                try {
-                    modInfos = buildInfoArray(modFiles);
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                }
-                MODUPDATES = new ArrayList<>();
-                for (int i=0; i<modInfos.length; ++i) {
-                    if (modInfos[i].UpdateJSON == null || modInfos[i].UpdateJSON.isEmpty()) {
-                        continue;
-                    }
-                    try {
-                        UpdateChecker updateChecker = new GithubUpdateChecker(modInfos[i].UpdateJSON);
-                        if (updateChecker.isNewerVersionAvailable(modInfos[i].Version)) {
-                            MODUPDATES.add(new ModUpdate(modInfos[i], updateChecker.getLatestReleaseURL(), updateChecker.getLatestDownloadURL()));
-                            //modFiles[i],
-                        }
-                    } catch (IllegalArgumentException e) {
-                        System.out.println("ERROR: " + modInfos[i].Name + ": " + e.getMessage());
-                    } catch (IOException e) {
-                        // NOP
-                    }
-                }
-
-                if (MODUPDATES.size() > 0) {
-                    ex.setUpdateIcon(ModSelectWindow.UpdateIconType.UPDATE_AVAILABLE);
-                } else {
-                    ex.setUpdateIcon(ModSelectWindow.UpdateIconType.UPTODATE);
-                }
-            }).start();
-            //*/
+            ModInfo[] modInfos = new ModInfo[0];
+            try {
+                modInfos = buildInfoArray(modFiles);
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            }
+            //ex.startCheckingForUpdates(modInfos);
         });
     }
 
