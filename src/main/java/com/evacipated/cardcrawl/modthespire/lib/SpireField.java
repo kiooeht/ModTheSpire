@@ -4,11 +4,22 @@ import java.lang.reflect.Field;
 
 public class SpireField<T>
 {
-    private T defaultValue;
+    public interface DefaultValue<T>
+    {
+        T get();
+    }
+
+    private DefaultValue<T> defaultValue;
 
     private Field field;
 
-    public SpireField(T defaultValue)
+    @Deprecated
+    public SpireField(T deprecated)
+    {
+        defaultValue = () -> deprecated;
+    }
+
+    public SpireField(DefaultValue<T> defaultValue)
     {
         this.defaultValue = defaultValue;
     }
@@ -21,7 +32,7 @@ public class SpireField<T>
 
     public T getDefaultValue()
     {
-        return defaultValue;
+        return defaultValue.get();
     }
 
     public T get(Object __instance)

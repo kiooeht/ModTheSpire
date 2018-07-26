@@ -44,7 +44,7 @@ public class Loader {
     public static boolean isModLoaded(String modID)
     {
         for (int i=0; i<MODINFOS.length; ++i) {
-            if (MODINFOS[i].ID.equals(modID)) {
+            if (modID.equals(MODINFOS[i].ID)) {
                 return true;
             }
         }

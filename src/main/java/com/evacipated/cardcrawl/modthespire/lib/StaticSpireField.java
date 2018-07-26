@@ -2,7 +2,7 @@ package com.evacipated.cardcrawl.modthespire.lib;
 
 public class StaticSpireField<T> extends SpireField<T>
 {
-    public StaticSpireField(T defaultValue)
+    public StaticSpireField(DefaultValue<T> defaultValue)
     {
         super(defaultValue);
     }
