@@ -2,6 +2,7 @@
 #### dev ####
 * More debug print info for SpireField
 * Fix SpireField to work with generic types
+* Fix SpireField to not use duplicate objects
 
 #### v2.9.1 ####
 * Patch to always enable Custom mode
