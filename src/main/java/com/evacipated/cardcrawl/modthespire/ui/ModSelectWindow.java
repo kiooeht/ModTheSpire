@@ -27,6 +27,13 @@ public class ModSelectWindow extends JFrame
     private static final String DEBUG_OPTION = "Debug";
     private static final String PLAY_OPTION = "Play";
     private static final String JAR_DUMP_OPTION = "Dump Patched Jar";
+
+    static final Icon ICON_UPDATE  = new ImageIcon(ModSelectWindow.class.getResource("/assets/update.gif"));
+    static final Icon ICON_LOAD    = new ImageIcon(ModSelectWindow.class.getResource("/assets/ajax-loader.gif"));
+    static final Icon ICON_GOOD    = new ImageIcon(ModSelectWindow.class.getResource("/assets/good.gif"));
+    static final Icon ICON_WARNING = new ImageIcon(ModSelectWindow.class.getResource("/assets/warning.gif"));
+    static final Icon ICON_ERROR   = new ImageIcon(ModSelectWindow.class.getResource("/assets/error.gif"));
+
     private File[] mods;
     private ModInfo[] info;
     private boolean showingLog = false;
@@ -54,7 +61,7 @@ public class ModSelectWindow extends JFrame
 
     public enum UpdateIconType
     {
-        NONE, CHECKING, UPDATE_AVAILABLE, UPTODATE
+        NONE, CAN_CHECK, CHECKING, UPDATE_AVAILABLE, UPTODATE
     }
 
     public static Properties getDefaults()
@@ -277,14 +284,21 @@ public class ModSelectWindow extends JFrame
                 e.printStackTrace();
             }
         });
+        // Check for Updates button
+        JButton updatesBtn = new JButton(ICON_UPDATE);
+        updatesBtn.setToolTipText("Check for Mod Updates");
+        updatesBtn.addActionListener(event -> {
+            startCheckingForModUpdates(updatesBtn);
+        });
         // Settings button
         JButton settingsBtn = new JButton("Settings");
         settingsBtn.addActionListener((ActionEvent event) -> {
             // TODO
         });
 
-        JPanel topPanel = new JPanel(new GridLayout(0, 1));
+        JPanel topPanel = new JPanel(new GridLayout(1, 0));
         //topPanel.add(settingsBtn);
+        topPanel.add(updatesBtn);
         topPanel.add(openFolderBtn);
         panel.add(topPanel, BorderLayout.NORTH);
 
@@ -428,7 +442,7 @@ public class ModSelectWindow extends JFrame
 
         if (Loader.STS_BETA) {
             betaWarningBanner = new JLabel();
-            betaWarningBanner.setIcon(new ImageIcon(getClass().getResource("/assets/error.gif")));
+            betaWarningBanner.setIcon(ICON_ERROR);
             betaWarningBanner.setText("<html>" +
                 "You are on the Slay the Spire beta branch.<br/>" +
                 "ModTheSpire does not support the beta branch.<br/>" +
@@ -442,7 +456,7 @@ public class ModSelectWindow extends JFrame
         }
 
         mtsUpdateBanner = new JLabel();
-        mtsUpdateBanner.setIcon(new ImageIcon(getClass().getResource("/assets/warning.gif")));
+        mtsUpdateBanner.setIcon(ICON_WARNING);
         mtsUpdateBanner.setText("<html>" +
             "An update for ModTheSpire is available.<br/>" +
             "Click here to open the download page." +
@@ -557,7 +571,7 @@ public class ModSelectWindow extends JFrame
         repaint();
     }
 
-    public void startCheckingForUpdates(ModInfo[] modInfos)
+    public void startCheckingForMTSUpdate()
     {
         new Thread(() -> {
             try {
@@ -573,34 +587,68 @@ public class ModSelectWindow extends JFrame
             } catch (IOException e) {
                 // NOP
             }
+        }).start();
+    }
 
+    public void startCheckingForModUpdates(JButton updatesBtn)
+    {
+        updatesBtn.setIcon(ICON_LOAD);
+
+        new Thread(() -> {
+            // Set all icons to checking
+            for (int i=0; i<info.length; ++i) {
+                if (info[i].UpdateJSON == null || info[i].UpdateJSON.isEmpty()) {
+                    continue;
+                }
+
+                for (int j=0; j<model.size(); ++j) {
+                    if (info[i] == model.get(j).info) {
+                        model.get(j).setUpdateIcon(UpdateIconType.CHECKING);
+                        break;
+                    }
+                }
+            }
+
+            //*
             // Check for mod updates
+            boolean anyNeedUpdates = false;
             MODUPDATES = new ArrayList<>();
-            for (int i=0; i<modInfos.length; ++i) {
-                if (modInfos[i].UpdateJSON == null || modInfos[i].UpdateJSON.isEmpty()) {
+            for (int i=0; i<info.length; ++i) {
+                if (info[i].UpdateJSON == null || info[i].UpdateJSON.isEmpty()) {
                     continue;
                 }
                 try {
-                    UpdateChecker updateChecker = new GithubUpdateChecker(modInfos[i].UpdateJSON);
-                    if (updateChecker.isNewerVersionAvailable(modInfos[i].Version)) {
-                        MODUPDATES.add(new ModUpdate(modInfos[i], updateChecker.getLatestReleaseURL(), updateChecker.getLatestDownloadURL()));
+                    UpdateChecker updateChecker = new GithubUpdateChecker(info[i].UpdateJSON);
+                    if (updateChecker.isNewerVersionAvailable(info[i].Version)) {
+                        anyNeedUpdates = true;
+                        MODUPDATES.add(new ModUpdate(info[i], updateChecker.getLatestReleaseURL(), updateChecker.getLatestDownloadURL()));
                         for (int j=0; j<model.size(); ++j) {
-                            System.out.println(model.get(j).info.ID);
-                            if (modInfos[i] != null && model.get(j).info != null
-                                && modInfos[i].ID != null && model.get(j).info.ID != null
-                                && model.get(j).info.ID.equals(modInfos[i].ID))
-                            {
+                            if (info[i] == model.get(j).info) {
                                 model.get(j).setUpdateIcon(UpdateIconType.UPDATE_AVAILABLE);
+                                break;
+                            }
+                        }
+                    } else {
+                        for (int j=0; j<model.size(); ++j) {
+                            if (info[i] == model.get(j).info) {
+                                model.get(j).setUpdateIcon(UpdateIconType.UPTODATE);
                                 break;
                             }
                         }
                     }
                 } catch (IllegalArgumentException e) {
-                    System.out.println("ERROR: " + modInfos[i].Name + ": " + e.getMessage());
+                    System.out.println("ERROR: " + info[i].Name + ": " + e.getMessage());
                 } catch (IOException e) {
                     // NOP
                     System.out.println(e);
                 }
+            }
+            //*/
+
+            if (anyNeedUpdates) {
+                updatesBtn.setIcon(ICON_WARNING);
+            } else {
+                updatesBtn.setIcon(ICON_UPDATE);
             }
         }).start();
     }

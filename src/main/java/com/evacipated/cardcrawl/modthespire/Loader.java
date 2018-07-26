@@ -136,13 +136,7 @@ public class Loader {
                 JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE);
             }
 
-            ModInfo[] modInfos = new ModInfo[0];
-            try {
-                modInfos = buildInfoArray(modFiles);
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            }
-            //ex.startCheckingForUpdates(modInfos);
+            //ex.startCheckingForMTSUpdate();
         });
     }
 
