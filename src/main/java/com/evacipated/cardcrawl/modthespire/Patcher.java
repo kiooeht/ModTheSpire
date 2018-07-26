@@ -3,7 +3,6 @@ package com.evacipated.cardcrawl.modthespire;
 import com.evacipated.cardcrawl.modthespire.lib.*;
 import com.evacipated.cardcrawl.modthespire.patcher.*;
 import com.evacipated.cardcrawl.modthespire.patcher.InsertPatchInfo.LineNumberAndPatchType;
-
 import javassist.*;
 import org.scannotation.AnnotationDB;
 
@@ -215,7 +214,12 @@ public class Patcher {
                     CtClass[] ctParamTypes = patchParamTypes(pool, patch);
                     if (patch.method().equals(SpirePatch.CONSTRUCTOR) || patch.method().equals(SpirePatch.OLD_CONSTRUCTOR)) {
                         if (ctParamTypes == null) {
-                            ctMethodToPatch = ctClsToPatch.getDeclaredConstructors()[0];
+                            CtConstructor[] constructors = ctClsToPatch.getDeclaredConstructors();
+                            if (constructors.length == 1) {
+                                ctMethodToPatch = constructors[0];
+                            } else {
+                                throw new MissingParamTypesException(ctPatchClass, patch);
+                            }
                         } else {
                             ctMethodToPatch = ctClsToPatch.getDeclaredConstructor(ctParamTypes);
                         }
@@ -230,10 +234,16 @@ public class Patcher {
                         ctClasses.add(ctClsToPatch);
                         ctClasses.add(ctPatchClass);
                     } else {
-                        if (ctParamTypes == null)
-                            ctMethodToPatch = ctClsToPatch.getDeclaredMethod(patch.method());
-                        else
+                        if (ctParamTypes == null) {
+                            CtMethod[] methods = ctClsToPatch.getDeclaredMethods(patch.method());
+                            if (methods.length == 1) {
+                                ctMethodToPatch = methods[0];
+                            } else {
+                                throw new MissingParamTypesException(ctPatchClass, patch);
+                            }
+                        } else {
                             ctMethodToPatch = ctClsToPatch.getDeclaredMethod(patch.method(), ctParamTypes);
+                        }
                     }
                 } catch (NotFoundException e) {
                     System.err.println("ERROR: No method [" + patch.method() + "] found on class [" + patch.cls() + "]");
