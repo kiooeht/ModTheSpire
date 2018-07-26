@@ -1,8 +1,8 @@
 package com.evacipated.cardcrawl.modthespire.patcher;
 
 import com.evacipated.cardcrawl.modthespire.Loader;
-import com.evacipated.cardcrawl.modthespire.lib.StaticSpireField;
 import com.evacipated.cardcrawl.modthespire.lib.SpireField;
+import com.evacipated.cardcrawl.modthespire.lib.StaticSpireField;
 import javassist.*;
 
 import java.util.Random;
@@ -56,10 +56,13 @@ public class ClassPatchInfo extends PatchInfo
                 // Make the field
                 String fieldName = String.format("%s_%d", f.getName(), new Random().nextInt(1000));
                 String fieldType = f.getGenericSignature();
-                Pattern pattern = Pattern.compile(".+<L(.+);>;");
+                Pattern pattern = Pattern.compile("Lcom/evacipated/cardcrawl/modthespire/lib/SpireField<L(.+);>;");
                 Matcher matcher = pattern.matcher(fieldType);
                 matcher.find();
                 fieldType = matcher.group(1).replace('/', '.');
+                if (fieldType.contains("<")) {
+                    fieldType = fieldType.substring(0, fieldType.indexOf('<'));
+                }
                 String str = String.format("public%s %s %s;",
                     (isStatic ? " static" : ""),
                     fieldType, fieldName);
@@ -81,6 +84,9 @@ public class ClassPatchInfo extends PatchInfo
                         "}",
                     f.getName(), f.getName(), (isStatic ? StaticSpireField.class.getCanonicalName() : SpireField.class.getCanonicalName()),
                     f.getName(), ctClassToPatch.getName() + ".class", fieldName);
+                if (Loader.DEBUG) {
+                    System.out.println(src);
+                }
                 staticinit.insertAfter(src);
             }
         }

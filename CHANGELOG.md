@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+* More debug print info for SpireField
+* Fix SpireField to work with generic types
 
 #### v2.9.1 ####
 * Patch to always enable Custom mode
