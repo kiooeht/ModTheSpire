@@ -246,7 +246,7 @@ public class Patcher {
                         }
                     }
                 } catch (NotFoundException e) {
-                    System.err.println("ERROR: No method [" + patch.method() + "] found on class [" + patch.cls() + "]");
+                    throw new NoSuchMethodException(String.format("Patch %s:\nNo method [%s(%s)] found on\nclass [%s]", ctPatchClass.getName(), patch.method(), patchParamTypesString(patch), patch.cls()));
                 }
                 if (ctMethodToPatch == null)
                     continue;
@@ -329,6 +329,14 @@ public class Patcher {
             return null;
 
         return pool.get(patch.paramtypes());
+    }
+
+    private static String patchParamTypesString(SpirePatch patch) {
+        String[] def = {"DEFAULT"};
+        if (Arrays.equals(patch.paramtypes(), def))
+            return "";
+
+        return String.join(", ", patch.paramtypes());
     }
 
     private static Method findRawMethod(Class<?> cls, String name) throws NoSuchMethodException
