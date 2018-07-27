@@ -101,30 +101,26 @@ public class ModPanel extends JPanel
             checkBox.setEnabled(false);
             checkBox.setBackground(lightRed);
             infoPanel.setBackground(lightRed);
-            //setToolTipText("This mod requires ModTheSpire v" + info.MTS_Version.get() + " or higher.");
+            info.statusMsg = "This mod requires ModTheSpire v" + info.MTS_Version.get() + " or higher.";
         } else if (checkBox.isSelected() && !dependenciesChecked(info, parent)) {
             checkBox.setBackground(lightOrange);
             infoPanel.setBackground(lightOrange);
             String[] missingDependencies = missingDependencies(info, parent);
             StringBuilder tooltip = new StringBuilder("");
-            /*
             tooltip.append("Missing dependencies: [");
             tooltip.append(String.join(", ", missingDependencies));
             tooltip.append("]");
-            setToolTipText(tooltip.toString());
-            //*/
+            info.statusMsg = tooltip.toString();
         } else if (Loader.STS_VERSION != null && info.STS_Version != null && !Loader.STS_VERSION.equals(info.STS_Version)) {
             checkBox.setBackground(lightYellow);
             infoPanel.setBackground(lightYellow);
-            /*
-            setToolTipText("<html>This mod explicitly supports StS " + info.STS_Version + ".<br/>" +
-                "You are running StS " + Loader.STS_VERSION + ".<br/>" +
-                "You may encounter problems running it.</html>");
-            //*/
+            info.statusMsg = "This mod explicitly supports StS " + info.STS_Version + ".\n" +
+                "You are running StS " + Loader.STS_VERSION + ".\n" +
+                "You may encounter problems running it.";
         } else {
             checkBox.setBackground(Color.WHITE);
             infoPanel.setBackground(Color.WHITE);
-            //setToolTipText(null);
+            info.statusMsg = " ";
         }
     }
 

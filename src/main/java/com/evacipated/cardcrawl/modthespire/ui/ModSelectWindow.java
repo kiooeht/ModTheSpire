@@ -44,10 +44,11 @@ public class ModSelectWindow extends JFrame
 
     private DefaultListModel<ModPanel> model;
 
+    private ModInfo currentModInfo;
     private TitledBorder name;
     private JTextArea authors;
     private JLabel modVersion;
-    private JLabel status;
+    private JTextArea status;
     private JLabel mtsVersion;
     private JLabel stsVersion;
     private JTextArea description;
@@ -343,23 +344,21 @@ public class ModSelectWindow extends JFrame
         modVersion = makeInfoLabelField("Version", " ");
         infoPanel.add(modVersion, c);
 
-        /*
         c.gridy = 2;
-        status = makeInfoLabelField("Status", " ");
-        infoPanel.add(status, c);
-        //*/
-
-        c.gridy = 3;
         mtsVersion = makeInfoLabelField("ModTheSpire Version", " ");
         infoPanel.add(mtsVersion, c);
 
-        c.gridy = 4;
+        c.gridy = 3;
         stsVersion = makeInfoLabelField("Slay the Spire Version", " ");
         infoPanel.add(stsVersion, c);
 
-        c.gridy = 5;
+        c.gridy = 4;
         credits = makeInfoTextAreaField("Additional Credits", " ");
         infoPanel.add(credits, c);
+
+        c.gridy = 5;
+        status = makeInfoTextAreaField("Status", " ");
+        infoPanel.add(status, c);
 
         c.gridx = 0;
         c.gridy = 0;
@@ -573,6 +572,8 @@ public class ModSelectWindow extends JFrame
 
     void setModInfo(ModInfo info)
     {
+        currentModInfo = info;
+
         name.setTitle(info.Name);
         authors.setText(String.join(", ", info.Authors));
         if (info.Version != null) {
@@ -593,22 +594,31 @@ public class ModSelectWindow extends JFrame
         description.setText(info.Description);
         credits.setText(info.Credits);
 
-        boolean needsUpdate = false;
-        if (MODUPDATES != null) {
-            for (ModUpdate modUpdate : MODUPDATES) {
-                if (modUpdate.info.equals(info)) {
-                    needsUpdate = true;
-                    break;
-                }
-            }
-        }
-        if (needsUpdate) {
-            modBannerNoticePanel.add(modUpdateBanner);
-        } else {
-            modBannerNoticePanel.remove(modUpdateBanner);
-        }
+        status.setText(info.statusMsg);
+
+        setModUpdateBanner(info);
 
         repaint();
+    }
+
+    synchronized void setModUpdateBanner(ModInfo info)
+    {
+        if (currentModInfo.equals(info)) {
+            boolean needsUpdate = false;
+            if (MODUPDATES != null) {
+                for (ModUpdate modUpdate : MODUPDATES) {
+                    if (modUpdate.info.equals(info)) {
+                        needsUpdate = true;
+                        break;
+                    }
+                }
+            }
+            if (needsUpdate) {
+                modBannerNoticePanel.add(modUpdateBanner);
+            } else {
+                modBannerNoticePanel.remove(modUpdateBanner);
+            }
+        }
     }
 
     public void startCheckingForMTSUpdate()
@@ -661,10 +671,12 @@ public class ModSelectWindow extends JFrame
                     if (updateChecker.isNewerVersionAvailable(info[i].Version)) {
                         anyNeedUpdates = true;
                         MODUPDATES.add(new ModUpdate(info[i], updateChecker.getLatestReleaseURL(), updateChecker.getLatestDownloadURL()));
+                        setModUpdateBanner(info[i]);
+                        revalidate();
+                        repaint();
                         for (int j=0; j<model.size(); ++j) {
                             if (info[i] == model.get(j).info) {
                                 model.get(j).setUpdateIcon(UpdateIconType.UPDATE_AVAILABLE);
-                                setModInfo(info[i]);
                                 break;
                             }
                         }

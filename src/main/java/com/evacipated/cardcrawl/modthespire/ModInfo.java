@@ -20,6 +20,7 @@ public class ModInfo implements Serializable
      */
     private static final long serialVersionUID = 7452562412479584982L;
     public transient URL jarURL;
+    public transient String statusMsg = " ";
     @SerializedName("modid")
     public String ID;
     @SerializedName("name")
