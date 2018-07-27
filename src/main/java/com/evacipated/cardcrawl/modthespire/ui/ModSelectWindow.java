@@ -57,6 +57,9 @@ public class ModSelectWindow extends JFrame
     private JLabel mtsUpdateBanner;
     private JLabel betaWarningBanner;
 
+    private JPanel modBannerNoticePanel;
+    private JLabel modUpdateBanner;
+
     static List<ModUpdate> MODUPDATES;
 
     public enum UpdateIconType
@@ -310,6 +313,9 @@ public class ModSelectWindow extends JFrame
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
 
+        // Top mod banner panel
+        panel.add(makeModBannerPanel(), BorderLayout.NORTH);
+
         // Bottom status panel
         panel.add(makeStatusPanel(), BorderLayout.SOUTH);
 
@@ -400,6 +406,25 @@ public class ModSelectWindow extends JFrame
         label.setFont(border.getTitleFont().deriveFont(Font.PLAIN).deriveFont(11.0f));
 
         return label;
+    }
+
+    private JPanel makeModBannerPanel()
+    {
+        modBannerNoticePanel = new JPanel();
+        modBannerNoticePanel.setLayout(new GridLayout(0, 1));
+        modBannerNoticePanel.setBorder(BorderFactory.createEmptyBorder(1, 0, 2, 0));
+
+        modUpdateBanner = new JLabel();
+        modUpdateBanner.setIcon(ICON_WARNING);
+        modUpdateBanner.setText("<html>" +
+            "An update is available for this mod." +
+            "</html>");
+        modUpdateBanner.setHorizontalAlignment(JLabel.CENTER);
+        modUpdateBanner.setOpaque(true);
+        modUpdateBanner.setBackground(new Color(255, 193, 7));
+        modUpdateBanner.setBorder(new EmptyBorder(5, 5, 5, 5));
+
+        return modBannerNoticePanel;
     }
 
     private JPanel makeStatusPanel()
@@ -568,6 +593,21 @@ public class ModSelectWindow extends JFrame
         description.setText(info.Description);
         credits.setText(info.Credits);
 
+        boolean needsUpdate = false;
+        if (MODUPDATES != null) {
+            for (ModUpdate modUpdate : MODUPDATES) {
+                if (modUpdate.info.equals(info)) {
+                    needsUpdate = true;
+                    break;
+                }
+            }
+        }
+        if (needsUpdate) {
+            modBannerNoticePanel.add(modUpdateBanner);
+        } else {
+            modBannerNoticePanel.remove(modUpdateBanner);
+        }
+
         repaint();
     }
 
@@ -609,7 +649,6 @@ public class ModSelectWindow extends JFrame
                 }
             }
 
-            //*
             // Check for mod updates
             boolean anyNeedUpdates = false;
             MODUPDATES = new ArrayList<>();
@@ -625,6 +664,7 @@ public class ModSelectWindow extends JFrame
                         for (int j=0; j<model.size(); ++j) {
                             if (info[i] == model.get(j).info) {
                                 model.get(j).setUpdateIcon(UpdateIconType.UPDATE_AVAILABLE);
+                                setModInfo(info[i]);
                                 break;
                             }
                         }
@@ -643,10 +683,17 @@ public class ModSelectWindow extends JFrame
                     System.out.println(e);
                 }
             }
-            //*/
 
             if (anyNeedUpdates) {
                 updatesBtn.setIcon(ICON_WARNING);
+                updatesBtn.setToolTipText("Mod updates are available.");
+                for (ActionListener listener : updatesBtn.getActionListeners()) {
+                    updatesBtn.removeActionListener(listener);
+                }
+                updatesBtn.addActionListener(e -> {
+                    UpdateWindow win = new UpdateWindow(this);
+                    win.setVisible(true);
+                });
             } else {
                 updatesBtn.setIcon(ICON_UPDATE);
             }

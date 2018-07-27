@@ -145,30 +145,12 @@ public class ModPanel extends JPanel
             case CHECKING:
                 update.setIcon(ModSelectWindow.ICON_LOAD);
                 break;
-            case UPDATE_AVAILABLE: {
+            case UPDATE_AVAILABLE:
                 update.setIcon(ModSelectWindow.ICON_WARNING);
-                    /*
-                    JFrame frame = this;
-                    update.addMouseListener(new MouseAdapter()
-                    {
-                        @Override
-                        public void mouseClicked(MouseEvent e)
-                        {
-                            if (Loader.MODUPDATES == null) {
-                                Loader.openLatestReleaseURL();
-                            } else {
-                                UpdateWindow win = new UpdateWindow(frame);
-                                win.setVisible(true);
-                            }
-                        }
-                    });
-                    //*/
                 break;
-            }
-            case UPTODATE: {
+            case UPTODATE:
                 update.setIcon(ModSelectWindow.ICON_GOOD);
                 break;
-            }
         }
         parent.repaint();
     }

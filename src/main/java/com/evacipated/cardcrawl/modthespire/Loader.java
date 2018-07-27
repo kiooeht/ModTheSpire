@@ -136,7 +136,7 @@ public class Loader {
                 JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE);
             }
 
-            //ex.startCheckingForMTSUpdate();
+            ex.startCheckingForMTSUpdate();
         });
     }
 
