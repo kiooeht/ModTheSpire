@@ -23,6 +23,11 @@ public class ConfigUtils
             // /home/x/.config/APP_NAME/
             basedir = SystemUtils.USER_HOME + File.separator
                 + ".config" + File.separator;
+        } else if (SystemUtils.IS_OS_MAC) {
+            // /Users/x/Library/Preferences/APP_NAME/
+            basedir = SystemUtils.USER_HOME + File.separator
+                + "Library" + File.separator
+                + "Preferences" + File.separator;
         } else {
             // user.home/APP_NAME/
             basedir = SystemUtils.USER_HOME;

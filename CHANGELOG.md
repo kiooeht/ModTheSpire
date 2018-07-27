@@ -5,6 +5,7 @@
 * Fix SpireField to not use duplicate objects
 * Fix NPE in isModLoaded
 * Reworked UI
+* Store configs in ~/Library/Preferences on Mac
 
 #### v2.9.1 ####
 * Patch to always enable Custom mode
