@@ -11,6 +11,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Objects;
 import java.util.Properties;
 
 public class ModInfo implements Serializable
@@ -143,5 +144,29 @@ public class ModInfo implements Serializable
         {
             return new Version(jsonElement.getAsJsonPrimitive().getAsString());
         }
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof ModInfo)) {
+            return false;
+        }
+
+        ModInfo info = (ModInfo) obj;
+        if (ID == null && info.ID == null) {
+            return Objects.equals(Name, info.Name);
+        } else {
+            return Objects.equals(ID, info.ID);
+        }
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(ID, Name);
     }
 }

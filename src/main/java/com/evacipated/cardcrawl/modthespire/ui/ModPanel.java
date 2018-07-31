@@ -21,7 +21,6 @@ public class ModPanel extends JPanel
     public JCheckBox checkBox;
     private InfoPanel infoPanel;
     private JLabel update = new JLabel();
-    private JModPanelCheckBoxList parent;
     
     private static boolean dependenciesChecked(ModInfo info, JModPanelCheckBoxList parent) {
         String[] dependencies = info.Dependencies;
@@ -66,7 +65,6 @@ public class ModPanel extends JPanel
     }
     
     public ModPanel(ModInfo info, File modFile, JModPanelCheckBoxList parent) {
-        this.parent = parent;
         this.info = info;
         this.modFile = modFile;
         checkBox = new JCheckBox();
@@ -148,7 +146,6 @@ public class ModPanel extends JPanel
                 update.setIcon(ModSelectWindow.ICON_GOOD);
                 break;
         }
-        parent.repaint();
     }
     
     public class InfoPanel extends JPanel

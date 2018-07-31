@@ -42,7 +42,7 @@ public class ModSelectWindow extends JFrame
     private Rectangle location;
     private JButton playBtn;
 
-    private DefaultListModel<ModPanel> model;
+    private JModPanelCheckBoxList modList;
 
     private ModInfo currentModInfo;
     private TitledBorder name;
@@ -226,8 +226,8 @@ public class ModSelectWindow extends JFrame
         panel.setPreferredSize(new Dimension(220, 300));
 
         // Mod List
-        model = new DefaultListModel<>();
-        JModPanelCheckBoxList modList = new JModPanelCheckBoxList(this, model);
+        DefaultListModel<ModPanel> model = new DefaultListModel<>();
+        modList = new JModPanelCheckBoxList(this, model);
         LoadOrder.loadModsInOrder(model, mods, info, modList);
         modList.publishBoxChecked();
 
@@ -651,12 +651,7 @@ public class ModSelectWindow extends JFrame
                     continue;
                 }
 
-                for (int j=0; j<model.size(); ++j) {
-                    if (info[i] == model.get(j).info) {
-                        model.get(j).setUpdateIcon(UpdateIconType.CHECKING);
-                        break;
-                    }
-                }
+                modList.setUpdateIcon(info[i], UpdateIconType.CHECKING);
             }
 
             // Check for mod updates
@@ -674,19 +669,9 @@ public class ModSelectWindow extends JFrame
                         setModUpdateBanner(info[i]);
                         revalidate();
                         repaint();
-                        for (int j=0; j<model.size(); ++j) {
-                            if (info[i] == model.get(j).info) {
-                                model.get(j).setUpdateIcon(UpdateIconType.UPDATE_AVAILABLE);
-                                break;
-                            }
-                        }
+                        modList.setUpdateIcon(info[i], UpdateIconType.UPDATE_AVAILABLE);
                     } else {
-                        for (int j=0; j<model.size(); ++j) {
-                            if (info[i] == model.get(j).info) {
-                                model.get(j).setUpdateIcon(UpdateIconType.UPTODATE);
-                                break;
-                            }
-                        }
+                        modList.setUpdateIcon(info[i], UpdateIconType.UPTODATE);
                     }
                 } catch (IllegalArgumentException e) {
                     System.out.println("ERROR: " + info[i].Name + ": " + e.getMessage());

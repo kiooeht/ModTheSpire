@@ -1,5 +1,7 @@
 package com.evacipated.cardcrawl.modthespire.ui;
 
+import com.evacipated.cardcrawl.modthespire.ModInfo;
+
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
@@ -79,6 +81,17 @@ public class JModPanelCheckBoxList extends JList<ModPanel> {
             }
         }
         return ret;
+    }
+
+    public synchronized void setUpdateIcon(ModInfo info, ModSelectWindow.UpdateIconType type)
+    {
+        for (int i=0; i<getModel().getSize(); ++i) {
+            if (info.equals(getModel().getElementAt(i).info)) {
+                getModel().getElementAt(i).setUpdateIcon(type);
+                break;
+            }
+        }
+        repaint();
     }
 
     protected class CellRenderer implements ListCellRenderer<ModPanel> {
