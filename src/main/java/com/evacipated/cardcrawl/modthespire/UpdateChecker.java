@@ -3,6 +3,7 @@ package com.evacipated.cardcrawl.modthespire;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,15 +14,15 @@ import java.net.URL;
 
 public abstract class UpdateChecker
 {
-    private URL jsonURL;
-    private JsonObject latest = null;
+    protected URL jsonURL;
+    protected JsonObject latest = null;
 
     public UpdateChecker(String jsonURL) throws MalformedURLException
     {
         this.jsonURL = new URL(jsonURL);
     }
 
-    private void obtainLatestRelease() throws IOException
+    protected void obtainLatestRelease() throws IOException
     {
         if (latest != null) {
             return;
@@ -30,9 +31,14 @@ public abstract class UpdateChecker
         HttpURLConnection request = (HttpURLConnection) jsonURL.openConnection();
         request.connect();
 
-        JsonParser jp = new JsonParser();
-        JsonElement root = jp.parse(new InputStreamReader((InputStream) request.getContent()));
-        latest = root.getAsJsonObject();
+        try {
+            JsonParser jp = new JsonParser();
+            JsonElement root = jp.parse(new InputStreamReader((InputStream) request.getContent()));
+            latest = root.getAsJsonObject();
+        } catch (JsonSyntaxException e) {
+            System.out.println(jsonURL);
+            System.out.println(e.getMessage());
+        }
     }
 
     public boolean isNewerVersionAvailable(Version current) throws IOException
@@ -44,11 +50,18 @@ public abstract class UpdateChecker
     public JsonElement getElement(String key) throws IOException
     {
         obtainLatestRelease();
+        if (latest == null) {
+            return null;
+        }
         return latest.get(key);
     }
 
     public String getElementAsString(String key) throws IOException
     {
+        JsonElement element = getElement(key);
+        if (element == null) {
+            return null;
+        }
         return getElement(key).getAsString();
     }
 
