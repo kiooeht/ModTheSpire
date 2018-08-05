@@ -603,7 +603,7 @@ public class ModSelectWindow extends JFrame
 
     synchronized void setModUpdateBanner(ModInfo info)
     {
-        if (currentModInfo.equals(info)) {
+        if (currentModInfo != null && currentModInfo.equals(info)) {
             boolean needsUpdate = false;
             if (MODUPDATES != null) {
                 for (ModUpdate modUpdate : MODUPDATES) {
