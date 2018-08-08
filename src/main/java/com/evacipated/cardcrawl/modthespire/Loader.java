@@ -37,6 +37,7 @@ public class Loader {
     public static SpireConfig MTS_CONFIG;
     public static String STS_VERSION = null;
     public static boolean STS_BETA = false;
+    public static boolean allowBeta = false;
 
     private static Object ARGS;
     private static ModSelectWindow ex;
@@ -71,6 +72,10 @@ public class Loader {
         
         if (Arrays.asList(args).contains("--out-jar")) {
             OUT_JAR = true;
+        }
+
+        if (Arrays.asList(args).contains("--allow-beta")) {
+            allowBeta = true;
         }
 
         try {

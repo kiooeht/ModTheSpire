@@ -273,7 +273,7 @@ public class ModSelectWindow extends JFrame
             });
             t.start();
         });
-        if (Loader.STS_BETA) {
+        if (Loader.STS_BETA && !Loader.allowBeta) {
             playBtn.setEnabled(false);
         }
         panel.add(playBtn, BorderLayout.SOUTH);
