@@ -245,9 +245,9 @@ public class ModSelectWindow extends JFrame
             this.getContentPane().removeAll();
 
             JTextArea textArea = new JTextArea();
+            textArea.setLineWrap(true);
             textArea.setFont(new Font("monospaced", Font.PLAIN, 12));
             JScrollPane logScroller = new JScrollPane(textArea);
-            this.getContentPane().setPreferredSize(new Dimension(700, 800));
             this.getContentPane().add(logScroller, BorderLayout.CENTER);
             MessageConsole mc = new MessageConsole(textArea);
             mc.redirectOut(null, System.out);
@@ -401,6 +401,7 @@ public class ModSelectWindow extends JFrame
         label.setEditable(false);
         label.setAlignmentX(Component.LEFT_ALIGNMENT);
         label.setLineWrap(true);
+        label.setWrapStyleWord(true);
         label.setOpaque(false);
         label.setFont(border.getTitleFont().deriveFont(Font.PLAIN).deriveFont(11.0f));
 
