@@ -6,6 +6,7 @@
 * Fix NPE in isModLoaded
 * Reworked UI
 * Store configs in ~/Library/Preferences on Mac
+* Make annotationDBMap public for mods to use
 
 #### v2.9.1 ####
 * Patch to always enable Custom mode

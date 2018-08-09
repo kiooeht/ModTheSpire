@@ -16,7 +16,7 @@ import java.net.URL;
 import java.util.*;
 
 public class Patcher {
-    private static Map<URL, AnnotationDB> annotationDBMap = new HashMap<>();
+    public static Map<URL, AnnotationDB> annotationDBMap = new HashMap<>();
     private static Map<Class<?>, EnumBusterReflect> enumBusterMap = new HashMap<>();
     private static TreeSet<PatchInfo> patchInfos = new TreeSet<>(new PatchInfoComparator());
 
