@@ -44,6 +44,21 @@ public class SpireConfig
         properties.store(new FileOutputStream(file), null);
     }
 
+    public boolean has(String key)
+    {
+        return properties.containsKey(key);
+    }
+
+    public void remove(String key)
+    {
+        properties.remove(key);
+    }
+
+    public void clear()
+    {
+        properties.clear();
+    }
+
     public String getString(String key)
     {
         return properties.getProperty(key);
