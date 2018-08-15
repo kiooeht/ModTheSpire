@@ -9,6 +9,7 @@
 * Make annotationDBMap public for mods to use
 * Add some functionality to SpireConfig
 * Add extra options for LineFinder
+* Fix in-game mod list tooltip position on other resolutions
 
 #### v2.9.1 ####
 * Patch to always enable Custom mode

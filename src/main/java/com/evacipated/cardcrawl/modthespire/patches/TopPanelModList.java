@@ -1,10 +1,12 @@
 package com.evacipated.cardcrawl.modthespire.patches;
 
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.evacipated.cardcrawl.modthespire.Loader;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
 import com.megacrit.cardcrawl.core.Settings;
 import com.megacrit.cardcrawl.helpers.Hitbox;
 import com.megacrit.cardcrawl.helpers.TipHelper;
+import com.megacrit.cardcrawl.ui.panels.TopPanel;
 
 @SpirePatch(
     cls="com.megacrit.cardcrawl.ui.panels.TopPanel",
@@ -16,12 +18,12 @@ public class TopPanelModList
     private static final float MOD_LIST_TIP_Y = Settings.HEIGHT - 120.0F * Settings.scale;
     private static Hitbox hb;
 
-    public static void Postfix(Object __obj_instance)
+    public static void Postfix(TopPanel __instance)
     {
         if (hb == null) {
             hb = new Hitbox(
-                Settings.WIDTH - 150.0F,
-                Settings.HEIGHT - 80.0F,
+                Settings.WIDTH - 225.0F * Settings.scale,
+                Settings.HEIGHT - 120.0F * Settings.scale,
                 300.0F * Settings.scale,
                 40.0F * Settings.scale
                 );
@@ -43,6 +45,20 @@ public class TopPanelModList
                     mods += Loader.MODINFOS[i].Name;
                 }
                 TipHelper.renderGenericTip(MOD_LIST_TIP_X, MOD_LIST_TIP_Y, header, mods);
+            }
+        }
+    }
+
+    @SpirePatch(
+        cls="com.megacrit.cardcrawl.ui.panels.TopPanel",
+        method="render"
+    )
+    public static class Render
+    {
+        public static void Postfix(TopPanel __instance, SpriteBatch sb)
+        {
+            if (hb != null) {
+                hb.render(sb);
             }
         }
     }
