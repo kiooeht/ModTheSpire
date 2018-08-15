@@ -8,6 +8,7 @@
 * Store configs in ~/Library/Preferences on Mac
 * Make annotationDBMap public for mods to use
 * Add some functionality to SpireConfig
+* Add extra options for LineFinder
 
 #### v2.9.1 ####
 * Patch to always enable Custom mode
