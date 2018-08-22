@@ -231,27 +231,7 @@ public class Loader {
 
                 // Initialize any mods that implement SpireInitializer.initialize()
                 System.out.println("Initializing mods...");
-                List<String> initialized = Patcher.initializeMods(loader, modInfos);
-                // DEPRECATED
-                // Initialize any mods which declare an initialization function
-                for (int i = 0; i < modInfos.length - 1; i++) {
-                    String modUrl = modInfos[i].jarURL.toString();
-                    String modName = modUrl.substring(modUrl.lastIndexOf('/') + 1, modUrl.length() - 4);
-
-                    try {
-                        Class<?> modMainClass = loader.loadClass(modName.toLowerCase() + "." + modName);
-                        Method initialize = modMainClass.getDeclaredMethod("initialize");
-                        if (!initialized.contains(modMainClass.getName())) {
-                            System.out.println("WARNING: <ModName>.<ModName>.initialize() method is deprecated and will be removed in a future version of ModTheSpire." +
-                                " Use @SpireInitializer intead.");
-                            initialize.invoke(null);
-                        }
-                    } catch (ClassNotFoundException e) {
-                        continue;
-                    } catch (NoSuchMethodException e) {
-                        continue;
-                    }
-                }
+                Patcher.initializeMods(loader, modInfos);
                 System.out.println("Done.");
                 System.out.println();
             }

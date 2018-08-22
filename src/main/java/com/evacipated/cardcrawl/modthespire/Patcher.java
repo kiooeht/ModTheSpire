@@ -20,10 +20,8 @@ public class Patcher {
     private static Map<Class<?>, EnumBusterReflect> enumBusterMap = new HashMap<>();
     private static TreeSet<PatchInfo> patchInfos = new TreeSet<>(new PatchInfoComparator());
 
-    public static List<String> initializeMods(ClassLoader loader, ModInfo... modInfos) throws ClassNotFoundException, InvocationTargetException, IllegalAccessException
+    public static void initializeMods(ClassLoader loader, ModInfo... modInfos) throws ClassNotFoundException, InvocationTargetException, IllegalAccessException
     {
-        List<String> result = new ArrayList<>();
-
         for (ModInfo info : modInfos) {
             if (annotationDBMap.containsKey(info.jarURL)) {
                 Set<String> initializers = annotationDBMap.get(info.jarURL).getAnnotationIndex().get(SpireInitializer.class.getName());
@@ -32,7 +30,6 @@ public class Patcher {
                         try {
                             Method init = loader.loadClass(initializer).getDeclaredMethod("initialize");
                             init.invoke(null);
-                            result.add(initializer);
                         } catch (NoSuchMethodException e) {
                             System.out.println("WARNING: Unable to find method initialize() on class marked @SpireInitializer: " + initializer);
                         }
@@ -42,8 +39,6 @@ public class Patcher {
                 System.err.println(info.jarURL + " Not in DB map. Something is very wrong");
             }
         }
-
-        return result;
     }
 
     public static List<Iterable<String>> findPatches(URL[] urls) throws IOException
