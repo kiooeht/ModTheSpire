@@ -5,6 +5,21 @@ import javassist.CtClass;
 
 public class PatchingException extends Exception
 {
+    public PatchingException(String msg)
+    {
+        super(msg);
+    }
+
+    public PatchingException(String msg, Throwable cause)
+    {
+        super(msg, cause);
+    }
+
+    public PatchingException(Throwable cause)
+    {
+        super(cause);
+    }
+
     public PatchingException(CtClass ctClass, String msg)
     {
         super(ctClass.getName() + ": " + msg);

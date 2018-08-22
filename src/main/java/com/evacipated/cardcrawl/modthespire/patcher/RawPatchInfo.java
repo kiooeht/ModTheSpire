@@ -2,6 +2,7 @@ package com.evacipated.cardcrawl.modthespire.patcher;
 
 import javassist.CtBehavior;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 public class RawPatchInfo extends PatchInfo
@@ -33,8 +34,12 @@ public class RawPatchInfo extends PatchInfo
     }
 
     @Override
-    public void doPatch() throws Exception
+    public void doPatch() throws PatchingException
     {
-        method.invoke(null, ctMethodToPatch);
+        try {
+            method.invoke(null, ctMethodToPatch);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new PatchingException(e);
+        }
     }
 }

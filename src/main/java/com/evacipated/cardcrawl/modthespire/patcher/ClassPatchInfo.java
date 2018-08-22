@@ -47,51 +47,55 @@ public class ClassPatchInfo extends PatchInfo
     }
 
     @Override
-    public void doPatch() throws NotFoundException, CannotCompileException
+    public void doPatch() throws PatchingException
     {
-        for (CtField f : ctPatchClass.getDeclaredFields()) {
-            boolean isStatic = f.getType().getName().equals(StaticSpireField.class.getCanonicalName());
-            boolean isSpireField = isStatic || f.getType().getName().equals(SpireField.class.getCanonicalName());
-            if (isSpireField) {
-                // Make the field
-                String fieldName = String.format("%s_%d", f.getName(), new Random().nextInt(1000));
-                String fieldType = f.getGenericSignature();
-                Pattern pattern = Pattern.compile("Lcom/evacipated/cardcrawl/modthespire/lib/SpireField<L(.+);>;");
-                Matcher matcher = pattern.matcher(fieldType);
-                matcher.find();
-                fieldType = matcher.group(1).replace('/', '.');
-                if (fieldType.contains("<")) {
-                    fieldType = fieldType.substring(0, fieldType.indexOf('<'));
-                }
-                String str = String.format("public%s %s %s;",
-                    (isStatic ? " static" : ""),
-                    fieldType, fieldName);
-                if (Loader.DEBUG) {
-                    System.out.println(" - Adding Field: " + str);
-                }
-                CtField new_f = CtField.make(str, ctClassToPatch);
-                String expr = String.format("(%s) %s.%s.getDefaultValue()", fieldType, ctPatchClass.getName(), f.getName());
-                ctClassToPatch.addField(new_f, CtField.Initializer.byExpr(expr));
+        try {
+            for (CtField f : ctPatchClass.getDeclaredFields()) {
+                boolean isStatic = f.getType().getName().equals(StaticSpireField.class.getCanonicalName());
+                boolean isSpireField = isStatic || f.getType().getName().equals(SpireField.class.getCanonicalName());
+                if (isSpireField) {
+                    // Make the field
+                    String fieldName = String.format("%s_%d", f.getName(), new Random().nextInt(1000));
+                    String fieldType = f.getGenericSignature();
+                    Pattern pattern = Pattern.compile("Lcom/evacipated/cardcrawl/modthespire/lib/SpireField<L(.+);>;");
+                    Matcher matcher = pattern.matcher(fieldType);
+                    matcher.find();
+                    fieldType = matcher.group(1).replace('/', '.');
+                    if (fieldType.contains("<")) {
+                        fieldType = fieldType.substring(0, fieldType.indexOf('<'));
+                    }
+                    String str = String.format("public%s %s %s;",
+                        (isStatic ? " static" : ""),
+                        fieldType, fieldName);
+                    if (Loader.DEBUG) {
+                        System.out.println(" - Adding Field: " + str);
+                    }
+                    CtField new_f = CtField.make(str, ctClassToPatch);
+                    String expr = String.format("(%s) %s.%s.getDefaultValue()", fieldType, ctPatchClass.getName(), f.getName());
+                    ctClassToPatch.addField(new_f, CtField.Initializer.byExpr(expr));
 
-                // Make and initialize SpireField object
-                CtConstructor staticinit = ctPatchClass.getClassInitializer();
-                if (staticinit == null) {
-                    staticinit = ctPatchClass.makeClassInitializer();
+                    // Make and initialize SpireField object
+                    CtConstructor staticinit = ctPatchClass.getClassInitializer();
+                    if (staticinit == null) {
+                        staticinit = ctPatchClass.makeClassInitializer();
+                    }
+                    String src = String.format("{\n" +
+                            "if (%s == null) { %s = new %s(null); }\n" +
+                            "%s.initialize(%s, \"%s\");\n" +
+                            "}",
+                        f.getName(), f.getName(), (isStatic ? StaticSpireField.class.getCanonicalName() : SpireField.class.getCanonicalName()),
+                        f.getName(), ctClassToPatch.getName() + ".class", fieldName);
+                    if (Loader.DEBUG) {
+                        System.out.println(src);
+                    }
+                    staticinit.insertAfter(src);
                 }
-                String src = String.format("{\n" +
-                        "if (%s == null) { %s = new %s(null); }\n" +
-                        "%s.initialize(%s, \"%s\");\n" +
-                        "}",
-                    f.getName(), f.getName(), (isStatic ? StaticSpireField.class.getCanonicalName() : SpireField.class.getCanonicalName()),
-                    f.getName(), ctClassToPatch.getName() + ".class", fieldName);
-                if (Loader.DEBUG) {
-                    System.out.println(src);
-                }
-                staticinit.insertAfter(src);
             }
-        }
-        if (Loader.DEBUG) {
-            System.out.println();
+            if (Loader.DEBUG) {
+                System.out.println();
+            }
+        } catch (CannotCompileException | NotFoundException e) {
+            throw new PatchingException(e);
         }
     }
 }

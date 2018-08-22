@@ -46,7 +46,7 @@ public abstract class PatchInfo
     // Lower is earlier
     public abstract int patchOrdering();
 
-    public abstract void doPatch() throws Exception;
+    public abstract void doPatch() throws PatchingException;
 
     protected static boolean paramByRef(Object[] annotations) {
         for (Object o : annotations) {

@@ -24,8 +24,12 @@ public class ReplacePatchInfo extends PatchInfo
     }
 
     @Override
-    public void doPatch() throws CannotCompileException
+    public void doPatch() throws PatchingException
     {
-        ((CtMethod)ctMethodToPatch).setBody(patchMethod, null);
+        try {
+            ((CtMethod) ctMethodToPatch).setBody(patchMethod, null);
+        } catch (CannotCompileException e) {
+            throw new PatchingException(e);
+        }
     }
 }

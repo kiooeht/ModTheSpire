@@ -65,7 +65,7 @@ public class InsertPatchInfo extends PatchInfo
         return -2;
     }
     
-    private void doPatch(int loc) throws NotFoundException, ClassNotFoundException, CannotCompileException {
+    private void doPatch(int loc) throws NotFoundException, ClassNotFoundException, CannotCompileException, PatchingException {
         CtClass returnType = patchMethod.getReturnType();
         boolean hasEarlyReturn = false;
         if (ctMethodToPatch instanceof CtMethod
@@ -85,7 +85,7 @@ public class InsertPatchInfo extends PatchInfo
         for (int i = insertParamsStartIndex; i < insertParamAnnotations.length; ++i) {
             if (paramByRef(insertParamAnnotations[i])) {
                 if (!insertParamTypes[i].isArray()) {
-                    System.out.println("      WARNING: ByRef parameter is not array type");
+                    throw new ByRefParameterNotArrayException(i);
                 } else {
                     localVarTypeNames[i - insertParamsStartIndex] = insertParamTypes[i].getName();
                 }
@@ -96,6 +96,9 @@ public class InsertPatchInfo extends PatchInfo
         if (info != null) {
             // Setup array holders for each local variable
             for (int i = 0; i < info.localvars().length; ++i) {
+                if (i >= localVarTypeNames.length) {
+                    throw new PatchingException("Insufficient method parameters to accept localvars");
+                }
                 if (localVarTypeNames[i] != null) {
                     src += localVarTypeNames[i] + " __" + info.localvars()[i] + " = new " + localVarTypeNames[i] + "{" + info.localvars()[i] + "};\n";
                 }
@@ -197,10 +200,14 @@ public class InsertPatchInfo extends PatchInfo
     }
 
     @Override
-    public void doPatch() throws NotFoundException, ClassNotFoundException, CannotCompileException
+    public void doPatch() throws PatchingException
     {
         for (LineNumberAndPatchType patchLoc : locs) {
-            doPatch(patchLoc.lineNumber);
+            try {
+                doPatch(patchLoc.lineNumber);
+            } catch (CannotCompileException | NotFoundException | ClassNotFoundException e) {
+                throw new PatchingException(e);
+            }
         }
     }
 }

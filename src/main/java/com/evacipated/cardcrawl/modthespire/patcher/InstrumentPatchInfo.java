@@ -36,9 +36,13 @@ public class InstrumentPatchInfo extends PatchInfo
     }
 
     @Override
-    public void doPatch() throws CannotCompileException, InvocationTargetException, IllegalAccessException
+    public void doPatch() throws PatchingException
     {
-        ExprEditor exprEditor = (ExprEditor)method.invoke(null);
-        ctMethodToPatch.instrument(exprEditor);
+        try {
+            ExprEditor exprEditor = (ExprEditor) method.invoke(null);
+            ctMethodToPatch.instrument(exprEditor);
+        } catch (IllegalAccessException | CannotCompileException | InvocationTargetException e) {
+            throw new PatchingException(e);
+        }
     }
 }
