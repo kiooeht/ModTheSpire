@@ -185,7 +185,7 @@ public class Patcher {
         if (class_names == null)
             return null;
 
-        HashSet<CtClass> ctClasses = new HashSet<CtClass>();
+        HashSet<CtClass> ctClasses = new HashSet<>();
         for (String cls_name : class_names) {
             CtClass ctPatchClass = pool.get(cls_name);
             
@@ -201,18 +201,28 @@ public class Patcher {
             }
 
             for (SpirePatch patch : patchArr) {
-                CtClass ctClsToPatch;
+                CtClass ctClsToPatch = null;
                 try {
-                    ctClsToPatch = pool.get(patch.cls());
+                    if (!patch.clz().equals(void.class)) {
+                        ctClsToPatch = pool.get(patch.clz().getName());
+                    } else if (!patch.cls().isEmpty()) {
+                        ctClsToPatch = pool.get(patch.cls());
+                    }
                 } catch (NotFoundException e) {
                     if (patch.optional()) {
                         continue;
                     }
                     throw e;
                 }
+                if (ctClsToPatch == null) {
+                    throw new PatchingException(ctPatchClass, "No class defined to patch. Must define either clz or cls in @SpirePatch.");
+                }
                 CtBehavior ctMethodToPatch = null;
                 try {
-                    CtClass[] ctParamTypes = patchParamTypes(pool, patch);
+                    CtClass[] ctParamTypes = patchParamTypez(pool, patch);
+                    if (ctParamTypes == null) {
+                        ctParamTypes = patchParamTypes(pool, patch);
+                    }
                     if (patch.method().equals(SpirePatch.CONSTRUCTOR) || patch.method().equals(SpirePatch.OLD_CONSTRUCTOR)) {
                         if (ctParamTypes == null) {
                             ctMethodToPatch = ctClsToPatch.getDeclaredConstructors()[0];
@@ -243,29 +253,32 @@ public class Patcher {
 
                 for (CtMethod m : ctPatchClass.getDeclaredMethods()) {
                     PatchInfo p = null;
-                    if (m.getName().equals("Prefix")) {
+                    if (m.getName().equals("Prefix") || m.hasAnnotation(SpirePrefixPatch.class)) {
                         p = new PrefixPatchInfo(ctMethodToPatch, m);
-                    } else if (m.getName().equals("Postfix")) {
+                    } else if (m.getName().equals("Postfix") || m.hasAnnotation(SpirePostfixPatch.class)) {
                         p = new PostfixPatchInfo(ctMethodToPatch, m);
                     } else if (m.getName().equals("Locator")) {
                         continue;
-                    } else if (m.getName().equals("Insert")) {
+                    } else if (m.getName().equals("Insert") || m.hasAnnotation(SpireInsertPatch.class)) {
                         SpireInsertPatch insertPatch = (SpireInsertPatch) m.getAnnotation(SpireInsertPatch.class);
-                        if (insertPatch == null) {
+                        /*if (insertPatch == null) {
                             throw new PatchingException(m, "Insert missing SpireInsertPatch info!");
-                        }
+                        }*/
 
                         LocatorInfo locatorInfo = null;
-                        for (CtClass nestedCtClass : ctPatchClass.getDeclaredClasses()) {
-                            if (nestedCtClass.getSuperclass().getName().equals(SpireInsertLocator.class.getName())) {
-                                locatorInfo = new LocatorInfo(ctMethodToPatch, loader.loadClass(nestedCtClass.getName()));
+                        if (insertPatch != null && !insertPatch.locator().equals(SpireInsertPatch.DEFAULT.class)) {
+                            locatorInfo = new LocatorInfo(ctMethodToPatch, loader.loadClass(insertPatch.locator().getName()));
+                        } else if (insertPatch == null || insertPatch.locator().equals(SpireInsertPatch.DEFAULT.class)) {
+                            // Find the Locator
+                            for (CtClass nestedCtClass : ctPatchClass.getDeclaredClasses()) {
+                                if (nestedCtClass.getSuperclass().getName().equals(SpireInsertLocator.class.getName())) {
+                                    locatorInfo = new LocatorInfo(ctMethodToPatch, loader.loadClass(nestedCtClass.getName()));
+                                }
                             }
                         }
 
-                        if (insertPatch.loc() == -1 && insertPatch.rloc() == -1
-                            && insertPatch.locs().length == 0 && insertPatch.rlocs().length == 0
-                            && locatorInfo == null) {
-                            throw new PatchingException(m, "SpireInsertPatch missing line number! Must specify either loc, rloc, locs, rlocs, or a locator");
+                        if (!isInsertPatchValid(insertPatch, locatorInfo)) {
+                            throw new PatchingException(m, "SpireInsertPatch missing line number! Must specify either loc, rloc, locs, rlocs, or a Locator");
                         }
 
                         List<LineNumberAndPatchType> locs = new ArrayList<>();
@@ -279,16 +292,22 @@ public class Patcher {
                                 locs.add(new LineNumberAndPatchType(abs_locs[i]));
                             }
                         }
-                        
-                        if (insertPatch.loc() >= 0) locs.add(new LineNumberAndPatchType(insertPatch.loc()));
-                        if (insertPatch.rloc() >= 0) locs.add(new LineNumberAndPatchType(
-                                ctMethodToPatch.getMethodInfo().getLineNumber(0) + insertPatch.rloc(), insertPatch.rloc()));
-                        for (int i = 0; i < insertPatch.locs().length; i++) {
-                            locs.add(new LineNumberAndPatchType(insertPatch.locs()[i]));
-                        }
-                        for (int i = 0; i < insertPatch.rlocs().length; i++) {
-                            locs.add(new LineNumberAndPatchType(
-                                ctMethodToPatch.getMethodInfo().getLineNumber(0) + insertPatch.rlocs()[i], insertPatch.rlocs()[i]));
+
+                        if (insertPatch != null) {
+                            if (insertPatch.loc() >= 0) {
+                                locs.add(new LineNumberAndPatchType(insertPatch.loc()));
+                            }
+                            if (insertPatch.rloc() >= 0) {
+                                locs.add(new LineNumberAndPatchType(
+                                    ctMethodToPatch.getMethodInfo().getLineNumber(0) + insertPatch.rloc(), insertPatch.rloc()));
+                            }
+                            for (int i = 0; i < insertPatch.locs().length; i++) {
+                                locs.add(new LineNumberAndPatchType(insertPatch.locs()[i]));
+                            }
+                            for (int i = 0; i < insertPatch.rlocs().length; i++) {
+                                locs.add(new LineNumberAndPatchType(
+                                    ctMethodToPatch.getMethodInfo().getLineNumber(0) + insertPatch.rlocs()[i], insertPatch.rlocs()[i]));
+                            }
                         }
 
                         p = new InsertPatchInfo(insertPatch, locs, ctMethodToPatch, m);
@@ -313,12 +332,38 @@ public class Patcher {
         return ctClasses;
     }
 
+    private static boolean isInsertPatchValid(SpireInsertPatch insertPatch, LocatorInfo locatorInfo) {
+        if (locatorInfo != null) {
+            return true;
+        }
+        if (insertPatch != null) {
+            if (insertPatch.loc() != -1 || insertPatch.rloc() != -1
+                || insertPatch.locs().length != 0 || insertPatch.rlocs().length != 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static CtClass[] patchParamTypes(ClassPool pool, SpirePatch patch) throws NotFoundException {
         String[] def = {"DEFAULT"};
-        if (Arrays.equals(patch.paramtypes(), def))
+        if (Arrays.equals(patch.paramtypes(), def)) {
             return null;
+        }
 
         return pool.get(patch.paramtypes());
+    }
+
+    private static CtClass[] patchParamTypez(ClassPool pool, SpirePatch patch) throws NotFoundException {
+        if (patch.paramtypez().length == 1 && void.class.equals(patch.paramtypez()[0])) {
+            return null;
+        }
+
+        String[] names = new String[patch.paramtypez().length];
+        for (int i=0; i<patch.paramtypez().length; ++i) {
+            names[i] = patch.paramtypez()[i].getName();
+        }
+        return pool.get(names);
     }
 
     private static Method findRawMethod(Class<?> cls, String name) throws NoSuchMethodException

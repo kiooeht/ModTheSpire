@@ -93,10 +93,12 @@ public class InsertPatchInfo extends PatchInfo
         }
 
         String src = "{\n";
-        // Setup array holders for each local variable
-        for (int i = 0; i < info.localvars().length; ++i) {
-            if (localVarTypeNames[i] != null) {
-                src += localVarTypeNames[i] + " __" + info.localvars()[i] + " = new " + localVarTypeNames[i] + "{" + info.localvars()[i] + "};\n";
+        if (info != null) {
+            // Setup array holders for each local variable
+            for (int i = 0; i < info.localvars().length; ++i) {
+                if (localVarTypeNames[i] != null) {
+                    src += localVarTypeNames[i] + " __" + info.localvars()[i] + " = new " + localVarTypeNames[i] + "{" + info.localvars()[i] + "};\n";
+                }
             }
         }
 
@@ -115,29 +117,33 @@ public class InsertPatchInfo extends PatchInfo
             src += ", ";
         }
         src += "$$";
-        for (int i = 0; i < info.localvars().length; ++i) {
-            src += ", ";
-            if (localVarTypeNames[i] != null) {
-                src += "__";
+        if (info != null) {
+            for (int i = 0; i < info.localvars().length; ++i) {
+                src += ", ";
+                if (localVarTypeNames[i] != null) {
+                    src += "__";
+                }
+                src += info.localvars()[i];
             }
-            src += info.localvars()[i];
         }
         src += ");\n";
 
         String src2 = src;
-        // Set local variables to changed values
-        for (int i = 0; i < info.localvars().length; ++i) {
-            if (localVarTypeNames[i] != null) {
-                src += info.localvars()[i] + " = ";
-                src2 += info.localvars()[i] + " = ";
+        if (info != null) {
+            // Set local variables to changed values
+            for (int i = 0; i < info.localvars().length; ++i) {
+                if (localVarTypeNames[i] != null) {
+                    src += info.localvars()[i] + " = ";
+                    src2 += info.localvars()[i] + " = ";
 
-                String typename = paramByRefTypename(insertParamAnnotations[i + insertParamsStartIndex]);
-                if (!typename.isEmpty()) {
-                    src += "(" + typename + ")";
-                    src2 += "(com.megacrit.cardcrawl." + typename + ")";
+                    String typename = paramByRefTypename(insertParamAnnotations[i + insertParamsStartIndex]);
+                    if (!typename.isEmpty()) {
+                        src += "(" + typename + ")";
+                        src2 += "(com.megacrit.cardcrawl." + typename + ")";
+                    }
+                    src += "__" + info.localvars()[i] + "[0];\n";
+                    src2 += "__" + info.localvars()[i] + "[0];\n";
                 }
-                src += "__" + info.localvars()[i] + "[0];\n";
-                src2 += "__" + info.localvars()[i] + "[0];\n";
             }
         }
 

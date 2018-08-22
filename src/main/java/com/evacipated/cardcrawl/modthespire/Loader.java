@@ -33,6 +33,7 @@ public class Loader {
     public static String COREPATCHES_JAR = "/corepatches.jar";
     public static String STS_PATCHED_JAR = "desktop-1.0-patched.jar";
     public static ModInfo[] MODINFOS;
+    private static ClassPool POOL;
 
     public static SpireConfig MTS_CONFIG;
     public static String STS_VERSION = null;
@@ -50,6 +51,11 @@ public class Loader {
             }
         }
         return false;
+    }
+
+    public static ClassPool getClassPool()
+    {
+        return new ClassPool(POOL);
     }
 
     public static void main(String[] args) {
@@ -167,23 +173,26 @@ public class Loader {
             MTSClassLoader loader = new MTSClassLoader(Loader.class.getResourceAsStream(COREPATCHES_JAR), buildUrlArray(modInfos), Loader.class.getClassLoader());
 
             if (modJars.length > 0) {
+                MTSClassLoader tmpPatchingLoader = new MTSClassLoader(Loader.class.getResourceAsStream(COREPATCHES_JAR), buildUrlArray(modInfos), Loader.class.getClassLoader());
+                
                 System.out.println("Begin patching...");
-                ClassPool pool = ClassPool.getDefault();
-                pool.insertClassPath(new LoaderClassPath(loader));
-                loader.addStreamToClassPool(pool); // Inserts infront of above path
+                ClassPool pool = new MTSClassPool(tmpPatchingLoader);
+                POOL = pool;
+                pool.insertClassPath(new LoaderClassPath(tmpPatchingLoader));
+                tmpPatchingLoader.addStreamToClassPool(pool); // Inserts infront of above path
                 SortedMap<String, CtClass> ctClasses = new TreeMap<>();
                 // Find and inject core patches
                 System.out.println("Finding core patches...");
-                for (CtClass cls : Patcher.injectPatches(loader, pool, Patcher.findPatches(new URL[]{Loader.class.getResource(Loader.COREPATCHES_JAR)}))) {
+                for (CtClass cls : Patcher.injectPatches(tmpPatchingLoader, pool, Patcher.findPatches(new URL[]{Loader.class.getResource(Loader.COREPATCHES_JAR)}))) {
                     ctClasses.put(countSuperClasses(cls) + cls.getName(), cls);
                 }
                 // Find and inject mod patches
                 System.out.println("Finding patches...");
-                for (CtClass cls : Patcher.injectPatches(loader, pool, Patcher.findPatches(MODINFOS))) {
+                for (CtClass cls : Patcher.injectPatches(tmpPatchingLoader, pool, Patcher.findPatches(MODINFOS))) {
                     ctClasses.put(countSuperClasses(cls) + cls.getName(), cls);
                 }
 
-                Patcher.finalizePatches(loader);
+                Patcher.finalizePatches(tmpPatchingLoader);
                 Patcher.compilePatches(loader, ctClasses);
 
                 System.out.printf("Patching enums...");

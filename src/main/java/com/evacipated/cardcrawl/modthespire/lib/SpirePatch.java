@@ -6,8 +6,10 @@ import java.lang.annotation.*;
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface SpirePatch {
-    String cls();
+    Class<?> clz() default void.class;
+    String cls() default "";
     String method();
+    Class<?>[] paramtypez() default {void.class};
     String[] paramtypes() default {"DEFAULT"};
     boolean optional() default false;
 
