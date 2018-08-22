@@ -17,6 +17,7 @@
   * No longer have to type the fully qualified class name
 * Allow Class types in locator Matchers
   * No longer have to type the fully qualified class name
+* Always print patch debug info on patching error
 
 #### v2.9.1 ####
 * Patch to always enable Custom mode

@@ -138,7 +138,15 @@ public class Patcher {
             if (Loader.DEBUG) {
                 p.debugPrint();
             }
-            p.doPatch();
+            try {
+                p.doPatch();
+            } catch (Exception e) {
+                if (!Loader.DEBUG) {
+                    System.out.println();
+                    p.debugPrint();
+                }
+                throw e;
+            }
             if (Loader.DEBUG) {
                 System.out.println();
             }
