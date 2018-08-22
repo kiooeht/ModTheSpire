@@ -10,14 +10,14 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface SpireInsertPatch {
-    Class<? extends SpireInsertLocator> locator() default DEFAULT.class;
+    Class<? extends SpireInsertLocator> locator() default NONE.class;
     int loc() default -1;
     int rloc() default -1;
     int[] locs() default {};
     int[] rlocs() default {};
     String[] localvars() default {};
 
-    final class DEFAULT extends SpireInsertLocator
+    final class NONE extends SpireInsertLocator
     {
         @Override
         public int[] Locate(CtBehavior ctMethodToPatch) throws Exception

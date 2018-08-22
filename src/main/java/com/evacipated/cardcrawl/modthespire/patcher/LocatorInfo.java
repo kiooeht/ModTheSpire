@@ -3,6 +3,8 @@ package com.evacipated.cardcrawl.modthespire.patcher;
 import com.evacipated.cardcrawl.modthespire.lib.SpireInsertLocator;
 import javassist.CtBehavior;
 
+import java.lang.reflect.Constructor;
+
 public class LocatorInfo {
 
     private CtBehavior ctMethodToPatch;
@@ -14,7 +16,9 @@ public class LocatorInfo {
     }
 
     public int[] findLines() throws Exception {
-        SpireInsertLocator obj = (SpireInsertLocator)finderClass.newInstance();
+        Constructor<?> ctor = finderClass.getDeclaredConstructor();
+        ctor.setAccessible(true);
+        SpireInsertLocator obj = (SpireInsertLocator)ctor.newInstance();
         return obj.Locate(ctMethodToPatch);
     }
 

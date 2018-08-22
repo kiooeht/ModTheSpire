@@ -261,20 +261,10 @@ public class Patcher {
                         continue;
                     } else if (m.getName().equals("Insert") || m.hasAnnotation(SpireInsertPatch.class)) {
                         SpireInsertPatch insertPatch = (SpireInsertPatch) m.getAnnotation(SpireInsertPatch.class);
-                        /*if (insertPatch == null) {
-                            throw new PatchingException(m, "Insert missing SpireInsertPatch info!");
-                        }*/
 
                         LocatorInfo locatorInfo = null;
-                        if (insertPatch != null && !insertPatch.locator().equals(SpireInsertPatch.DEFAULT.class)) {
+                        if (insertPatch != null && !insertPatch.locator().equals(SpireInsertPatch.NONE.class)) {
                             locatorInfo = new LocatorInfo(ctMethodToPatch, loader.loadClass(insertPatch.locator().getName()));
-                        } else if (insertPatch == null || insertPatch.locator().equals(SpireInsertPatch.DEFAULT.class)) {
-                            // Find the Locator
-                            for (CtClass nestedCtClass : ctPatchClass.getDeclaredClasses()) {
-                                if (nestedCtClass.getSuperclass().getName().equals(SpireInsertLocator.class.getName())) {
-                                    locatorInfo = new LocatorInfo(ctMethodToPatch, loader.loadClass(nestedCtClass.getName()));
-                                }
-                            }
                         }
 
                         if (!isInsertPatchValid(insertPatch, locatorInfo)) {
