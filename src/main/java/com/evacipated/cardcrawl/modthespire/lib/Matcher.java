@@ -58,11 +58,19 @@ public abstract class Matcher {
         private String className, methodName;
         private boolean checkMethodName;
 
+        public ConstructorCallMatcher(Class<?> clazz) {
+            this(clazz.getName());
+        }
+
         public ConstructorCallMatcher(String className) {
             super(Expectation.CONSTRUCTOR_CALL);
 
             this.className = className;
             this.checkMethodName = false;
+        }
+
+        public ConstructorCallMatcher(Class<?> clazz, String methodName) {
+            this(clazz.getName(), methodName);
         }
 
         public ConstructorCallMatcher(String className, String methodName) {
@@ -86,6 +94,10 @@ public abstract class Matcher {
 
         private String className, fieldName;
 
+        public FieldAccessMatcher(Class<?> clazz, String fieldName) {
+            this(clazz.getName(), fieldName);
+        }
+
         public FieldAccessMatcher(String className, String fieldName) {
             super(Expectation.FIELD_ACCESS);
 
@@ -106,6 +118,10 @@ public abstract class Matcher {
 
         private String exceptionType;
         private boolean isFinallyClause;
+
+        public CatchClauseMatcher(Class<?> exceptionType, boolean isFinallyClause) {
+            this(exceptionType.getName(), isFinallyClause);
+        }
 
         public CatchClauseMatcher(String exceptionType, boolean isFinallyClause) {
             super(Expectation.CATCH_CLAUSE);
@@ -135,6 +151,10 @@ public abstract class Matcher {
 
         private String comparedToType;
 
+        public InstanceOfMatcher(Class<?> clazz) {
+            this(clazz.getName());
+        }
+
         public InstanceOfMatcher(String comparedToType) {
             super(Expectation.INSTANCEOF);
 
@@ -161,6 +181,10 @@ public abstract class Matcher {
 
         private String className, methodName;
 
+        public MethodCallMatcher(Class<?> clazz, String methodName) {
+            this(clazz.getName(), methodName);
+        }
+
         public MethodCallMatcher(String className, String methodName) {
             super(Expectation.METHOD_CALL);
 
@@ -180,6 +204,10 @@ public abstract class Matcher {
     public static class NewArrayMatcher extends Matcher {
 
         private String className;
+
+        public NewArrayMatcher(Class<?> clazz) {
+            this(clazz.getName());
+        }
 
         public NewArrayMatcher(String className) {
             super(Expectation.ARRAY_CREATION);
@@ -206,6 +234,10 @@ public abstract class Matcher {
     public static class NewExprMatcher extends Matcher {
 
         private String className;
+
+        public NewExprMatcher(Class<?> clazz) {
+            this(clazz.getName());
+        }
 
         public NewExprMatcher(String className) {
             super(Expectation.NEW_EXPRESSION);

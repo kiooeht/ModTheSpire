@@ -15,6 +15,8 @@
   * If using a locator, Insert must specify locator with the `locator` parameter of SpireInsertPatch
 * Allow Class types to be used in SpirePatch
   * No longer have to type the fully qualified class name
+* Allow Class types in locator Matchers
+  * No longer have to type the fully qualified class name
 
 #### v2.9.1 ####
 * Patch to always enable Custom mode
