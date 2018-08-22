@@ -9,7 +9,7 @@ import com.megacrit.cardcrawl.screens.mainMenu.MenuButton;
 import java.util.Arrays;
 
 @SpirePatch(
-    cls="com.megacrit.cardcrawl.screens.mainMenu.MainMenuScreen",
+    clz=MainMenuScreen.class,
     method="setMainMenuButtons"
 )
 public class MainMenuItem

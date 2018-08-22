@@ -1,12 +1,13 @@
 package com.evacipated.cardcrawl.modthespire.patches;
 
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
+import com.megacrit.cardcrawl.screens.mainMenu.MenuPanelScreen;
 import javassist.CannotCompileException;
 import javassist.expr.ExprEditor;
 import javassist.expr.FieldAccess;
 
 @SpirePatch(
-    cls="com.megacrit.cardcrawl.screens.mainMenu.MenuPanelScreen",
+    clz=MenuPanelScreen.class,
     method="initializePanels"
 )
 public class AlwaysEnableCustomMode

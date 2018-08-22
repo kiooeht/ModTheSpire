@@ -10,14 +10,12 @@ import com.megacrit.cardcrawl.helpers.FontHelper;
 import com.megacrit.cardcrawl.screens.mainMenu.MainMenuScreen;
 
 @SpirePatch(
-        cls="com.megacrit.cardcrawl.screens.mainMenu.MainMenuScreen",
-        method="render"
+    clz=MainMenuScreen.class,
+    method="render"
 )
 public class MainMenuModList {
-    public static void Postfix(Object __obj_instance, Object sb)
+    public static void Postfix(MainMenuScreen __instance, Object sb)
     {
-        MainMenuScreen __instance = (MainMenuScreen)__obj_instance;
-
         if (__instance.screen != ModsScreen.Enum.MODS_LIST) {
             float tmpy = 30.0F;
             for (int i = Loader.MODINFOS.length - 1; i >= 0; --i) {

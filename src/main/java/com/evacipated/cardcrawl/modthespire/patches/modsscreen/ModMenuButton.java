@@ -14,7 +14,7 @@ public class ModMenuButton
     static ModsScreen modsScreen = null;
 
     @SpirePatch(
-        cls="com.megacrit.cardcrawl.screens.mainMenu.MenuButton",
+        clz=MenuButton.class,
         method="setLabel"
     )
     public static class SetLabel
@@ -34,7 +34,7 @@ public class ModMenuButton
     }
 
     @SpirePatch(
-        cls="com.megacrit.cardcrawl.screens.mainMenu.MenuButton",
+        clz=MenuButton.class,
         method="buttonEffect"
     )
     public static class ButtonEffect

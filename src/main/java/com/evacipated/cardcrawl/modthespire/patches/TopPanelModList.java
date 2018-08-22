@@ -9,7 +9,7 @@ import com.megacrit.cardcrawl.helpers.TipHelper;
 import com.megacrit.cardcrawl.ui.panels.TopPanel;
 
 @SpirePatch(
-    cls="com.megacrit.cardcrawl.ui.panels.TopPanel",
+    clz=TopPanel.class,
     method="updateTips"
 )
 public class TopPanelModList

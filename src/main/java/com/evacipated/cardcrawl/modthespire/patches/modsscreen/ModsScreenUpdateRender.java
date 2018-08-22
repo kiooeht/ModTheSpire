@@ -7,7 +7,7 @@ import com.megacrit.cardcrawl.screens.mainMenu.MainMenuScreen;
 public class ModsScreenUpdateRender
 {
     @SpirePatch(
-        cls="com.megacrit.cardcrawl.screens.mainMenu.MainMenuScreen",
+        clz=MainMenuScreen.class,
         method="update"
     )
     public static class Update
@@ -21,7 +21,7 @@ public class ModsScreenUpdateRender
     }
 
     @SpirePatch(
-        cls="com.megacrit.cardcrawl.screens.mainMenu.MainMenuScreen",
+        clz=MainMenuScreen.class,
         method="render"
     )
     public static class Render
