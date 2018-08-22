@@ -10,6 +10,10 @@
 * Add some functionality to SpireConfig
 * Add extra options for LineFinder
 * Fix in-game mod list tooltip position on other resolutions
+* Allow multiple Prefix, Postfix, and Insert patches to exist in a single patch class
+  * Use the SpirePrefixPatch, SpirePostfixPatch, and SpireInsertPatch annotations to mark methods
+* Allow Class types to be used in SpirePatch
+  * No longer have to type the fully qualified class name
 
 #### v2.9.1 ####
 * Patch to always enable Custom mode
