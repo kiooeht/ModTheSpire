@@ -15,7 +15,7 @@ import java.util.ArrayList;
 
 @SpirePatch(
     clz=CreditsScreen.class,
-    method="ctor"
+    method=SpirePatch.CONSTRUCTOR
 )
 public class CreditsModList {
     private static String[] MTS_AUTHORS = new String[] {

@@ -3,7 +3,6 @@ package com.evacipated.cardcrawl.modthespire;
 import com.evacipated.cardcrawl.modthespire.lib.*;
 import com.evacipated.cardcrawl.modthespire.patcher.*;
 import com.evacipated.cardcrawl.modthespire.patcher.InsertPatchInfo.LineNumberAndPatchType;
-
 import javassist.*;
 import org.scannotation.AnnotationDB;
 
@@ -228,7 +227,12 @@ public class Patcher {
                     }
                     if (patch.method().equals(SpirePatch.CONSTRUCTOR)) {
                         if (ctParamTypes == null) {
-                            ctMethodToPatch = ctClsToPatch.getDeclaredConstructors()[0];
+                            CtConstructor[] constructors = ctClsToPatch.getDeclaredConstructors();
+                            if (constructors.length == 1) {
+                                ctMethodToPatch = constructors[0];
+                            } else {
+                                throw new MissingParamTypesException(ctPatchClass, patch);
+                            }
                         } else {
                             ctMethodToPatch = ctClsToPatch.getDeclaredConstructor(ctParamTypes);
                         }
@@ -243,13 +247,30 @@ public class Patcher {
                         ctClasses.add(ctClsToPatch);
                         ctClasses.add(ctPatchClass);
                     } else {
-                        if (ctParamTypes == null)
-                            ctMethodToPatch = ctClsToPatch.getDeclaredMethod(patch.method());
-                        else
+                        if (ctParamTypes == null) {
+                            CtMethod[] methods = ctClsToPatch.getDeclaredMethods(patch.method());
+                            if (methods.length == 1) {
+                                ctMethodToPatch = methods[0];
+                            } else if (methods.length == 0) {
+                                throw new NoSuchMethodException(String.format("Patch %s:\nNo method named [%s] found on\nclass [%s]",
+                                    ctPatchClass.getName(),
+                                    patch.method(),
+                                    patchClassName(patch)
+                                ));
+                            } else {
+                                throw new MissingParamTypesException(ctPatchClass, patch);
+                            }
+                        } else {
                             ctMethodToPatch = ctClsToPatch.getDeclaredMethod(patch.method(), ctParamTypes);
+                        }
                     }
                 } catch (NotFoundException e) {
-                    System.err.println("ERROR: No method [" + patch.method() + "] found on class [" + patch.cls() + "]");
+                    throw new NoSuchMethodException(String.format("Patch %s:\nNo method [%s(%s)] found on\nclass [%s]",
+                        ctPatchClass.getName(),
+                        patch.method(),
+                        patchParamTypesString(patch),
+                        patchClassName(patch)
+                    ));
                 }
                 if (ctMethodToPatch == null)
                     continue;
@@ -347,13 +368,14 @@ public class Patcher {
         return pool.get(patch.paramtypes());
     }
 
-    private static CtClass[] patchParamTypez(ClassPool pool, SpirePatch patch) throws NotFoundException {
+    private static CtClass[] patchParamTypez(ClassPool pool, SpirePatch patch) throws NotFoundException
+    {
         if (patch.paramtypez().length == 1 && void.class.equals(patch.paramtypez()[0])) {
             return null;
         }
 
         String[] names = new String[patch.paramtypez().length];
-        for (int i=0; i<patch.paramtypez().length; ++i) {
+        for (int i = 0; i < patch.paramtypez().length; ++i) {
             names[i] = patch.paramtypez()[i].getName();
         }
         return pool.get(names);
@@ -367,5 +389,31 @@ public class Patcher {
             }
         }
         throw new NoSuchMethodException();
+    }
+
+    private static String patchParamTypesString(SpirePatch patch)
+    {
+        if (patch.paramtypez().length == 1 && void.class.equals(patch.paramtypez()[0])) {
+            String[] def = {"DEFAULT"};
+            if (Arrays.equals(patch.paramtypes(), def))
+                return "";
+
+            return String.join(", ", patch.paramtypes());
+        } else {
+            String[] tmp = new String[patch.paramtypez().length];
+            for (int i=0; i<patch.paramtypez().length; ++i) {
+                tmp[i] = patch.paramtypez()[i].getName();
+            }
+            return String.join(", ", tmp);
+        }
+    }
+
+    private static String patchClassName(SpirePatch patch)
+    {
+        if (patch.clz().equals(void.class)) {
+            return patch.cls();
+        } else {
+            return patch.clz().getName();
+        }
     }
 }

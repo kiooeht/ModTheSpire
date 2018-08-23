@@ -19,6 +19,8 @@
   * No longer have to type the fully qualified class name
 * Always print patch debug info on patching error
 * More understandable errors for some patching errors
+* Force defining paramtypes on overloaded methods
+* Stricter error when method to patch isn't found
 
 #### v2.9.1 ####
 * Patch to always enable Custom mode
