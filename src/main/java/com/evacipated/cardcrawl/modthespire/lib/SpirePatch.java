@@ -14,8 +14,6 @@ public @interface SpirePatch {
     boolean optional() default false;
 
     String CONSTRUCTOR = "<ctor>";
-    @Deprecated
-    String OLD_CONSTRUCTOR = "ctor";
     String STATICINITIALIZER = "<staticinit>";
     String CLASS = "<class>";
 }

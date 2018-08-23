@@ -226,7 +226,7 @@ public class Patcher {
                     if (ctParamTypes == null) {
                         ctParamTypes = patchParamTypes(pool, patch);
                     }
-                    if (patch.method().equals(SpirePatch.CONSTRUCTOR) || patch.method().equals(SpirePatch.OLD_CONSTRUCTOR)) {
+                    if (patch.method().equals(SpirePatch.CONSTRUCTOR)) {
                         if (ctParamTypes == null) {
                             ctMethodToPatch = ctClsToPatch.getDeclaredConstructors()[0];
                         } else {

@@ -13,12 +13,6 @@ public class SpireField<T>
 
     private Field field;
 
-    @Deprecated
-    public SpireField(T deprecated)
-    {
-        defaultValue = () -> deprecated;
-    }
-
     public SpireField(DefaultValue<T> defaultValue)
     {
         this.defaultValue = defaultValue;
