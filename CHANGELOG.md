@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.0.0 ####
 * More debug print info for SpireField
 * Fix SpireField to work with generic types
 * Fix SpireField to not use duplicate objects
