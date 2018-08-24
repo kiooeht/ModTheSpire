@@ -214,7 +214,7 @@ public class Patcher {
                     if (patch.optional()) {
                         continue;
                     }
-                    throw e;
+                    throw new PatchingException(ctPatchClass.getName(), e);
                 }
                 if (ctClsToPatch == null) {
                     throw new PatchingException(ctPatchClass, "No class defined to patch. Must define either clz or cls in @SpirePatch.");
