@@ -110,8 +110,8 @@ public class ModPanel extends JPanel
             tooltip.append("]");
             info.statusMsg = tooltip.toString();
         } else if (Loader.STS_VERSION != null && info.STS_Version != null && !Loader.STS_VERSION.equals(info.STS_Version)) {
-            checkBox.setBackground(lightYellow);
-            infoPanel.setBackground(lightYellow);
+            //checkBox.setBackground(lightYellow);
+            //infoPanel.setBackground(lightYellow);
             info.statusMsg = "This mod explicitly supports StS " + info.STS_Version + ".\n" +
                 "You are running StS " + Loader.STS_VERSION + ".\n" +
                 "You may encounter problems running it.";
