@@ -481,6 +481,12 @@ public class Loader {
             for (String dependency : modInfos[i].Dependencies) {
                 g.addEdge(findDependencyIndex(modInfos, dependency), i);
             }
+            for (String optionalDependency : modInfos[i].OptionalDependencies) {
+                int idx = findDependencyIndex(modInfos, optionalDependency);
+                if (idx != -1) {
+                    g.addEdge(idx, i);
+                }
+            }
         }
 
         g.tsortStable();

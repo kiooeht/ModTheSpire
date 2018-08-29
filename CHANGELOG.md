@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+* Option dependencies field in ModInfo
+  * Will be loaded before your mod, but aren't required
 
 #### v3.0.0 ####
 * More debug print info for SpireField

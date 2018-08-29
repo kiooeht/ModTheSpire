@@ -40,6 +40,8 @@ public class ModInfo implements Serializable
     public String STS_Version;
     @SerializedName("dependencies")
     public String[] Dependencies;
+    @SerializedName("optional_dependencies")
+    public String[] OptionalDependencies;
     @SerializedName("update_json")
     public String UpdateJSON;
 
@@ -51,6 +53,7 @@ public class ModInfo implements Serializable
         MTS_Version = new Version("0.0.0");
         STS_Version = null;
         Dependencies = new String[]{};
+        OptionalDependencies = new String[]{};
         UpdateJSON = null;
     }
 
