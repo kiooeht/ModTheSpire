@@ -2,15 +2,14 @@ package com.evacipated.cardcrawl.modthespire;
 
 import com.google.gson.*;
 import com.google.gson.annotations.SerializedName;
+import com.vdurmont.semver4j.Semver;
 
-import java.io.File;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Serializable;
+import java.io.*;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -27,7 +26,7 @@ public class ModInfo implements Serializable
     @SerializedName("name")
     public String Name;
     @SerializedName("version")
-    public Version Version;
+    public Semver ModVersion;
     @SerializedName("author_list")
     public String[] Authors;
     @SerializedName("credits")
@@ -35,7 +34,7 @@ public class ModInfo implements Serializable
     @SerializedName("description")
     public String Description;
     @SerializedName("mts_version")
-    public Version MTS_Version;
+    public Semver MTS_Version;
     @SerializedName("sts_version")
     public String STS_Version;
     @SerializedName("dependencies")
@@ -50,7 +49,7 @@ public class ModInfo implements Serializable
         Name = "";
         Authors = new String[]{};
         Description = "";
-        MTS_Version = new Version("0.0.0");
+        MTS_Version = ModInfo.safeVersion("0.0.0");
         STS_Version = null;
         Dependencies = new String[]{};
         OptionalDependencies = new String[]{};
@@ -80,7 +79,7 @@ public class ModInfo implements Serializable
     {
         Gson gson = new GsonBuilder()
             .excludeFieldsWithModifiers(Modifier.STATIC, Modifier.TRANSIENT)
-            .registerTypeAdapter(Version.class, new VersionDeserializer())
+            .registerTypeAdapter(Semver.class, new VersionDeserializer())
             .setDateFormat("MM-dd-yyyy")
             .create();
 
@@ -92,10 +91,11 @@ public class ModInfo implements Serializable
                 // Fallback to old info file
                 return ReadModInfoOld(mod_jar);
             }
-            ModInfo info = gson.fromJson(new InputStreamReader(in,"UTF-8"), ModInfo.class);
+            ModInfo info = gson.fromJson(new InputStreamReader(in, StandardCharsets.UTF_8), ModInfo.class);
             in.close();
             return info;
         } catch (Exception e) {
+            System.out.println(mod_jar);
             e.printStackTrace();
         } finally {
             if (loader != null) {
@@ -120,13 +120,13 @@ public class ModInfo implements Serializable
             Properties prop = new Properties();
             InputStream inProp = loader.getResourceAsStream("ModTheSpire.config");
             if (inProp != null) {
-                prop.load(new InputStreamReader(inProp,"UTF-8"));
+                prop.load(new InputStreamReader(inProp, StandardCharsets.UTF_8));
                 info.Name = prop.getProperty("name");
                 String author = prop.getProperty("author");
                 if (author != null && !author.isEmpty()) {
                     info.Authors = author.split(",");
                 }
-                info.MTS_Version = new Version(prop.getProperty("mts_version", "0.0.0"));
+                info.MTS_Version = ModInfo.safeVersion(prop.getProperty("mts_version", "0.0.0"));
                 info.Description = prop.getProperty("description");
 
                 info.STS_Version = prop.getProperty("sts_version");
@@ -140,12 +140,12 @@ public class ModInfo implements Serializable
         return info;
     }
 
-    private static class VersionDeserializer implements JsonDeserializer<Version>
+    private static class VersionDeserializer implements JsonDeserializer<Semver>
     {
         @Override
-        public Version deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException
+        public Semver deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException
         {
-            return new Version(jsonElement.getAsJsonPrimitive().getAsString());
+            return safeVersion(jsonElement.getAsJsonPrimitive().getAsString());
         }
     }
 
@@ -171,5 +171,40 @@ public class ModInfo implements Serializable
     public int hashCode()
     {
         return Objects.hash(ID, Name);
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws IOException
+    {
+        out.writeObject(ID);
+        out.writeObject(Name);
+        out.writeObject(ModVersion.toString());
+        out.writeObject(Authors);
+        out.writeObject(Credits);
+        out.writeObject(Description);
+        out.writeObject(MTS_Version.toString());
+        out.writeObject(STS_Version);
+        out.writeObject(Dependencies);
+        out.writeObject(OptionalDependencies);
+        out.writeObject(UpdateJSON);
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException
+    {
+        ID = (String) in.readObject();
+        Name = (String) in.readObject();
+        ModVersion = safeVersion((String) in.readObject());
+        Authors = (String[]) in.readObject();
+        Credits = (String) in.readObject();
+        Description = (String) in.readObject();
+        MTS_Version = safeVersion((String) in.readObject());
+        STS_Version = (String) in.readObject();
+        Dependencies = (String[]) in.readObject();
+        OptionalDependencies = (String[]) in.readObject();
+        UpdateJSON = (String) in.readObject();
+    }
+
+    public static Semver safeVersion(String verString)
+    {
+        return new Semver(verString, Semver.SemverType.NPM);
     }
 }

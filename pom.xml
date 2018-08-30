@@ -41,6 +41,11 @@
             <version>3.2.0</version>
         </dependency>
         <dependency>
+            <groupId>com.vdurmont</groupId>
+            <artifactId>semver4j</artifactId>
+            <version>2.2.0</version>
+        </dependency>
+        <dependency>
             <groupId>com.megacrit.cardcrawl</groupId>
             <artifactId>slaythespire</artifactId>
             <version>015</version>

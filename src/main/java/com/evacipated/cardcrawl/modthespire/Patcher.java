@@ -70,7 +70,7 @@ public class Patcher {
                 patchSetList.add(db.getAnnotationIndex().get(SpirePatch.class.getName()));
                 patchSetList.add(db.getAnnotationIndex().get(SpirePatches.class.getName()));
             } else {
-                String str = "ERROR: " + modInfos[i].Name + " requires ModTheSpire v" + modInfos[i].MTS_Version.get() + " or greater!";
+                String str = "ERROR: " + modInfos[i].Name + " requires ModTheSpire v" + modInfos[i].MTS_Version + " or greater!";
                 System.out.println(str);
                 JOptionPane.showMessageDialog(null, str);
             }

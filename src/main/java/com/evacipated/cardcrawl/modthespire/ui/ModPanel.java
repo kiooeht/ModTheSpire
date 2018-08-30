@@ -99,7 +99,7 @@ public class ModPanel extends JPanel
             checkBox.setEnabled(false);
             checkBox.setBackground(lightRed);
             infoPanel.setBackground(lightRed);
-            info.statusMsg = "This mod requires ModTheSpire v" + info.MTS_Version.get() + " or higher.";
+            info.statusMsg = "This mod requires ModTheSpire v" + info.MTS_Version + " or higher.";
         } else if (checkBox.isSelected() && !dependenciesChecked(info, parent)) {
             checkBox.setBackground(lightOrange);
             infoPanel.setBackground(lightOrange);
@@ -164,8 +164,8 @@ public class ModPanel extends JPanel
 
             version.setOpaque(true);
             version.setFont(version.getFont().deriveFont(10.0f).deriveFont(Font.PLAIN));
-            if (info.Version != null) {
-                version.setText(info.Version.get());
+            if (info.ModVersion != null) {
+                version.setText(info.ModVersion.toString());
             } else {
                 version.setText("missing version");
             }

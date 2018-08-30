@@ -2,6 +2,7 @@ package com.evacipated.cardcrawl.modthespire;
 
 import com.evacipated.cardcrawl.modthespire.lib.SpireConfig;
 import com.evacipated.cardcrawl.modthespire.ui.ModSelectWindow;
+import com.vdurmont.semver4j.Semver;
 import javassist.*;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.commons.EmptyVisitor;
@@ -25,7 +26,7 @@ public class Loader {
     public static boolean DEBUG = false;
     public static boolean OUT_JAR = false;
 
-    public static Version MTS_VERSION;
+    public static Semver MTS_VERSION;
     public static String MOD_DIR = "mods/";
     public static String STS_JAR = "desktop-1.0.jar";
     private static String MAC_STS_JAR = "SlayTheSpire.app/Contents/Resources/" + STS_JAR;
@@ -87,7 +88,7 @@ public class Loader {
         try {
             Properties properties = new Properties();
             properties.load(Loader.class.getResourceAsStream("/META-INF/version.prop"));
-            MTS_VERSION = new Version(properties.getProperty("version"));
+            MTS_VERSION = ModInfo.safeVersion(properties.getProperty("version"));
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(-1);
@@ -217,7 +218,7 @@ public class Loader {
                 Class<?> CardCrawlGame = loader.loadClass("com.megacrit.cardcrawl.core.CardCrawlGame");
                 Field VERSION_NUM = CardCrawlGame.getDeclaredField("VERSION_NUM");
                 String oldVersion = (String) VERSION_NUM.get(null);
-                VERSION_NUM.set(null, oldVersion + " [ModTheSpire " + MTS_VERSION.get() + "]");
+                VERSION_NUM.set(null, oldVersion + " [ModTheSpire " + MTS_VERSION + "]");
                 System.out.println("Done.");
                 System.out.println();
                 
@@ -411,19 +412,19 @@ public class Loader {
 
     private static void printMTSInfo()
     {
-        System.out.println("Version Info:");
+        System.out.println("ModVersion Info:");
         System.out.printf(" - Java version (%s)\n", System.getProperty("java.version"));
         System.out.printf(" - Slay the Spire (%s)", STS_VERSION);
         if (STS_BETA) {
             System.out.printf(" BETA");
         }
         System.out.printf("\n");
-        System.out.printf(" - ModTheSpire (%s)\n", MTS_VERSION.get());
+        System.out.printf(" - ModTheSpire (%s)\n", MTS_VERSION);
         System.out.printf("Mod list:\n");
         for (ModInfo info : MODINFOS) {
             System.out.printf(" - %s", info.getIDName());
-            if (info.Version != null) {
-                System.out.printf(" (%s)", info.Version.get());
+            if (info.ModVersion != null) {
+                System.out.printf(" (%s)", info.ModVersion);
             }
             System.out.println();
         }

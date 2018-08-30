@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
+import com.vdurmont.semver4j.Semver;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,7 +42,7 @@ public abstract class UpdateChecker
         }
     }
 
-    public boolean isNewerVersionAvailable(Version current) throws IOException
+    public boolean isNewerVersionAvailable(Semver current) throws IOException
     {
         obtainLatestRelease();
         return getLatestReleaseVersion().compareTo(current) > 0;
@@ -65,7 +66,7 @@ public abstract class UpdateChecker
         return getElement(key).getAsString();
     }
 
-    public abstract Version getLatestReleaseVersion() throws IOException;
+    public abstract Semver getLatestReleaseVersion() throws IOException;
 
     public abstract URL getLatestReleaseURL() throws IOException;
 

@@ -343,7 +343,7 @@ public class ModsScreen
         if (selectedMod >= 0) {
             ModInfo info = Loader.MODINFOS[selectedMod];
             String text = info.Name;
-            text += " NL Version: " + (info.Version != null ? info.Version.get() : "<MISSING>");
+            text += " NL ModVersion: " + (info.ModVersion != null ? info.ModVersion : "<MISSING>");
             text += " NL Mod ID: " + (info.ID != null ? info.ID : "<MISSING>");
             text += " NL Author" + (info.Authors.length > 1 ? "s" : "") + ": " + StringUtils.join(info.Authors, ", ");
             if (info.Credits != null && !info.Credits.isEmpty()) {

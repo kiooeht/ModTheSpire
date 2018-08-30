@@ -1,6 +1,7 @@
 package com.evacipated.cardcrawl.modthespire;
 
 import com.google.gson.*;
+import com.vdurmont.semver4j.Semver;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -54,9 +55,9 @@ public class GithubUpdateChecker extends UpdateChecker
     }
 
     @Override
-    public Version getLatestReleaseVersion() throws IOException
+    public Semver getLatestReleaseVersion() throws IOException
     {
-        return new Version(getElementAsString("tag_name"));
+        return ModInfo.safeVersion(getElementAsString("tag_name"));
     }
 
     @Override

@@ -193,7 +193,7 @@ public class ModSelectWindow extends JFrame
 
     private void initUI()
     {
-        setTitle("ModTheSpire " + Loader.MTS_VERSION.get());
+        setTitle("ModTheSpire " + Loader.MTS_VERSION);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setResizable(true);
 
@@ -341,15 +341,15 @@ public class ModSelectWindow extends JFrame
         infoPanel.add(authors, c);
 
         c.gridy = 1;
-        modVersion = makeInfoLabelField("Version", " ");
+        modVersion = makeInfoLabelField("ModVersion", " ");
         infoPanel.add(modVersion, c);
 
         c.gridy = 2;
-        mtsVersion = makeInfoLabelField("ModTheSpire Version", " ");
+        mtsVersion = makeInfoLabelField("ModTheSpire ModVersion", " ");
         infoPanel.add(mtsVersion, c);
 
         c.gridy = 3;
-        stsVersion = makeInfoLabelField("Slay the Spire Version", " ");
+        stsVersion = makeInfoLabelField("Slay the Spire ModVersion", " ");
         infoPanel.add(stsVersion, c);
 
         c.gridy = 4;
@@ -577,13 +577,13 @@ public class ModSelectWindow extends JFrame
 
         name.setTitle(info.Name);
         authors.setText(String.join(", ", info.Authors));
-        if (info.Version != null) {
-            modVersion.setText(info.Version.get());
+        if (info.ModVersion != null) {
+            modVersion.setText(info.ModVersion.toString());
         } else {
             modVersion.setText(" ");
         }
         if (info.MTS_Version != null) {
-            mtsVersion.setText(info.MTS_Version.get() + "+");
+            mtsVersion.setText(info.MTS_Version + "+");
         } else {
             mtsVersion.setText(" ");
         }
@@ -664,7 +664,7 @@ public class ModSelectWindow extends JFrame
                 }
                 try {
                     UpdateChecker updateChecker = new GithubUpdateChecker(info[i].UpdateJSON);
-                    if (updateChecker.isNewerVersionAvailable(info[i].Version)) {
+                    if (updateChecker.isNewerVersionAvailable(info[i].ModVersion)) {
                         anyNeedUpdates = true;
                         MODUPDATES.add(new ModUpdate(info[i], updateChecker.getLatestReleaseURL(), updateChecker.getLatestDownloadURL()));
                         setModUpdateBanner(info[i]);
