@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.1.0 ####
 * Option dependencies field in ModInfo
   * Will be loaded before your mod, but aren't required
 * Use SemVer library for version numbers
