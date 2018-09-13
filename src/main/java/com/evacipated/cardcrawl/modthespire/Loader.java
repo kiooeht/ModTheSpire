@@ -193,6 +193,10 @@ public class Loader {
                     ctClasses.put(countSuperClasses(cls) + cls.getName(), cls);
                 }
 
+                for (CtClass cls : Patcher.patchOverrides(tmpPatchingLoader, pool, MODINFOS)) {
+                    ctClasses.put(countSuperClasses(cls) + cls.getName(), cls);
+                }
+
                 Patcher.finalizePatches(tmpPatchingLoader);
                 Patcher.compilePatches(loader, ctClasses);
 

@@ -3,7 +3,10 @@ package com.evacipated.cardcrawl.modthespire;
 import com.evacipated.cardcrawl.modthespire.lib.*;
 import com.evacipated.cardcrawl.modthespire.patcher.*;
 import com.evacipated.cardcrawl.modthespire.patcher.InsertPatchInfo.LineNumberAndPatchType;
+import com.evacipated.cardcrawl.modthespire.patcher.javassist.MyCodeConverter;
 import javassist.*;
+import javassist.expr.ExprEditor;
+import javassist.expr.MethodCall;
 import org.scannotation.AnnotationDB;
 
 import javax.swing.*;
@@ -415,5 +418,127 @@ public class Patcher {
         } else {
             return patch.clz().getName();
         }
+    }
+
+    static HashSet<CtClass> patchOverrides(ClassLoader loader, ClassPool pool, ModInfo[] modInfos) throws PatchingException
+    {
+        System.out.println("Patching Overrides...");
+
+        HashSet<CtClass> ctClasses = new HashSet<>();
+        for (AnnotationDB db : annotationDBMap.values()) {
+            Set<String> classNames = db.getAnnotationIndex().get(SpireOverride.class.getName());
+            if (classNames != null) {
+                for (String className : classNames) {
+                    if (Loader.DEBUG) {
+                        System.out.println("Class: [" + className + "]");
+                    }
+                    try {
+                        CtClass cc = pool.get(className);
+
+                        for (CtMethod ctMethod : cc.getDeclaredMethods()) {
+                            if (ctMethod.hasAnnotation(SpireOverride.class)) {
+                                CtMethod superMethod = findSuperMethod(ctMethod);
+                                if (superMethod == null) {
+                                    throw new PatchingException(ctMethod, "Has no matching method signature in any superclass");
+                                }
+
+                                if (Loader.DEBUG) {
+                                    System.out.println(" - Overriding [" + superMethod.getLongName() + "]");
+                                    System.out.println("      Fixing invocations in superclass " + superMethod.getDeclaringClass().getSimpleName() + "...");
+                                }
+
+                                MyCodeConverter codeConverter = new MyCodeConverter();
+                                codeConverter.redirectSpecialMethodCall(superMethod);
+                                superMethod.getDeclaringClass().instrument(codeConverter);
+
+                                if (Loader.DEBUG) {
+                                    System.out.println("      Replacing SpireSuper calls...");
+                                }
+                                ExprEditor exprEditor = new ExprEditor() {
+                                    @Override
+                                    public void edit(MethodCall m) throws CannotCompileException
+                                    {
+                                        try {
+                                            if (m.getClassName().equals(SpireSuper.class.getName())) {
+                                                if (Loader.DEBUG) {
+                                                    System.out.println("        @ " + m.getLineNumber());
+                                                }
+                                                String src = " { ";
+                                                if (!ctMethod.getReturnType().equals(CtClass.voidType)) {
+                                                    src += "$_ = ";
+                                                }
+                                                src += "super." + ctMethod.getName() + "(";
+                                                for (int i=0; i<ctMethod.getParameterTypes().length; ++i) {
+                                                    if (i > 0) {
+                                                        src += ", ";
+                                                    }
+                                                    src += makeObjectCastedString(ctMethod.getParameterTypes()[i], "$1[" + i + "]");
+                                                }
+                                                src += ");\n";
+                                                if (ctMethod.getReturnType().equals(CtClass.voidType)) {
+                                                    src += "$_ = null;";
+                                                }
+                                                src += " }";
+                                                if (Loader.DEBUG) {
+                                                    System.out.println(src);
+                                                }
+                                                m.replace(src);
+                                            }
+                                        } catch (NotFoundException e) {
+                                            throw new CannotCompileException(e);
+                                        }
+                                    }
+                                };
+                                ctMethod.instrument(exprEditor);
+                                ctClasses.add(superMethod.getDeclaringClass());
+                                ctClasses.add(ctMethod.getDeclaringClass());
+                            }
+                        }
+                    } catch (NotFoundException | CannotCompileException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        }
+
+        return ctClasses;
+    }
+
+    private static CtMethod findSuperMethod(CtMethod ctMethod) throws NotFoundException
+    {
+        CtClass superclass = ctMethod.getDeclaringClass().getSuperclass();
+
+        while (superclass != null) {
+            try {
+                CtMethod superMethod = superclass.getDeclaredMethod(ctMethod.getName(), ctMethod.getParameterTypes());
+                if (ctMethod.getReturnType().equals(superMethod.getReturnType())) {
+                    return superMethod;
+                }
+            } catch (NotFoundException ignored) {
+            }
+
+            superclass = superclass.getSuperclass();
+        }
+
+        return null;
+    }
+
+    private static String makeObjectCastedString(CtClass ctType, String value)
+    {
+        String typename = ctType.getName();
+        String extra = "";
+        if (ctType.isPrimitive()) {
+            if (ctType.equals(CtPrimitiveType.intType)) {
+                typename = "Integer";
+            } else if (ctType.equals(CtPrimitiveType.charType)) {
+                typename = "Character";
+            } else {
+                typename = typename.substring(0, 1).toUpperCase() + typename.substring(1);
+            }
+
+            extra = "." + ctType.getName() + "Value()";
+        }
+
+        return "((" + typename + ") " + value + ")" + extra;
     }
 }

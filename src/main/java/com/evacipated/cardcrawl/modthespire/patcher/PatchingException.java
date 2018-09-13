@@ -27,7 +27,7 @@ public class PatchingException extends Exception
 
     public PatchingException(CtBehavior m, String msg)
     {
-        super(m.getDeclaringClass().getName() + "." + m.getName() + ": " + msg);
+        super(m.getLongName() + ": " + msg);
     }
 
 }
