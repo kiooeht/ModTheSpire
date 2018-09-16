@@ -56,7 +56,7 @@ public class Loader {
 
     public static ClassPool getClassPool()
     {
-        return new ClassPool(POOL);
+        return POOL;
     }
 
     public static void main(String[] args) {
@@ -178,7 +178,6 @@ public class Loader {
                 
                 System.out.println("Begin patching...");
                 ClassPool pool = new MTSClassPool(tmpPatchingLoader);
-                POOL = pool;
                 pool.insertClassPath(new LoaderClassPath(tmpPatchingLoader));
                 tmpPatchingLoader.addStreamToClassPool(pool); // Inserts infront of above path
                 SortedMap<String, CtClass> ctClasses = new TreeMap<>();
@@ -199,6 +198,13 @@ public class Loader {
 
                 Patcher.finalizePatches(tmpPatchingLoader);
                 Patcher.compilePatches(loader, ctClasses);
+
+                ctClasses.clear();
+                tmpPatchingLoader.close();
+
+                POOL = new MTSClassPool(loader);
+                POOL.insertClassPath(new LoaderClassPath(loader));
+                loader.addStreamToClassPool(POOL);
 
                 System.out.printf("Patching enums...");
                 Patcher.patchEnums(loader, Loader.class.getResource(Loader.COREPATCHES_JAR));

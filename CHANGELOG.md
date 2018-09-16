@@ -1,6 +1,7 @@
 ## Changelog ##
 #### dev ####
 * SpireOverride: Allow overriding private methods from superclasses
+* Cleanup after the patching process
 
 #### v3.1.0 ####
 * Option dependencies field in ModInfo
