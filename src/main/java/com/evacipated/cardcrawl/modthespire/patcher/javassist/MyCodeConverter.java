@@ -1,10 +1,8 @@
 package com.evacipated.cardcrawl.modthespire.patcher.javassist;
 
+import com.evacipated.cardcrawl.modthespire.patcher.javassist.convert.TransformInsertGoto;
 import com.evacipated.cardcrawl.modthespire.patcher.javassist.convert.TransformSpecialCallVirtual;
-import javassist.CannotCompileException;
-import javassist.CodeConverter;
-import javassist.CtMethod;
-import javassist.Modifier;
+import javassist.*;
 
 public class MyCodeConverter extends CodeConverter
 {
@@ -20,5 +18,10 @@ public class MyCodeConverter extends CodeConverter
         origMethod.setModifiers(Modifier.setProtected(origMethod.getModifiers()));
 
         transformers = new TransformSpecialCallVirtual(transformers, origMethod);
+    }
+
+    public void insertGoto(int fromLoc, int toLoc)
+    {
+        transformers = new TransformInsertGoto(transformers, fromLoc, toLoc);
     }
 }

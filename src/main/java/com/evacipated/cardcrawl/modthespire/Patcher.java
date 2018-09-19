@@ -335,6 +335,9 @@ public class Patcher {
                         p = new ReplacePatchInfo(ctMethodToPatch, m);
                     } else if (m.getName().equals("Raw")) {
                         p = new RawPatchInfo(ctMethodToPatch, findRawMethod(loader.loadClass(cls_name), m.getName()));
+                    } else if (m.hasAnnotation(SpireNOP.class)) {
+                        SpireNOP spireNOP = (SpireNOP) m.getAnnotation(SpireNOP.class);
+                        p = new NOPPatchInfo(ctMethodToPatch, m, spireNOP);
                     }
 
                     if (p != null) {
