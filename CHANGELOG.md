@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.2.0 ####
 * SpireOverride: Allow overriding private methods from superclasses
 * Cleanup after the patching process
 
