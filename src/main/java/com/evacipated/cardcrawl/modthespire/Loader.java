@@ -473,8 +473,10 @@ public class Loader {
     private static int findDependencyIndex(ModInfo[] modInfos, String dependencyID)
     {
         for (int i=0; i<modInfos.length; ++i) {
-            if (modInfos[i].ID.equals(dependencyID)) {
-                return i;
+            if (modInfos[i] != null && modInfos[i].ID != null) {
+                if (modInfos[i].ID.equals(dependencyID)) {
+                    return i;
+                }
             }
         }
         return -1;
