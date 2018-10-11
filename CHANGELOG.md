@@ -1,6 +1,7 @@
 ## Changelog ##
 #### dev ####
 * Fix crash if a mod doesn't have an ID
+* Copy annotations from SpireFields
 
 #### v3.2.0 ####
 * SpireOverride: Allow overriding private methods from superclasses

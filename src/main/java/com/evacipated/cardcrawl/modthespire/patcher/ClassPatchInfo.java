@@ -4,7 +4,12 @@ import com.evacipated.cardcrawl.modthespire.Loader;
 import com.evacipated.cardcrawl.modthespire.lib.SpireField;
 import com.evacipated.cardcrawl.modthespire.lib.StaticSpireField;
 import javassist.*;
+import javassist.bytecode.AnnotationsAttribute;
+import javassist.bytecode.ConstPool;
+import javassist.bytecode.annotation.Annotation;
+import javassist.bytecode.annotation.AnnotationImpl;
 
+import java.lang.reflect.Proxy;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -71,6 +76,27 @@ public class ClassPatchInfo extends PatchInfo
                         System.out.println(" - Adding Field: " + str);
                     }
                     CtField new_f = CtField.make(str, ctClassToPatch);
+
+                    // Copy annotations
+                    ConstPool constPool = ctClassToPatch.getClassFile().getConstPool();
+                    AnnotationsAttribute attr = new AnnotationsAttribute(constPool, AnnotationsAttribute.visibleTag);
+                    for (Object a : f.getAvailableAnnotations()) {
+                        if (Proxy.getInvocationHandler(a) instanceof AnnotationImpl) {
+                            if (Loader.DEBUG) {
+                                System.out.println("   - Copying annotation: " + a);
+                            }
+                            AnnotationImpl impl = (AnnotationImpl) Proxy.getInvocationHandler(a);
+                            Annotation annotation = new Annotation(impl.getTypeName(), constPool);
+                            if (impl.getAnnotation().getMemberNames() != null) {
+                                for (Object memberName : impl.getAnnotation().getMemberNames()) {
+                                    annotation.addMemberValue((String) memberName, impl.getAnnotation().getMemberValue((String) memberName));
+                                }
+                            }
+                            attr.addAnnotation(annotation);
+                        }
+                    }
+                    new_f.getFieldInfo().addAttribute(attr);
+
                     String expr = String.format("(%s) %s.%s.getDefaultValue()", fieldType, ctPatchClass.getName(), f.getName());
                     ctClassToPatch.addField(new_f, CtField.Initializer.byExpr(expr));
 
