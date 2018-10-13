@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.3.0 ####
 * Fix crash if a mod doesn't have an ID
 * Copy annotations from SpireFields
 
