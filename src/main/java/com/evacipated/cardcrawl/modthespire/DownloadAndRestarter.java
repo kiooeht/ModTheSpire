@@ -8,6 +8,7 @@ import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class DownloadAndRestarter
 {
@@ -36,6 +37,7 @@ public class DownloadAndRestarter
         command.add(javaBin);
         command.add("-jar");
         command.add(currentJar.getPath());
+        command.addAll(Arrays.asList(Loader.ARGS));
 
         final ProcessBuilder builder = new ProcessBuilder(command);
         builder.start();

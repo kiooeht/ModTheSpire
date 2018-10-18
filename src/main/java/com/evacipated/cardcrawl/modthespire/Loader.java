@@ -41,7 +41,7 @@ public class Loader {
     public static boolean STS_BETA = false;
     public static boolean allowBeta = false;
 
-    private static Object ARGS;
+    static String[] ARGS;
     private static ModSelectWindow ex;
 
     public static boolean isModLoaded(String modID)

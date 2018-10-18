@@ -1,6 +1,7 @@
 ## Changelog ##
 #### dev ####
 * Fix in-game mods menu not scrolling if you have a lot of mods
+* Download and restart now uses same arguments as first launch
 
 #### v3.3.0 ####
 * Fix crash if a mod doesn't have an ID
