@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Fix in-game mods menu not scrolling if you have a lot of mods
 
 #### v3.3.0 ####
 * Fix crash if a mod doesn't have an ID

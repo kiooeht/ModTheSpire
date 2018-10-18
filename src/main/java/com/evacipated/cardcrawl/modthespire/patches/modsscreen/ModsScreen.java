@@ -104,8 +104,8 @@ public class ModsScreen
 
         selectedMod = -1;
 
-        scrollUpperBound = targetY;
-        scrollLowerBound = Settings.HEIGHT - 600.0F * Settings.scale;
+        scrollUpperBound = targetY + Math.max(0, Loader.MODINFOS.length - 15) * 45.0f * Settings.scale;
+        scrollLowerBound = targetY;
     }
 
     public void update()
