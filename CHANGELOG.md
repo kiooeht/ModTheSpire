@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.4.0 ####
 * Fix in-game mods menu not scrolling if you have a lot of mods
 * Download and restart now uses same arguments as first launch
 
