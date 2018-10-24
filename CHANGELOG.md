@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Cache updater  to avoid hitting the rate limit
 
 #### v3.4.0 ####
 * Fix in-game mods menu not scrolling if you have a lot of mods

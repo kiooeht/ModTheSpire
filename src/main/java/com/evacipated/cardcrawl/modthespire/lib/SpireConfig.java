@@ -5,10 +5,31 @@ import java.util.Properties;
 
 public class SpireConfig
 {
-    private final static String EXTENSION = ".properties";
+    private final static String EXTENSION = "properties";
     private Properties properties;
     private File file;
     private String filePath;
+
+    public static String makeFilePath(String modName, String fileName)
+    {
+        return makeFilePath(modName, fileName, EXTENSION);
+    }
+
+    public static String makeFilePath(String modName, String fileName, String ext)
+    {
+        String dirPath;
+        if (modName == null) {
+            dirPath = ConfigUtils.CONFIG_DIR + File.separator;
+        } else {
+            dirPath = ConfigUtils.CONFIG_DIR + File.separator
+                + modName + File.separator;
+        }
+        String filePath = dirPath + fileName + "." + ext;
+        File dir = new File(dirPath);
+        dir.mkdirs();
+
+        return filePath;
+    }
 
     public SpireConfig(String modName, String fileName) throws IOException
     {
@@ -18,16 +39,8 @@ public class SpireConfig
     public SpireConfig(String modName, String fileName, Properties defaultProperties) throws IOException
     {
         properties = new Properties(defaultProperties);
-        String dirPath;
-        if (modName == null) {
-            dirPath = ConfigUtils.CONFIG_DIR + File.separator;
-        } else {
-            dirPath = ConfigUtils.CONFIG_DIR + File.separator
-                + modName + File.separator;
-        }
-        filePath = dirPath + fileName + EXTENSION;
-        File dir = new File(dirPath);
-        dir.mkdirs();
+
+        filePath = makeFilePath(modName, fileName);
 
         file = new File(filePath);
         file.createNewFile();
