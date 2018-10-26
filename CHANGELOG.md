@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.5.0 ####
 * Cache updater  to avoid hitting the rate limit
 
 #### v3.4.0 ####
