@@ -12,6 +12,7 @@ public @interface SpirePatch {
     Class<?>[] paramtypez() default {void.class};
     String[] paramtypes() default {"DEFAULT"};
     boolean optional() default false;
+    boolean condition() default true;
 
     String CONSTRUCTOR = "<ctor>";
     String STATICINITIALIZER = "<staticinit>";
