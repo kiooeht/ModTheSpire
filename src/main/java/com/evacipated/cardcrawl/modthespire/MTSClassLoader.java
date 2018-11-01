@@ -19,13 +19,17 @@ import java.util.jar.JarInputStream;
 // Parent classloader is us and will find our fake DesktopLauncher rather than the real game
 // Also loads from an InputStream, in our case the corepatches.jar resource
 // Otherwise acts like URLClassLoader
-public class MTSClassLoader extends URLClassLoader {
+public class MTSClassLoader extends URLClassLoader
+{
+    private ClassLoader parent;
     private Map<String, byte[]> classes = new HashMap<>();
     private Map<String, Class<?>> definedClasses = new HashMap<>();
 
-    public MTSClassLoader(InputStream stream, URL[] urls, ClassLoader parent) throws IOException {
-        super(urls, parent);
+    public MTSClassLoader(InputStream stream, URL[] urls, ClassLoader parent) throws IOException
+    {
+        super(urls, null);
 
+        this.parent = parent;
         JarInputStream is = new JarInputStream(stream);
         JarEntry entry = is.getNextJarEntry();
         while (entry != null) {
@@ -38,7 +42,8 @@ public class MTSClassLoader extends URLClassLoader {
         }
     }
 
-    private byte[] bufferStream(InputStream is) throws IOException {
+    private byte[] bufferStream(InputStream is) throws IOException
+    {
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         int nextValue = is.read();
         while (nextValue != -1) {
@@ -49,10 +54,10 @@ public class MTSClassLoader extends URLClassLoader {
     }
 
     @Override
-    public Class<?> loadClass(String name) throws ClassNotFoundException {
+    public Class<?> loadClass(String name) throws ClassNotFoundException
+    {
         if (name.equals("com.megacrit.cardcrawl.desktop.DesktopLauncher")) {
-            @SuppressWarnings("rawtypes")
-            Class c = findLoadedClass(name);
+            Class<?> c = findLoadedClass(name);
             if (c == null) {
                 c = findClass(name);
                 if (c == null) {
@@ -61,16 +66,17 @@ public class MTSClassLoader extends URLClassLoader {
             }
             return c;
         } else {
-            //try {
+            try {
+                return parent.loadClass(name);
+            } catch (ClassNotFoundException e) {
                 return super.loadClass(name);
-            //} catch (ClassNotFoundException e) {
-            //    return findClass(name);
-            //}
+            }
         }
     }
 
     @Override
-    public Class<?> findClass(String name) throws ClassNotFoundException {
+    public Class<?> findClass(String name) throws ClassNotFoundException
+    {
         Class<?> ret;
         try {
             ret = super.findClass(name);
@@ -87,7 +93,8 @@ public class MTSClassLoader extends URLClassLoader {
         return ret;
     }
 
-    public void addStreamToClassPool(ClassPool pool) {
+    public void addStreamToClassPool(ClassPool pool)
+    {
         for (Map.Entry<String, byte[]> entry : classes.entrySet()) {
             pool.insertClassPath(new ByteArrayClassPath(entry.getKey(), entry.getValue()));
         }

@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Fix ClassLoader to retrieve correct DesktopLauncher when invoked via ClassPool
 
 #### v3.5.0 ####
 * Cache updater  to avoid hitting the rate limit
