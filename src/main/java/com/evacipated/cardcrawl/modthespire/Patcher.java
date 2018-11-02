@@ -28,10 +28,16 @@ public class Patcher {
             if (annotationDBMap.containsKey(info.jarURL)) {
                 Set<String> initializers = annotationDBMap.get(info.jarURL).getAnnotationIndex().get(SpireInitializer.class.getName());
                 if (initializers != null) {
+                    System.out.println(" - " + info.Name);
                     for (String initializer : initializers) {
+                        System.out.println("   - " + initializer);
                         try {
+                            long startTime = System.nanoTime();
                             Method init = loader.loadClass(initializer).getDeclaredMethod("initialize");
                             init.invoke(null);
+                            long endTime = System.nanoTime();
+                            long duration = endTime - startTime;
+                            System.out.println("   - " + (duration / 1000000) + "ms");
                         } catch (NoSuchMethodException e) {
                             System.out.println("WARNING: Unable to find method initialize() on class marked @SpireInitializer: " + initializer);
                         }

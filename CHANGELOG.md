@@ -1,6 +1,7 @@
 ## Changelog ##
 #### dev ####
 * Fix ClassLoader to retrieve correct DesktopLauncher when invoked via ClassPool
+* Time mod initializers
 
 #### v3.5.0 ####
 * Cache updater  to avoid hitting the rate limit
