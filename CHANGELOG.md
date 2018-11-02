@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.6.0 ####
 * Fix ClassLoader to retrieve correct DesktopLauncher when invoked via ClassPool
 * Time mod initializers
 
