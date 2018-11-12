@@ -10,12 +10,16 @@ import javassist.expr.MethodCall;
 import org.scannotation.AnnotationDB;
 
 import javax.swing.*;
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.file.*;
 import java.util.*;
+import java.util.stream.Stream;
 
 public class Patcher {
     public static Map<URL, AnnotationDB> annotationDBMap = new HashMap<>();
@@ -170,10 +174,12 @@ public class Patcher {
             System.out.println();
         }
         for (Map.Entry<String, CtClass> cls : ctClasses.entrySet()) {
-            if (Loader.DEBUG) {
-                System.out.println("  " + cls.getValue().getName());
+            if (!cls.getValue().isInterface()) {
+                if (Loader.DEBUG) {
+                    System.out.println("  " + cls.getValue().getName());
+                }
+                cls.getValue().toClass(loader, null);
             }
-            cls.getValue().toClass(loader, null);
         }
         System.out.println("Done.");
     }
@@ -546,5 +552,80 @@ public class Patcher {
         }
 
         return "((" + typename + ") " + value + ")" + extra;
+    }
+
+    public static SortedMap<String, CtClass> patchEverythingPublic(ClassPool realPool, SortedMap<String, CtClass> ctClasses)
+        throws IOException, NotFoundException, CannotCompileException
+    {
+        List<URL> urls = new ArrayList<>();
+        urls.add(new File(Loader.STS_JAR).toURI().toURL());
+
+        URLClassLoader loader = new URLClassLoader(urls.toArray(new URL[0]));
+
+        ClassPool pool = new ClassPool() {
+            @Override
+            public ClassLoader getClassLoader()
+            {
+                return loader;
+            }
+        };
+        pool.insertClassPath(Loader.STS_JAR);
+        pool.insertClassPath(new LoaderClassPath(Loader.class.getClassLoader()));
+
+        System.out.printf("Making it all public...");
+        FileSystem fs = FileSystems.newFileSystem(Paths.get(Loader.STS_JAR), null);
+        PathMatcher classMatcher = fs.getPathMatcher("glob:**.class");
+        Stream<Path> walk = Files.walk(fs.getPath("/com/megacrit/cardcrawl"));
+        for (Iterator<Path> it = walk.iterator(); it.hasNext();) {
+            Path path = it.next();
+            if (classMatcher.matches(path)) {
+                CtClass ctClass;
+                if (realPool != null) {
+                    String className = pool.makeClass(Files.newInputStream(path)).getName();
+                    ctClass = realPool.get(className);
+                } else {
+                    ctClass = pool.makeClass(Files.newInputStream(path));
+                }
+                // Make the class public
+                ctClass.setModifiers(Modifier.setPublic(ctClass.getModifiers()));
+                // Make all its fields public
+                for (CtField ctField : ctClass.getDeclaredFields()) {
+                    if (!Modifier.isPublic(ctField.getModifiers())) {
+                        ctField.setModifiers(Modifier.setPublic(ctField.getModifiers()));
+                    }
+                }
+                // Deal with private/protected methods
+                // We can't just make them public as that causes errors for people overriding them (@Overrider/@SpireOverride)
+                for (CtMethod ctMethod : ctClass.getDeclaredMethods()) {
+                    if (!Modifier.isPublic(ctMethod.getModifiers())) {
+                        if (Modifier.isStatic(ctMethod.getModifiers())) {
+                            // Make static private/protected methods public
+                            ctMethod.setModifiers(Modifier.setPublic(ctMethod.getModifiers()));
+                        } else {
+                            // Make public copies of non-static methods
+                            // public copy is named "methodName_public"
+                            CtMethod pubMethod = CtNewMethod.make(
+                                Modifier.setPublic(ctMethod.getModifiers()),
+                                ctMethod.getReturnType(),
+                                ctMethod.getName() + "_public",
+                                ctMethod.getParameterTypes(),
+                                ctMethod.getExceptionTypes(),
+                                "{ return " + ctMethod.getName() + "($$); }",
+                                ctClass
+                            );
+                            ctClass.addMethod(pubMethod);
+                        }
+                    }
+                }
+                ctClasses.put(Loader.countSuperClasses(ctClass) + ctClass.getName(), ctClass);
+            }
+        }
+        fs.close();
+
+        loader.close();
+
+        System.out.println("Done.");
+
+        return ctClasses;
     }
 }

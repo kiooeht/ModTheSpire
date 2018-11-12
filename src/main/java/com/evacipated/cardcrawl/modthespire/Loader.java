@@ -135,6 +135,15 @@ public class Loader
             }
         }
 
+        if (Arrays.asList(args).contains("--public-desktop")) {
+            try {
+                OutJar.dumpAlteredDesktopJar();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return;
+        }
+
         findGameVersion();
 
         EventQueue.invokeLater(() -> {
@@ -203,6 +212,7 @@ public class Loader
                 }
 
                 Patcher.finalizePatches(tmpPatchingLoader);
+                ctClasses = Patcher.patchEverythingPublic(pool, ctClasses);
                 Patcher.compilePatches(loader, ctClasses);
 
                 ctClasses.clear();
@@ -443,7 +453,7 @@ public class Loader
         }
     }
 
-    private static int countSuperClasses(CtClass cls)
+    static int countSuperClasses(CtClass cls)
     {
         String name = cls.getName();
         int count = 0;

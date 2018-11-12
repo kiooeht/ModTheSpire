@@ -4,16 +4,18 @@ import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.NotFoundException;
+import org.apache.logging.log4j.core.util.FileUtils;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Vector;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
+import java.util.jar.Manifest;
 
 class OutJar
 {
@@ -115,5 +117,66 @@ class OutJar
         }
         JarHandler handler = new JarHandler();
         handler.writeOut(jarPath, files);
+    }
+
+    public static void dumpAlteredDesktopJar()
+        throws NotFoundException, IOException, CannotCompileException
+    {
+        SortedMap<String, CtClass> ctClasses = new TreeMap<>();
+
+        ctClasses = Patcher.patchEverythingPublic(null, ctClasses);
+
+        System.out.printf("Start compiling...");
+        for (Map.Entry<String, CtClass> cls : ctClasses.entrySet()) {
+            cls.getValue().writeFile("public-desktop-1.0");
+        }
+        System.out.println("Done.");
+
+        System.out.printf("Creating JAR...");
+        File archiveFile = new File("public-desktop-1.0.jar");
+        FileOutputStream stream = new FileOutputStream(archiveFile);
+        JarOutputStream out = new JarOutputStream(stream, new Manifest());
+
+        byte buffer[] = new byte[10240];
+        Path path = Paths.get("public-desktop-1.0");
+        Files.walkFileTree(path, new SimpleFileVisitor<Path>()
+        {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException
+            {
+                File pathFile = file.toFile();
+                String name = pathFile.getAbsolutePath();
+                if (name.startsWith(path.toAbsolutePath().toString())) {
+                    name = name.substring(path.toAbsolutePath().toString().length() + 1);
+                }
+                name = name.replace("\\", "/");
+                JarEntry jarAdd = new JarEntry(name);
+                jarAdd.setTime(pathFile.lastModified());
+                out.putNextEntry(jarAdd);
+
+                FileInputStream in = new FileInputStream(pathFile);
+                while (true) {
+                    int nRead = in.read(buffer, 0, buffer.length);
+                    if (nRead <= 0) {
+                        break;
+                    }
+                    out.write(buffer, 0, nRead);
+                }
+                in.close();
+
+                return FileVisitResult.CONTINUE;
+            }
+        });
+        System.out.println("Done.");
+
+        out.close();
+        stream.close();
+
+        System.out.printf("Cleaning up...");
+        Files.walk(path)
+            .sorted(Comparator.reverseOrder())
+            .map(Path::toFile)
+            .forEach(File::delete);
+        System.out.println("Done");
     }
 }
