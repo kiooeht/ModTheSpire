@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Fix silent crash if a mod has a bad version number
 
 #### v3.6.0 ####
 * Fix ClassLoader to retrieve correct DesktopLauncher when invoked via ClassPool

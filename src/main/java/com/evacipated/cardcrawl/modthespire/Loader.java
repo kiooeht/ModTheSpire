@@ -147,6 +147,8 @@ public class Loader
             }
             ex.setVisible(true);
 
+            ex.warnAboutMissingVersions();
+
             String java_version = System.getProperty("java.version");
             if (!java_version.startsWith("1.8")) {
                 String msg = "ModTheSpire requires Java version 8 to run properly.\nYou are currently using Java " + java_version;

@@ -83,13 +83,7 @@ public class ModSelectWindow extends JFrame
     {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (UnsupportedLookAndFeelException e) {
+        } catch (ClassNotFoundException | InstantiationException | UnsupportedLookAndFeelException | IllegalAccessException e) {
             e.printStackTrace();
         }
 
@@ -696,5 +690,16 @@ public class ModSelectWindow extends JFrame
                 updatesBtn.setIcon(ICON_UPDATE);
             }
         }).start();
+    }
+
+    public void warnAboutMissingVersions()
+    {
+        for (ModInfo modInfo : info) {
+            if (modInfo.ModVersion == null) {
+                JOptionPane.showMessageDialog(null,
+                    modInfo.Name + " has a missing or bad version number.\nGo yell at the author to fix it.",
+                    "Warning", JOptionPane.WARNING_MESSAGE);
+            }
+        }
     }
 }

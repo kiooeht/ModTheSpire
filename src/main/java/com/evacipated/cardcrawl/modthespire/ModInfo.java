@@ -3,7 +3,9 @@ package com.evacipated.cardcrawl.modthespire;
 import com.google.gson.*;
 import com.google.gson.annotations.SerializedName;
 import com.vdurmont.semver4j.Semver;
+import com.vdurmont.semver4j.SemverException;
 
+import javax.swing.*;
 import java.io.*;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
@@ -145,7 +147,11 @@ public class ModInfo implements Serializable
         @Override
         public Semver deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException
         {
-            return safeVersion(jsonElement.getAsJsonPrimitive().getAsString());
+            try {
+                return safeVersion(jsonElement.getAsJsonPrimitive().getAsString());
+            } catch (SemverException e) {
+                return null;
+            }
         }
     }
 
