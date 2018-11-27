@@ -2,7 +2,9 @@ package com.evacipated.cardcrawl.modthespire;
 
 import com.google.gson.*;
 import com.vdurmont.semver4j.Semver;
+import com.vdurmont.semver4j.SemverException;
 
+import javax.swing.*;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -57,7 +59,17 @@ public class GithubUpdateChecker extends UpdateChecker
     @Override
     public Semver getLatestReleaseVersion() throws IOException
     {
-        return ModInfo.safeVersion(getElementAsString("tag_name"));
+        try {
+            return ModInfo.safeVersion(getElementAsString("tag_name"));
+        } catch (SemverException e) {
+            JOptionPane.showMessageDialog(null,
+                getElementAsString("html_url")
+                    + "\nrelease has a missing or bad version number: \""
+                    + getElementAsString("tag_name")
+                    + "\".\nGo yell at the author to fix it.",
+                "Warning", JOptionPane.WARNING_MESSAGE);
+            return null;
+        }
     }
 
     @Override

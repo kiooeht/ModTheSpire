@@ -98,7 +98,12 @@ public abstract class UpdateChecker
         if (latest == null) {
             return false;
         }
-        return getLatestReleaseVersion().compareTo(current) > 0;
+        Semver latestVersion = getLatestReleaseVersion();
+        if (latestVersion != null) {
+            return latestVersion.compareTo(current) > 0;
+        } else {
+            return false;
+        }
     }
 
     public JsonElement getElement(String key) throws IOException
