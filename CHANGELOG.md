@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.6.1 ####
 * Fix silent crash if a mod has a bad version number
 
 #### v3.6.0 ####
