@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.6.2 ####
 * Fix silent crash in auto-updater if a mod's release has a bad version number
 
 #### v3.6.1 ####
