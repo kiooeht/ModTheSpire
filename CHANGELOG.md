@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Reroll to avoid duplicate SpireField names
 
 #### v3.6.2 ####
 * Fix silent crash in auto-updater if a mod's release has a bad version number
