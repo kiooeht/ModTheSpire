@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Fix SpireReturn not working on constructors
 
 #### v3.6.3 ####
 * Reroll to avoid duplicate SpireField names

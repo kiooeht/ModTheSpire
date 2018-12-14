@@ -66,6 +66,11 @@ public class PrefixPatchInfo extends PatchInfo
                 && returnType.equals(returnType.getClassPool().get(SpireReturn.class.getName()))) {
 
                 hasEarlyReturn = true;
+            } else if (ctMethodToPatch instanceof CtConstructor
+                && !returnType.equals(CtPrimitiveType.voidType)
+                && returnType.equals(returnType.getClassPool().get(SpireReturn.class.getName()))) {
+
+                hasEarlyReturn = true;
             }
 
             if (hasEarlyReturn) {
@@ -81,7 +86,7 @@ public class PrefixPatchInfo extends PatchInfo
 
             if (hasEarlyReturn) {
                 String earlyReturn = "if (opt.isPresent()) { return";
-                if (!((CtMethod) ctMethodToPatch).getReturnType().equals(CtPrimitiveType.voidType)) {
+                if (ctMethodToPatch instanceof CtMethod && !((CtMethod) ctMethodToPatch).getReturnType().equals(CtPrimitiveType.voidType)) {
                     CtClass toPatchReturnType = ((CtMethod) ctMethodToPatch).getReturnType();
                     String toPatchReturnTypeName = toPatchReturnType.getName();
                     if (toPatchReturnType.isPrimitive()) {
