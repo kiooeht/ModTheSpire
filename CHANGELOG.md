@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.6.3 ####
 * Reroll to avoid duplicate SpireField names
 
 #### v3.6.2 ####
