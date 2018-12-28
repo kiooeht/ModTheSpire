@@ -14,6 +14,8 @@ public class SteamSearch
 
     private static String installDir = null;
 
+    private static SteamWorkshop workshop;
+
     public static String findDesktopJar()
     {
         prepare();

@@ -135,6 +135,8 @@ public class Loader
             }
         }
 
+        new SteamWorkshop();
+
         findGameVersion();
 
         EventQueue.invokeLater(() -> {
