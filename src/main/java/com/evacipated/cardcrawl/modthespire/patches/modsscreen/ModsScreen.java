@@ -347,9 +347,9 @@ public class ModsScreen
             text += " NL Mod ID: " + (info.ID != null ? info.ID : "<MISSING>");
             text += " NL Author" + (info.Authors.length > 1 ? "s" : "") + ": " + StringUtils.join(info.Authors, ", ");
             if (info.Credits != null && !info.Credits.isEmpty()) {
-                text += " NL Credits: " + info.Credits;
+                text += " NL Credits: " + newlineToNL(info.Credits);
             }
-            text += " NL NL " + info.Description;
+            text += " NL NL " + newlineToNL(info.Description);
 
             FontHelper.renderSmartText(sb, FontHelper.buttonLabelFont,
                 text,
@@ -377,7 +377,13 @@ public class ModsScreen
         }
     }
 
-    private void drawRect(SpriteBatch sb, float x, float y, float width, float height, float thickness) {
+    private String newlineToNL(String str)
+    {
+        return str.replace(" \n ", " NL ").replace("\n ", " NL ").replace("\n", " NL ");
+    }
+
+    private void drawRect(SpriteBatch sb, float x, float y, float width, float height, float thickness)
+    {
         sb.draw(ImageMaster.WHITE_SQUARE_IMG, x, y, width, thickness);
         sb.draw(ImageMaster.WHITE_SQUARE_IMG, x, y, thickness, height);
         sb.draw(ImageMaster.WHITE_SQUARE_IMG, x, y+height-thickness, width, thickness);
