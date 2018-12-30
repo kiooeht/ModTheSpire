@@ -1,43 +1,33 @@
 package com.evacipated.cardcrawl.modthespire;
 
 import com.codedisaster.steamworks.*;
-import com.evacipated.cardcrawl.modthespire.steam.FriendsCallback;
 
 import java.util.Arrays;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class SteamWorkshop
 {
-    private static final Logger logger = Logger.getLogger(SteamWorkshop.class.getName());
-
     private static final int appId = 646570;
 
-    private SteamUGC workshop;
+    private static SteamUGC workshop;
 
-    public static class SteamTicker implements Runnable
+    private static boolean kill = false;
+
+    public static void main(String[] args)
     {
-        @Override
-        public void run()
-        {
-            while (SteamAPI.isSteamRunning()) {
-                try {
-                    Thread.sleep(66L);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                SteamAPI.runCallbacks();
+        try {
+            if (!SteamAPI.init()) {
+                System.err.println("Could not connect to Steam. Is it running?");
+                System.exit(1);
             }
-            System.out.println("[ERROR] SteamAPI stopped running.");
+        } catch (SteamException e) {
+            System.err.println(e.getMessage());
+            System.exit(2);
         }
-    }
-
-    SteamWorkshop()
-    {
-        System.out.println("TRYING TO CONNECT TO STEAM");
-        connectToSteam();
 
         if (SteamAPI.isSteamRunning(true)) {
+            SteamApps apps = new SteamApps();
+            System.out.println(apps.getAppOwner().getAccountID());
+
             workshop = new SteamUGC(new Callback());
             int items = workshop.getNumSubscribedItems();
 
@@ -46,57 +36,39 @@ public class SteamWorkshop
 
             SteamUGCQuery query = workshop.createQueryUGCDetailsRequest(Arrays.asList(publishedFileIDS));
             workshop.sendQueryUGCRequest(query);
-        }
-    }
 
-    private void connectToSteam() {
-        Thread thread;
-        try {
-            if (SteamAPI.init()) {
-                SteamApps steamApps = new SteamApps();
-                SteamID id = steamApps.getAppOwner();
-                int accountId = id.getAccountID();
-                System.out.println("ACCOUNT ID: " + accountId);
+            while (SteamAPI.isSteamRunning()) {
+                try {
+                    Thread.sleep(66L);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                SteamAPI.runCallbacks();
 
-                SteamFriends friends = new SteamFriends(new FriendsCallback());
-                String name = friends.getPersonaName();
-                System.out.println("NAME: " + name);
-
-                thread = new Thread(new SteamTicker());
-                thread.setName("SteamTicker");
-                thread.start();
-            } else {
-                logger.severe("Could not connect to Steam. Is it running?");
-                //exit(1);
+                if (kill) {
+                    break;
+                }
             }
-        } catch (SteamException e) {
-            logger.log(Level.SEVERE, e.toString(), e);
-            //exit(1);
         }
+
+        SteamAPI.shutdown();
     }
 
-    private class Callback implements SteamUGCCallback {
+    private static class Callback implements SteamUGCCallback {
 
         @Override
-        public void onUGCQueryCompleted(SteamUGCQuery query, int numResultsReturned, int totalMatchingResults, boolean isCachedData, SteamResult result) {
-            System.out.println("QUERY COMPLETE");
-
-            System.out.println("results: " + numResultsReturned);
-
+        public void onUGCQueryCompleted(SteamUGCQuery query, int numResultsReturned, int totalMatchingResults, boolean isCachedData, SteamResult result)
+        {
             if (query.isValid()) {
-                for (int i=0; i<numResultsReturned; ++i) {
+                for (int i = 0; i < numResultsReturned; ++i) {
                     SteamUGCDetails details = new SteamUGCDetails();
                     if (workshop.getQueryUGCResult(query, i, details)) {
-                        System.out.println(details.getPublishedFileID());
-                        System.out.println(details.getTitle());
-                        System.out.println(details.getDescription());
-
                         SteamUGC.ItemInstallInfo info = new SteamUGC.ItemInstallInfo();
                         if (workshop.getItemInstallInfo(details.getPublishedFileID(), info)) {
                             System.out.println(info.getFolder());
-                        } else {
-                            System.out.println("Not installed");
                         }
+
+                        System.out.println(details.getTags());
                     } else {
                         System.out.println("query valid? " + query.isValid());
                         System.out.println("index: " + i);
@@ -104,8 +76,10 @@ public class SteamWorkshop
                     }
                 }
             } else {
-                System.out.println("Not a valid query?");
+                System.err.println("Not a valid query?");
             }
+
+            kill = true;
         }
 
         @Override

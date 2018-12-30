@@ -28,13 +28,13 @@ public class ModSelectWindow extends JFrame
     private static final String PLAY_OPTION = "Play";
     private static final String JAR_DUMP_OPTION = "Dump Patched Jar";
 
-    static final Icon ICON_UPDATE  = new ImageIcon(ModSelectWindow.class.getResource("/assets/update.gif"));
-    static final Icon ICON_LOAD    = new ImageIcon(ModSelectWindow.class.getResource("/assets/ajax-loader.gif"));
-    static final Icon ICON_GOOD    = new ImageIcon(ModSelectWindow.class.getResource("/assets/good.gif"));
-    static final Icon ICON_WARNING = new ImageIcon(ModSelectWindow.class.getResource("/assets/warning.gif"));
-    static final Icon ICON_ERROR   = new ImageIcon(ModSelectWindow.class.getResource("/assets/error.gif"));
+    static final Icon ICON_UPDATE   = new ImageIcon(ModSelectWindow.class.getResource("/assets/update.gif"));
+    static final Icon ICON_LOAD     = new ImageIcon(ModSelectWindow.class.getResource("/assets/ajax-loader.gif"));
+    static final Icon ICON_GOOD     = new ImageIcon(ModSelectWindow.class.getResource("/assets/good.gif"));
+    static final Icon ICON_WARNING  = new ImageIcon(ModSelectWindow.class.getResource("/assets/warning.gif"));
+    static final Icon ICON_ERROR    = new ImageIcon(ModSelectWindow.class.getResource("/assets/error.gif"));
+    static final Icon ICON_WORKSHOP = new ImageIcon(ModSelectWindow.class.getResource("/assets/workshop.gif"));
 
-    private File[] mods;
     private ModInfo[] info;
     private boolean showingLog = false;
     private boolean isMaximized = false;
@@ -65,7 +65,7 @@ public class ModSelectWindow extends JFrame
 
     public enum UpdateIconType
     {
-        NONE, CAN_CHECK, CHECKING, UPDATE_AVAILABLE, UPTODATE
+        NONE, CAN_CHECK, CHECKING, UPDATE_AVAILABLE, UPTODATE, WORKSHOP
     }
 
     public static Properties getDefaults()
@@ -79,7 +79,7 @@ public class ModSelectWindow extends JFrame
         return properties;
     }
     
-    public ModSelectWindow(File[] modJars) throws MalformedURLException
+    public ModSelectWindow(ModInfo[] modInfos)
     {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -87,8 +87,7 @@ public class ModSelectWindow extends JFrame
             e.printStackTrace();
         }
 
-        mods = modJars;
-        info = Loader.buildInfoArray(mods);
+        info = modInfos;
         readWindowPosSize();
         setupDetectMaximize();
         initUI();
@@ -222,7 +221,7 @@ public class ModSelectWindow extends JFrame
         // Mod List
         DefaultListModel<ModPanel> model = new DefaultListModel<>();
         modList = new JModPanelCheckBoxList(this, model);
-        LoadOrder.loadModsInOrder(model, mods, info, modList);
+        LoadOrder.loadModsInOrder(model, info, modList);
         modList.publishBoxChecked();
 
         JScrollPane modScroller = new JScrollPane(modList);

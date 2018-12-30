@@ -79,7 +79,9 @@ public class ModPanel extends JPanel
         update.setVerticalAlignment(JLabel.CENTER);
         update.setOpaque(true);
         update.setBorder(new EmptyBorder(0, 0, 0, 4));
-        if (info.UpdateJSON != null && !info.UpdateJSON.isEmpty()) {
+        if (info.isWorkshop) {
+            setUpdateIcon(ModSelectWindow.UpdateIconType.WORKSHOP);
+        } else if (info.UpdateJSON != null && !info.UpdateJSON.isEmpty()) {
             setUpdateIcon(ModSelectWindow.UpdateIconType.CAN_CHECK);
         } else {
             setUpdateIcon(ModSelectWindow.UpdateIconType.NONE);
@@ -145,6 +147,8 @@ public class ModPanel extends JPanel
             case UPTODATE:
                 update.setIcon(ModSelectWindow.ICON_GOOD);
                 break;
+            case WORKSHOP:
+                update.setIcon(ModSelectWindow.ICON_WORKSHOP);
         }
     }
     
