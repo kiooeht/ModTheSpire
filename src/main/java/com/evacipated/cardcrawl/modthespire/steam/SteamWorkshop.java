@@ -1,4 +1,4 @@
-package com.evacipated.cardcrawl.modthespire;
+package com.evacipated.cardcrawl.modthespire.steam;
 
 import com.codedisaster.steamworks.*;
 
