@@ -463,8 +463,8 @@ public class ModSelectWindow extends JFrame
             betaWarningBanner.setIcon(ICON_ERROR);
             betaWarningBanner.setText("<html>" +
                 "You are on the Slay the Spire beta branch.<br/>" +
-                "ModTheSpire does not support the beta branch.<br/>" +
-                "Switch to the main branch to use ModTheSpire." +
+                "If mods are not working correctly,<br/>" +
+                "switch to the main branch for best results." +
                 "</html>");
             betaWarningBanner.setHorizontalAlignment(JLabel.CENTER);
             betaWarningBanner.setOpaque(true);

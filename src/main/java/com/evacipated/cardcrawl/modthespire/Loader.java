@@ -2,6 +2,7 @@ package com.evacipated.cardcrawl.modthespire;
 
 import com.evacipated.cardcrawl.modthespire.lib.SpireConfig;
 import com.evacipated.cardcrawl.modthespire.steam.SteamSearch;
+import com.evacipated.cardcrawl.modthespire.steam.SteamWorkshop;
 import com.evacipated.cardcrawl.modthespire.ui.ModSelectWindow;
 import com.vdurmont.semver4j.Semver;
 import javassist.ClassPool;
@@ -85,6 +86,7 @@ public class Loader
             OUT_JAR = true;
         }
 
+        allowBeta = true;
         if (Arrays.asList(args).contains("--allow-beta")) {
             allowBeta = true;
         }
@@ -143,6 +145,12 @@ public class Loader
                 "com.evacipated.cardcrawl.modthespire.steam.SteamWorkshop"
             );
             Process p = pb.start();
+
+            BufferedReader ereader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+            String eline = null;
+            while ((eline = ereader.readLine()) != null) {
+                System.err.println("ERROR: " + eline);
+            }
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
             String first = null;
