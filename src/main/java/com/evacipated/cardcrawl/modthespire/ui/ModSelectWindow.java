@@ -338,11 +338,11 @@ public class ModSelectWindow extends JFrame
         infoPanel.add(modVersion, c);
 
         c.gridy = 2;
-        mtsVersion = makeInfoLabelField("ModTheSpire ModVersion", " ");
+        mtsVersion = makeInfoLabelField("ModTheSpire Version", " ");
         infoPanel.add(mtsVersion, c);
 
         c.gridy = 3;
-        stsVersion = makeInfoLabelField("Slay the Spire ModVersion", " ");
+        stsVersion = makeInfoLabelField("Slay the Spire Version", " ");
         infoPanel.add(stsVersion, c);
 
         c.gridy = 4;
