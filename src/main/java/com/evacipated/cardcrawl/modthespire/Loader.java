@@ -18,10 +18,7 @@ import java.awt.event.WindowEvent;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLClassLoader;
+import java.net.*;
 import java.util.*;
 import java.util.List;
 
@@ -139,9 +136,12 @@ public class Loader
         List<SteamSearch.WorkshopInfo> workshopInfos = new ArrayList<>();
         try {
             System.out.println("Searching for Workshop items...");
+            String path = SteamWorkshop.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+            path = URLDecoder.decode(path, "utf-8");
+            path = new File(path).getPath();
             ProcessBuilder pb = new ProcessBuilder(
                 SteamSearch.findJRE(),
-                "-cp", SteamWorkshop.class.getProtectionDomain().getCodeSource().getLocation().getPath(),
+                "-cp", path,
                 "com.evacipated.cardcrawl.modthespire.steam.SteamWorkshop"
             );
             Process p = pb.start();
