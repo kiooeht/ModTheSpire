@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 
 import javax.swing.DefaultListModel;
@@ -43,8 +44,18 @@ public class LoadOrder {
         return;
     }
     
-    public static void loadModsInOrder(DefaultListModel<ModPanel> model, File[] mods, ModInfo[] info, JModPanelCheckBoxList parent) {
+    public static void loadModsInOrder(DefaultListModel<ModPanel> model, ModInfo[] info, JModPanelCheckBoxList parent) {
         File cfg_file = new File(CFG_FILE);
+
+        File[] mods = new File[info.length];
+        for (int i=0; i<info.length; ++i) {
+            try {
+                mods[i] = new File(info[i].jarURL.toURI());
+            } catch (URISyntaxException e) {
+                System.out.println("Problem with: " + info[i].jarURL);
+                e.printStackTrace();
+            }
+        }
         
         if (!cfg_file.exists()) {
             defaultLoad(model, mods, info, parent);

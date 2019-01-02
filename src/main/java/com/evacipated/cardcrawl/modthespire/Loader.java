@@ -1,6 +1,8 @@
 package com.evacipated.cardcrawl.modthespire;
 
 import com.evacipated.cardcrawl.modthespire.lib.SpireConfig;
+import com.evacipated.cardcrawl.modthespire.steam.SteamSearch;
+import com.evacipated.cardcrawl.modthespire.steam.SteamWorkshop;
 import com.evacipated.cardcrawl.modthespire.ui.ModSelectWindow;
 import com.vdurmont.semver4j.Semver;
 import javassist.ClassPool;
@@ -13,17 +15,12 @@ import org.objectweb.asm.commons.EmptyVisitor;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowEvent;
-import java.io.File;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLClassLoader;
+import java.net.*;
 import java.util.*;
+import java.util.List;
 
 public class Loader
 {
@@ -86,6 +83,7 @@ public class Loader
             OUT_JAR = true;
         }
 
+        allowBeta = true;
         if (Arrays.asList(args).contains("--allow-beta")) {
             allowBeta = true;
         }
@@ -135,16 +133,57 @@ public class Loader
             }
         }
 
+        List<SteamSearch.WorkshopInfo> workshopInfos = new ArrayList<>();
+        try {
+            System.out.println("Searching for Workshop items...");
+            String path = SteamWorkshop.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+            path = URLDecoder.decode(path, "utf-8");
+            path = new File(path).getPath();
+            ProcessBuilder pb = new ProcessBuilder(
+                SteamSearch.findJRE(),
+                "-cp", path,
+                "com.evacipated.cardcrawl.modthespire.steam.SteamWorkshop"
+            );
+            Process p = pb.start();
+
+            BufferedReader ereader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+            String eline = null;
+            while ((eline = ereader.readLine()) != null) {
+                System.err.println("ERROR: " + eline);
+            }
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            String first = null;
+            String installPath = null;
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                if (first == null) {
+                    first = line;
+                    System.out.println(first);
+                } else if (installPath == null) {
+                    installPath = line;
+                } else {
+                    SteamSearch.WorkshopInfo info = new SteamSearch.WorkshopInfo(installPath, line);
+                    if (!info.hasTag("tool") && !info.hasTag("tools")) {
+                        workshopInfos.add(info);
+                    }
+                    installPath = null;
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        for (SteamSearch.WorkshopInfo info : workshopInfos) {
+            System.out.println(info.getInstallPath());
+            System.out.println(Arrays.toString(info.getTags().toArray()));
+        }
+
         findGameVersion();
 
         EventQueue.invokeLater(() -> {
-            File[] modFiles = getAllModFiles();
-            try {
-                ex = new ModSelectWindow(modFiles);
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-                System.exit(-1);
-            }
+            ModInfo[] modInfos = getAllMods(workshopInfos);
+            ex = new ModSelectWindow(modInfos);
             ex.setVisible(true);
 
             ex.warnAboutMissingVersions();
@@ -230,6 +269,9 @@ public class Loader
                 System.out.println("Done.");
                 System.out.println();
 
+                Field isDev = Settings.getDeclaredField("isDev");
+                isDev.set(null, false);
+
                 // Add ModTheSpire section to CardCrawlGame.VERSION_NUM
                 System.out.printf("Adding ModTheSpire to version...");
                 System.out.flush();
@@ -310,21 +352,22 @@ public class Loader
         return urls;
     }
 
-    public static ModInfo[] buildInfoArray(File[] modJars) throws MalformedURLException
+    private static ModInfo[] buildInfoArray(File[] modJars)
     {
         ModInfo[] infos = new ModInfo[modJars.length];
         for (int i = 0; i < modJars.length; ++i) {
             infos[i] = ModInfo.ReadModInfo(modJars[i]);
-            infos[i].jarURL = modJars[i].toURI().toURL();
         }
         return infos;
     }
 
     // getAllModFiles - returns a File array containing all of the JAR files in the mods directory
-    private static File[] getAllModFiles()
+    private static File[] getAllModFiles(String directory)
     {
-        File file = new File(MOD_DIR);
-        if (!file.exists() || !file.isDirectory()) return new File[0];
+        File file = new File(directory);
+        if (!file.exists() || !file.isDirectory()) {
+            return new File[0];
+        }
 
         File[] files = file.listFiles(new FilenameFilter() {
             @Override
@@ -333,8 +376,63 @@ public class Loader
             }
         });
 
-        if (files.length > 0) return files;
-        return new File[0];
+        if (files == null || files.length == 0) {
+            return new File[0];
+        }
+        return files;
+    }
+
+    private static ModInfo[] getAllMods(List<SteamSearch.WorkshopInfo> workshopInfos)
+    {
+        List<ModInfo> modInfos = new ArrayList<>();
+
+        // "mods/" directory
+        for (File f : getAllModFiles(MOD_DIR)) {
+            ModInfo info = ModInfo.ReadModInfo(f);
+            if (info != null) {
+                if (modInfos.stream().noneMatch(i -> i.ID == null || i.ID.equals(info.ID))) {
+                    modInfos.add(info);
+                }
+            }
+        }
+
+        // Workshop content
+        for (SteamSearch.WorkshopInfo workshopInfo : workshopInfos) {
+            for (File f : getAllModFiles(workshopInfo.getInstallPath().toString())) {
+                ModInfo info = ModInfo.ReadModInfo(f);
+                if (info != null) {
+                    // Disable the update json url for workshop content
+                    info.UpdateJSON = null;
+                    info.isWorkshop = true;
+
+                    // If the workshop item is a newer version, use it instead of the local mod
+                    boolean doAdd = true;
+                    Iterator<ModInfo> it = modInfos.iterator();
+                    while (it.hasNext()) {
+                        ModInfo modInfo = it.next();
+                        if (modInfo.ID != null && modInfo.ID.equals(info.ID)) {
+                            if (modInfo.ModVersion == null || info.ModVersion == null) {
+                                doAdd = false;
+                                break;
+                            }
+                            if (info.ModVersion.isGreaterThan(modInfo.ModVersion)) {
+                                it.remove();
+                            } else {
+                                doAdd = false;
+                                break;
+                            }
+                        }
+                    }
+                    if (doAdd) {
+                        modInfos.add(info);
+                    }
+                }
+            }
+        }
+
+        modInfos.sort(Comparator.comparing(m -> m.Name));
+
+        return modInfos.toArray(new ModInfo[0]);
     }
 
     private static void printMTSInfo()

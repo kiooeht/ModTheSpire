@@ -1,5 +1,6 @@
-package com.evacipated.cardcrawl.modthespire;
+package com.evacipated.cardcrawl.modthespire.steam;
 
+import com.evacipated.cardcrawl.modthespire.Loader;
 import org.apache.commons.lang3.SystemUtils;
 
 import java.io.*;
@@ -13,6 +14,38 @@ public class SteamSearch
     private static final int appId = 646570;
 
     private static String installDir = null;
+
+    public static String findJRE()
+    {
+        Path local = Paths.get("jre", "bin", "java.exe");
+        if (local.toFile().exists()) {
+            System.out.println("Using local StS JRE");
+            return local.toString();
+        }
+        local = Paths.get("jre", "bin", "java");
+        if (local.toFile().exists()) {
+            System.out.println("Using local StS JRE");
+            return local.toString();
+        }
+
+        prepare();
+
+        if (installDir == null) {
+            return null;
+        }
+
+        Path install = Paths.get(installDir, "jre", "bin", "java.exe");
+        if (install.toFile().exists()) {
+            System.out.println("Using install StS JRE");
+            return install.toString();
+        }
+        install = Paths.get(installDir, "jre", "bin", "java");
+        if (install.toFile().exists()) {
+            System.out.println("Using install StS JRE");
+            return install.toString();
+        }
+        return Paths.get(installDir, "jre", "bin", "java.exe").toString();
+    }
 
     public static String findDesktopJar()
     {
@@ -124,12 +157,46 @@ public class SteamSearch
         return libraries;
     }
 
-    private static boolean isInteger(String s) {
+    private static boolean isInteger(String s)
+    {
         try {
             Integer.parseInt(s);
         } catch (NumberFormatException | NullPointerException e) {
             return false;
         }
         return true;
+    }
+
+    public static class WorkshopInfo
+    {
+        private final Path installPath;
+        private List<String> tags;
+
+        public WorkshopInfo(String installPath, String tagsString)
+        {
+            this.installPath = Paths.get(installPath).toAbsolutePath();
+            String[] tmp = tagsString.split(",");
+            tags = new ArrayList<>();
+            for (String s : tmp) {
+                tags.add(s.toLowerCase().trim());
+            }
+        }
+
+        public Path getInstallPath()
+        {
+            return installPath;
+        }
+
+        public List<String> getTags()
+        {
+            return tags;
+        }
+
+        public boolean hasTag(String tag)
+        {
+            tag = tag.toLowerCase().trim();
+            String finalTag = tag;
+            return tags.stream().anyMatch(t -> t.equals(finalTag));
+        }
     }
 }

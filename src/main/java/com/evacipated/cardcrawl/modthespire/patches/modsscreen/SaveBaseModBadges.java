@@ -1,9 +1,13 @@
 package com.evacipated.cardcrawl.modthespire.patches.modsscreen;
 
 import com.badlogic.gdx.graphics.Texture;
+import com.evacipated.cardcrawl.modthespire.Loader;
 import com.evacipated.cardcrawl.modthespire.lib.SpireInsertPatch;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
 import javassist.CannotCompileException;
+import javassist.ClassPool;
+import javassist.CtClass;
+import javassist.NotFoundException;
 import javassist.expr.ExprEditor;
 import javassist.expr.MethodCall;
 
@@ -32,8 +36,23 @@ public class SaveBaseModBadges
         StackTraceElement[] stacktrace = Thread.currentThread().getStackTrace();
         try {
             Class<?> cls = SaveBaseModBadges.class.getClassLoader().loadClass(stacktrace[3].getClassName());
-            URL modFile = cls.getProtectionDomain().getCodeSource().getLocation().toURI().toURL();
-            ModsScreen.baseModBadges.put(modFile, badge);
+            URL location = cls.getProtectionDomain().getCodeSource().getLocation();
+            if (location == null) {
+                try {
+                    ClassPool pool = Loader.getClassPool();
+                    CtClass ctCls = pool.get(cls.getName());
+                    String url = ctCls.getURL().getFile();
+                    int i = url.lastIndexOf('!');
+                    url = url.substring(0, i);
+                    location = new URL(url);
+                } catch (NotFoundException | MalformedURLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (location != null) {
+                URL modFile = location.toURI().toURL();
+                ModsScreen.baseModBadges.put(modFile, badge);
+            }
         } catch (ClassNotFoundException | URISyntaxException | MalformedURLException e) {
             e.printStackTrace();
         }

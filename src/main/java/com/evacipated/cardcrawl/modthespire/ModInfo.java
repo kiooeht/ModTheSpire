@@ -23,6 +23,7 @@ public class ModInfo implements Serializable
     private static final long serialVersionUID = 7452562412479584982L;
     public transient URL jarURL;
     public transient String statusMsg = " ";
+    public transient boolean isWorkshop = false;
     @SerializedName("modid")
     public String ID;
     @SerializedName("name")
@@ -94,6 +95,7 @@ public class ModInfo implements Serializable
                 return ReadModInfoOld(mod_jar);
             }
             ModInfo info = gson.fromJson(new InputStreamReader(in, StandardCharsets.UTF_8), ModInfo.class);
+            info.jarURL = mod_jar.toURI().toURL();
             in.close();
             return info;
         } catch (Exception e) {
