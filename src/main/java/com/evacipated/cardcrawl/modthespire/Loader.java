@@ -404,15 +404,33 @@ public class Loader
                     // Disable the update json url for workshop content
                     info.UpdateJSON = null;
                     info.isWorkshop = true;
-                    if (modInfos.stream().noneMatch(i -> i.ID == null || i.ID.equals(info.ID))) {
+
+                    // If the workshop item is a newer version, use it instead of the local mod
+                    boolean doAdd = true;
+                    Iterator<ModInfo> it = modInfos.iterator();
+                    while (it.hasNext()) {
+                        ModInfo modInfo = it.next();
+                        if (modInfo.ID != null && modInfo.ID.equals(info.ID)) {
+                            if (modInfo.ModVersion == null || info.ModVersion == null) {
+                                doAdd = false;
+                                break;
+                            }
+                            if (info.ModVersion.isGreaterThan(modInfo.ModVersion)) {
+                                it.remove();
+                            } else {
+                                doAdd = false;
+                                break;
+                            }
+                        }
+                    }
+                    if (doAdd) {
                         modInfos.add(info);
                     }
                 }
             }
         }
 
-        // Convert to ModInfo, don't include duplicate mod IDs
-
+        modInfos.sort(Comparator.comparing(m -> m.Name));
 
         return modInfos.toArray(new ModInfo[0]);
     }
