@@ -269,6 +269,9 @@ public class Loader
                 System.out.println("Done.");
                 System.out.println();
 
+                Field isDev = Settings.getDeclaredField("isDev");
+                isDev.set(null, false);
+
                 // Add ModTheSpire section to CardCrawlGame.VERSION_NUM
                 System.out.printf("Adding ModTheSpire to version...");
                 System.out.flush();
