@@ -1,5 +1,8 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.7.0 ###
+* Steam Workshop support
 * Fix SpireReturn not working on constructors
 
 #### v3.6.3 ####
