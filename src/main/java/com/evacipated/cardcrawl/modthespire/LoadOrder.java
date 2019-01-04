@@ -49,6 +49,10 @@ public class LoadOrder {
 
         File[] mods = new File[info.length];
         for (int i=0; i<info.length; ++i) {
+            if (info[i].jarURL == null) {
+                System.out.println("ERROR: jarURL is null?: " + info[i].Name);
+                continue;
+            }
             try {
                 mods[i] = new File(info[i].jarURL.toURI());
             } catch (URISyntaxException e) {

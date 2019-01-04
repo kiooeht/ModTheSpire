@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Fix crash if mod is so old it only has ModTheSpire.config
 
 #### v3.7.1 ####
 * When opening mods folder, create it if it doesn't exist

@@ -92,7 +92,9 @@ public class ModInfo implements Serializable
             InputStream in = loader.getResourceAsStream("ModTheSpire.json");
             if (in == null) {
                 // Fallback to old info file
-                return ReadModInfoOld(mod_jar);
+                ModInfo info = ReadModInfoOld(mod_jar);
+                info.jarURL = mod_jar.toURI().toURL();
+                return info;
             }
             ModInfo info = gson.fromJson(new InputStreamReader(in, StandardCharsets.UTF_8), ModInfo.class);
             info.jarURL = mod_jar.toURI().toURL();
