@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* When opening mods folder, create it if it doesn't exist
 
 #### v3.7.0 ###
 * Steam Workshop support

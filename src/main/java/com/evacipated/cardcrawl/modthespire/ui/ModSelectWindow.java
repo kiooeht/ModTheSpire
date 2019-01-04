@@ -276,7 +276,11 @@ public class ModSelectWindow extends JFrame
         openFolderBtn.setToolTipText("Open Mods Directory");
         openFolderBtn.addActionListener((ActionEvent event) -> {
             try {
-                Desktop.getDesktop().open(new File(Loader.MOD_DIR));
+                File file = new File(Loader.MOD_DIR);
+                if (!file.exists()) {
+                    file.mkdir();
+                }
+                Desktop.getDesktop().open(file);
             } catch (IOException e) {
                 e.printStackTrace();
             }
