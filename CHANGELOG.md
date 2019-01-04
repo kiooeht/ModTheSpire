@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.7.2 ####
 * Fix crash if mod is so old it only has ModTheSpire.config
 
 #### v3.7.1 ####
