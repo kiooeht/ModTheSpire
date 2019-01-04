@@ -1,8 +1,10 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.7.1 ####
 * When opening mods folder, create it if it doesn't exist
 
-#### v3.7.0 ###
+#### v3.7.0 ####
 * Steam Workshop support
 * Fix SpireReturn not working on constructors
 
