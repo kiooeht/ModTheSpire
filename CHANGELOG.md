@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.7.3 ####
 * Restart MTS using jre1.8.0_51 if available
   * Resolves "OpenGL is not supported by the video driver" crash for people with older laptops
 
