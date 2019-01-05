@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+* Restart MTS using jre1.8.0_51 if available
+  * Resolves "OpenGL is not supported by the video driver" crash for people with older laptops
 
 #### v3.7.2 ####
 * Fix crash if mod is so old it only has ModTheSpire.config

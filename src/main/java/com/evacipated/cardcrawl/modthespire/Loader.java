@@ -34,6 +34,7 @@ public class Loader
     private static String STS_JAR2 = "SlayTheSpire.jar";
     public static String COREPATCHES_JAR = "/corepatches.jar";
     public static String STS_PATCHED_JAR = "desktop-1.0-patched.jar";
+    public static String JRE_51_DIR = "jre1.8.0_51";
     public static ModInfo[] MODINFOS;
     private static ClassPool POOL;
 
@@ -62,6 +63,36 @@ public class Loader
 
     public static void main(String[] args)
     {
+        // Restart MTS if jre1.8.0_51 is detected
+        // For those people with old laptops and OpenGL problems
+        if (!Arrays.asList(args).contains("--jre51") && new File(JRE_51_DIR).exists()) {
+            System.out.println("JRE 51 exists, restarting using it...");
+            try {
+                String path = Loader.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+                path = URLDecoder.decode(path, "utf-8");
+                path = new File(path).getPath();
+
+                String[] newArgs = new String[args.length + 4];
+                newArgs[0] = SteamSearch.findJRE51();
+                newArgs[1] = "-jar";
+                newArgs[2] = path;
+                newArgs[3] = "--jre51";
+                System.arraycopy(args, 0, newArgs, 4, args.length);
+                ProcessBuilder pb = new ProcessBuilder(
+                    newArgs
+                );
+                pb.redirectOutput(new File("sendToDevs", "mts_process_launch.log"));
+                pb.redirectErrorStream(true);
+                pb.start();
+                System.exit(0);
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.exit(3);
+            }
+        } else if (Arrays.asList(args).contains("--jre51")) {
+            System.out.println("Launched using JRE 51");
+        }
+
         ARGS = args;
         try {
             Properties defaults = new Properties();
