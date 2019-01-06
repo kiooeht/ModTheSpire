@@ -174,41 +174,41 @@ public class Loader
                 SteamSearch.findJRE(),
                 "-cp", path,
                 "com.evacipated.cardcrawl.modthespire.steam.SteamWorkshop"
-            );
+            ).redirectError(ProcessBuilder.Redirect.INHERIT);
             Process p = pb.start();
 
-            BufferedReader ereader = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-            String eline = null;
-            while ((eline = ereader.readLine()) != null) {
-                System.err.println("ERROR: " + eline);
-            }
-
             BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            String first = null;
+            String title = null;
             String installPath = null;
             String line = null;
             while ((line = reader.readLine()) != null) {
-                if (first == null) {
-                    first = line;
-                    System.out.println(first);
+                System.out.println(line);
+                if (title == null) {
+                    title = line;
                 } else if (installPath == null) {
                     installPath = line;
                 } else {
-                    SteamSearch.WorkshopInfo info = new SteamSearch.WorkshopInfo(installPath, line);
+                    SteamSearch.WorkshopInfo info = new SteamSearch.WorkshopInfo(title, installPath, line);
                     if (!info.hasTag("tool") && !info.hasTag("tools")) {
                         workshopInfos.add(info);
                     }
+                    title = null;
                     installPath = null;
                 }
             }
+            reader.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+        /*
         for (SteamSearch.WorkshopInfo info : workshopInfos) {
+            System.out.println(info.getTitle());
             System.out.println(info.getInstallPath());
             System.out.println(Arrays.toString(info.getTags().toArray()));
         }
+        //*/
+        System.out.println("Got " + workshopInfos.size() + " workshop items");
 
         findGameVersion();
 

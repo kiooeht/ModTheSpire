@@ -179,17 +179,24 @@ public class SteamSearch
 
     public static class WorkshopInfo
     {
+        private final String title;
         private final Path installPath;
         private List<String> tags;
 
-        public WorkshopInfo(String installPath, String tagsString)
+        public WorkshopInfo(String title, String installPath, String tagsString)
         {
+            this.title = title;
             this.installPath = Paths.get(installPath).toAbsolutePath();
             String[] tmp = tagsString.split(",");
             tags = new ArrayList<>();
             for (String s : tmp) {
                 tags.add(s.toLowerCase().trim());
             }
+        }
+
+        public String getTitle()
+        {
+            return title;
         }
 
         public Path getInstallPath()

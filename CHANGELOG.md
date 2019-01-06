@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Fix ModTheSpire hanging if there are too many Steam mods installed
 
 #### v3.7.3 ####
 * Restart MTS using jre1.8.0_51 if available

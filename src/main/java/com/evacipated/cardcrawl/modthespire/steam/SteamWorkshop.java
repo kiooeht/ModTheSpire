@@ -3,6 +3,7 @@ package com.evacipated.cardcrawl.modthespire.steam;
 import com.codedisaster.steamworks.*;
 
 import java.util.Arrays;
+import java.util.Collection;
 
 public class SteamWorkshop
 {
@@ -25,14 +26,13 @@ public class SteamWorkshop
         }
 
         if (SteamAPI.isSteamRunning(true)) {
-            SteamApps apps = new SteamApps();
-            System.out.println(apps.getAppOwner().getAccountID());
-
             workshop = new SteamUGC(new Callback());
             int items = workshop.getNumSubscribedItems();
 
             SteamPublishedFileID[] publishedFileIDS = new SteamPublishedFileID[items];
             items = workshop.getSubscribedItems(publishedFileIDS);
+
+            System.err.println("subbed items: " + items);
 
             SteamUGCQuery query = workshop.createQueryUGCDetailsRequest(Arrays.asList(publishedFileIDS));
             workshop.sendQueryUGCRequest(query);
@@ -56,30 +56,42 @@ public class SteamWorkshop
 
     private static class Callback implements SteamUGCCallback {
 
+        int resultsReceived = 0;
+
         @Override
         public void onUGCQueryCompleted(SteamUGCQuery query, int numResultsReturned, int totalMatchingResults, boolean isCachedData, SteamResult result)
         {
             if (query.isValid()) {
+                System.err.println("result: " + result);
+                System.err.println("numResultsReturned: " + numResultsReturned);
+                System.err.println("totalMatchingResults: " + totalMatchingResults);
+                System.err.println("isCachedData: " + isCachedData);
                 for (int i = 0; i < numResultsReturned; ++i) {
                     SteamUGCDetails details = new SteamUGCDetails();
                     if (workshop.getQueryUGCResult(query, i, details)) {
-                        SteamUGC.ItemInstallInfo info = new SteamUGC.ItemInstallInfo();
-                        if (workshop.getItemInstallInfo(details.getPublishedFileID(), info)) {
-                            System.out.println(info.getFolder());
+                        Collection<SteamUGC.ItemState> state = workshop.getItemState(details.getPublishedFileID());
+                        if (state.contains(SteamUGC.ItemState.Installed)) {
+                            SteamUGC.ItemInstallInfo info = new SteamUGC.ItemInstallInfo();
+                            if (workshop.getItemInstallInfo(details.getPublishedFileID(), info)) {
+                                System.out.println(details.getTitle());
+                                System.out.println(info.getFolder());
+                                System.out.println(details.getTags());
+                            }
                         }
-
-                        System.out.println(details.getTags());
                     } else {
-                        System.out.println("query valid? " + query.isValid());
-                        System.out.println("index: " + i);
-                        System.out.println("Query result failed");
+                        System.err.println("query valid? " + query.isValid());
+                        System.err.println("index: " + i);
+                        System.err.println("Query result failed");
                     }
                 }
             } else {
                 System.err.println("Not a valid query?");
             }
 
-            kill = true;
+            resultsReceived += numResultsReturned;
+            if (resultsReceived >= totalMatchingResults) {
+                kill = true;
+            }
         }
 
         @Override
