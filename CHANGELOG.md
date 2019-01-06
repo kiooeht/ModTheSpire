@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.7.4 ####
 * Fix ModTheSpire hanging if there are too many Steam mods installed
 
 #### v3.7.3 ####
