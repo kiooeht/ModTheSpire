@@ -21,6 +21,7 @@ import java.lang.reflect.Method;
 import java.net.*;
 import java.util.*;
 import java.util.List;
+import java.util.Timer;
 
 public class Loader
 {
@@ -332,6 +333,19 @@ public class Loader
             Class<?> cls = loader.loadClass("com.megacrit.cardcrawl.desktop.DesktopLauncher");
             Method method = cls.getDeclaredMethod("main", String[].class);
             method.invoke(null, (Object) ARGS);
+            if (!DEBUG) {
+                new Timer().schedule(
+                    new TimerTask()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            ex.setState(Frame.ICONIFIED);
+                        }
+                    },
+                    1000
+                );
+            }
         } catch (MissingDependencyException e) {
             System.err.println("ERROR: " + e.getMessage());
             JOptionPane.showMessageDialog(null, e.getMessage(), "Missing Dependency", JOptionPane.ERROR_MESSAGE);

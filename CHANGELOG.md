@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Fix OBS capturing log window instead of the game sometimes
 
 #### v3.7.4 ####
 * Fix ModTheSpire hanging if there are too many Steam mods installed
