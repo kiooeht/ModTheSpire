@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.7.5 ####
 * Fix OBS capturing log window instead of the game sometimes
 
 #### v3.7.4 ####
