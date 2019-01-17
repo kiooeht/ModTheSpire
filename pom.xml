@@ -133,6 +133,12 @@
                                         <exclude>com/evacipated/cardcrawl/modthespire/patches/**</exclude>
                                     </excludes>
                                 </filter>
+                                <filter>
+                                    <artifact>com.code-disaster.steamworks4j:steamworks4j</artifact>
+                                    <excludes>
+                                        <exclude>**</exclude>
+                                    </excludes>
+                                </filter>
                             </filters>
                         </configuration>
                     </execution>

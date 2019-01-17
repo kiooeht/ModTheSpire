@@ -172,7 +172,7 @@ public class Loader
             path = new File(path).getPath();
             ProcessBuilder pb = new ProcessBuilder(
                 SteamSearch.findJRE(),
-                "-cp", path,
+                "-cp", path + File.pathSeparatorChar + STS_JAR,
                 "com.evacipated.cardcrawl.modthespire.steam.SteamWorkshop"
             ).redirectError(ProcessBuilder.Redirect.INHERIT);
             Process p = pb.start();
