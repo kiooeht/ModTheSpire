@@ -2,11 +2,13 @@ package com.evacipated.cardcrawl.modthespire;
 
 import org.objectweb.asm.*;
 
-public class GameBetaFinder extends ClassAdapter
+public class GameBetaFinder extends ClassVisitor
 {
-    public GameBetaFinder(ClassVisitor classVisitor)
+    public GameBetaFinder()
     {
-        super(classVisitor);
+        super(Opcodes.ASM5);
+        // TODO?
+        //super(classVisitor);
     }
 
     @Override
@@ -19,13 +21,15 @@ public class GameBetaFinder extends ClassAdapter
         return r;
     }
 
-    class MyMethodAdapter extends MethodAdapter
+    class MyMethodAdapter extends MethodVisitor
     {
         private boolean isBeta = false;
 
         MyMethodAdapter(MethodVisitor methodVisitor)
         {
-            super(methodVisitor);
+            super(Opcodes.ASM5);
+            // TODO?
+            //super(methodVisitor);
         }
 
         @Override

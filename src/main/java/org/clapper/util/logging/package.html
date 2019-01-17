@@ -1,0 +1,47 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+</head>
+<body>
+<p>org.clapper.util.logging - Logging Classes.</p>
+<p>This package contains logging-related classes. The
+<a href="Logger.html"><tt>Logger</tt></a> class provides a front-end to
+the 
+<a href="http://jakarta.apache.org/commons/logging/guide.html" target="_top">Jakarta Commons Logging</a>
+API,
+insulating calling applications from the specifics of the underlying
+logging layer, while providing a simpler, thinner interface than
+Commons Logging. Other classes, such as
+<a href="JavaUtilLoggingTextFormatter.html"><tt>JavaUtilLoggingTextFormatter</tt></a>,
+provide useful formatters for the <tt>java.util.logging</tt> framework.</p>
+
+<p>WARNING: If your application installs its own class loader (e.g.,
+as the thread context class loader), you may have problems with
+both Jakarta Commons Logging and <tt>java.util.logging</tt> (which
+Jakarta Commons Logging uses as its default logging implementation).</p>
+
+<ul>
+  <li> The <tt>java.util.logging</tt> layer explicitly bootstraps
+       itself using the system class loader (i.e., the class loader
+       that examines the CLASSPATH setting). In some cases, this can
+       cause problems. For instance, an application that installs its
+       own class loader and expects to use that class loader to find
+       a custom-built <tt>java.util.logging</tt> formatter will not
+       end up using its own formatter, because the formatter class
+       is not available in the CLASSPATH, and that's where
+       <tt>java.util.logging</tt> expects to find it. In situations
+       like that, the best bet is to substitute a better-behaved
+       underlying logging layer such as
+       <a href="http://logging.apache.org/log4j/docs/" target="_top">Log4J</a>.
+
+  <li> Jakarta Commons Logging uses a "discovery" process that plays
+       class loader games. You can solve the problem with Commons Logging
+       by explicitly specifying the underlying logging API to use. For
+       example:
+
+       <pre>
+java -Dorg.apache.commons.logging.Log=org.apache.commons.logging.impl.Log4JLogger -Dlog4j.configuration=file:/path/to/log4j-debug.properties</pre>
+</ul>
+
+</body>
+</html>

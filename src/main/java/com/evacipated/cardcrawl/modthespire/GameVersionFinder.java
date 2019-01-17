@@ -1,14 +1,19 @@
 package com.evacipated.cardcrawl.modthespire;
 
 import org.objectweb.asm.*;
-import org.objectweb.asm.commons.EmptyVisitor;
+import org.objectweb.asm.ClassVisitor;
 
-public class GameVersionFinder extends EmptyVisitor
+public class GameVersionFinder extends ClassVisitor
 {
+    public GameVersionFinder()
+    {
+        super(Opcodes.ASM5);
+    }
+
     @Override
     public MethodVisitor visitMethod(int i, String s, String s1, String s2, String[] strings)
     {
-        return new MethodVisitor()
+        return new MethodVisitor(Opcodes.ASM5)
         {
             @Override
             public AnnotationVisitor visitAnnotationDefault()

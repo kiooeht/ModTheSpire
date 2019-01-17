@@ -10,7 +10,6 @@ import javassist.CtClass;
 import javassist.LoaderClassPath;
 import javassist.NotFoundException;
 import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.commons.EmptyVisitor;
 
 import javax.swing.*;
 import java.awt.*;
@@ -379,7 +378,7 @@ public class Loader
             InputStream in2 = tmpLoader.getResourceAsStream("com/megacrit/cardcrawl/core/Settings.class");
             ClassReader classReader2 = new ClassReader(in2);
 
-            classReader2.accept(new GameBetaFinder(new EmptyVisitor()), 0);
+            classReader2.accept(new GameBetaFinder(), 0);
         } catch (IOException e) {
             e.printStackTrace();
         }
