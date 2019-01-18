@@ -39,10 +39,10 @@ public class SpireField<T>
         return null;
     }
 
-    public void set(Object __intance, T value)
+    public void set(Object __instance, T value)
     {
         try {
-            field.set(__intance, value);
+            field.set(__instance, value);
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
