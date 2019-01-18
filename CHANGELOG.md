@@ -1,6 +1,8 @@
 ## Changelog ##
 #### dev ####
 * Update libraries to use newer ASM
+* Reduce MTS size by 30%
+* Fix a typo (reina)
 
 #### v3.7.5 ####
 * Fix OBS capturing log window instead of the game sometimes
