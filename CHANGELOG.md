@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.8.0 ####
 * Update libraries to use newer ASM
 * Reduce MTS size by 30%
 * Fix a typo (reina)
