@@ -17,4 +17,9 @@ public class MTSClassPool extends ClassPool
     {
         return classLoader;
     }
+
+    public void setParent(ClassPool parent)
+    {
+        this.parent = parent;
+    }
 }

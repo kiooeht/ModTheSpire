@@ -283,6 +283,8 @@ public class Loader
                 POOL = new MTSClassPool(loader);
                 POOL.insertClassPath(new LoaderClassPath(loader));
                 loader.addStreamToClassPool(POOL);
+                ((MTSClassPool) POOL).setParent(pool);
+                POOL.childFirstLookup = true;
 
                 System.out.printf("Patching enums...");
                 Patcher.patchEnums(loader, Loader.class.getResource(Loader.COREPATCHES_JAR));

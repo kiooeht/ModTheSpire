@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Fix ClassPool changes not propagating
 
 #### v3.8.0 ####
 * Update libraries to use newer ASM
