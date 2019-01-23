@@ -3,7 +3,7 @@
 
     <groupId>com.evacipated.cardcrawl</groupId>
     <artifactId>ModTheSpire</artifactId>
-    <version>3.8.0</version>
+    <version>3.8.1</version>
     <packaging>jar</packaging>
 
     <name>ModTheSpire</name>

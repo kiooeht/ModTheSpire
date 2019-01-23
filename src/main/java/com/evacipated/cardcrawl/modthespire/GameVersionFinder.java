@@ -3,8 +3,13 @@ package com.evacipated.cardcrawl.modthespire;
 import org.objectweb.asm.*;
 import org.objectweb.asm.ClassVisitor;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class GameVersionFinder extends ClassVisitor
 {
+    Pattern pattern = Pattern.compile("\\[.+] (\\(.+\\))");
+
     public GameVersionFinder()
     {
         super(Opcodes.ASM5);
@@ -104,8 +109,9 @@ public class GameVersionFinder extends ClassVisitor
             {
                 if (o instanceof String) {
                     String possibleVersion = (String)o;
-                    if (possibleVersion.startsWith("[EARLY_ACCESS]")) {
-                        Loader.setGameVersion(possibleVersion.substring("[EARLY_ACCESS]".length()).trim());
+                    Matcher m = pattern.matcher(possibleVersion);
+                    if (m.matches()) {
+                        Loader.setGameVersion(m.group(1));
                     }
                 }
             }

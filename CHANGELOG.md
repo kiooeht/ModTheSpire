@@ -2,6 +2,9 @@
 #### dev ####
 * Fix ClassPool changes not propagating
 
+#### v3.8.1 ####
+* Fix GameVersionFinder for full release
+
 #### v3.8.0 ####
 * Update libraries to use newer ASM
 * Reduce MTS size by 30%
