@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.8.1 ####
 * Fix GameVersionFinder for full release
 
 #### v3.8.0 ####
