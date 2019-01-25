@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.8.2 ####
 * Fix ClassPool changes not propagating
 
 #### v3.8.1 ####
