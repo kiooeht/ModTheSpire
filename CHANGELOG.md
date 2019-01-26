@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.8.3 ####
 * Fix being unable to SpireOverride the same method on multiple subclasses
 
 #### v3.8.2 ####
