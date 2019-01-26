@@ -429,6 +429,7 @@ public class Patcher {
     static HashSet<CtClass> patchOverrides(ClassLoader loader, ClassPool pool, ModInfo[] modInfos) throws PatchingException
     {
         System.out.println("Patching Overrides...");
+        MyCodeConverter.reset();
 
         HashSet<CtClass> ctClasses = new HashSet<>();
         for (AnnotationDB db : annotationDBMap.values()) {

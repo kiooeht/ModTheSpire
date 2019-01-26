@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Fix being unable to SpireOverride the same method on multiple subclasses
 
 #### v3.8.2 ####
 * Fix ClassPool changes not propagating
