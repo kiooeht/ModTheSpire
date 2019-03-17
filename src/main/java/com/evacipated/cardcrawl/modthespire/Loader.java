@@ -259,6 +259,18 @@ public class Loader
                 pool.insertClassPath(new LoaderClassPath(tmpPatchingLoader));
                 tmpPatchingLoader.addStreamToClassPool(pool); // Inserts infront of above path
                 SortedMap<String, CtClass> ctClasses = new TreeMap<>();
+
+                // Patch enums
+                System.out.printf("Patching enums...");
+                for (CtClass cls : Patcher.patchEnums(tmpPatchingLoader, pool, Loader.class.getResource(Loader.COREPATCHES_JAR))) {
+                    ctClasses.put(countSuperClasses(cls) + cls.getName(), cls);
+                }
+                // Patch SpireEnums from mods
+                for (CtClass cls : Patcher.patchEnums(tmpPatchingLoader, pool, modInfos)) {
+                    ctClasses.put(countSuperClasses(cls) + cls.getName(), cls);
+                }
+                System.out.println("Done.");
+
                 // Find and inject core patches
                 System.out.println("Finding core patches...");
                 for (CtClass cls : Patcher.injectPatches(tmpPatchingLoader, pool, Patcher.findPatches(new URL[]{Loader.class.getResource(Loader.COREPATCHES_JAR)}))) {
@@ -286,10 +298,11 @@ public class Loader
                 ((MTSClassPool) POOL).setParent(pool);
                 POOL.childFirstLookup = true;
 
-                System.out.printf("Patching enums...");
-                Patcher.patchEnums(loader, Loader.class.getResource(Loader.COREPATCHES_JAR));
-                // Patch SpireEnums from mods
-                Patcher.patchEnums(loader, modInfos);
+                // Bust enums
+                System.out.printf("Busting enums...");
+                Patcher.bustEnums(loader, Loader.class.getResource(Loader.COREPATCHES_JAR));
+                // Bust SpireEnums from mods
+                Patcher.bustEnums(loader, modInfos);
                 System.out.println("Done.");
                 System.out.println();
 

@@ -87,16 +87,66 @@ public class Patcher {
         return patchSetList;
     }
 
-    public static void patchEnums(ClassLoader loader, ModInfo[] modInfos) throws IOException, ClassNotFoundException, NoSuchFieldException, IllegalAccessException
+    public static HashSet<CtClass> patchEnums(ClassLoader loader, ClassPool pool, ModInfo[] modInfos)
+        throws IOException, ClassNotFoundException, NotFoundException, CannotCompileException
     {
         URL[] urls = new URL[modInfos.length];
         for (int i = 0; i < modInfos.length; i++) {
             urls[i] = modInfos[i].jarURL;
         }
-        patchEnums(loader, urls);
+        return patchEnums(loader, pool, urls);
     }
 
-    public static void patchEnums(ClassLoader loader, URL... urls) throws IOException, ClassNotFoundException, NoSuchFieldException, IllegalAccessException
+    public static HashSet<CtClass> patchEnums(ClassLoader loader, ClassPool pool, URL... urls)
+        throws IOException, ClassNotFoundException, NotFoundException, CannotCompileException
+    {
+        HashSet<CtClass> ctClasses = new HashSet<>();
+
+        AnnotationDB db = new AnnotationDB();
+        db.setScanClassAnnotations(false);
+        db.setScanMethodAnnotations(false);
+        db.scanArchives(urls);
+
+        Set<String> annotations = db.getAnnotationIndex().get(SpireEnum.class.getName());
+        if (annotations == null) {
+            return ctClasses;
+        }
+
+        for (String s : annotations) {
+            Class<?> cls = loader.loadClass(s);
+            for (Field field : cls.getDeclaredFields()) {
+                SpireEnum spireEnum = field.getDeclaredAnnotation(SpireEnum.class);
+                if (spireEnum != null) {
+                    String enumName = field.getName();
+                    if (!spireEnum.name().isEmpty()) {
+                        enumName = spireEnum.name();
+                    }
+
+                    // Patch new field onto the enum
+                    CtClass ctClass = pool.get(field.getType().getName());
+                    CtField f = new CtField(ctClass, enumName, ctClass);
+                    f.setModifiers(Modifier.PUBLIC | Modifier.STATIC | Modifier.FINAL | Modifier.ENUM);
+                    ctClass.addField(f);//, CtField.Initializer.byNew(ctClass));
+                    ctClasses.add(ctClass);
+                }
+            }
+        }
+
+        return ctClasses;
+    }
+
+    public static void bustEnums(ClassLoader loader, ModInfo[] modInfos)
+        throws IOException, ClassNotFoundException, NoSuchFieldException, IllegalAccessException
+    {
+        URL[] urls = new URL[modInfos.length];
+        for (int i = 0; i < modInfos.length; i++) {
+            urls[i] = modInfos[i].jarURL;
+        }
+        bustEnums(loader, urls);
+    }
+
+    public static void bustEnums(ClassLoader loader, URL... urls)
+        throws IOException, ClassNotFoundException, NoSuchFieldException, IllegalAccessException
     {
         AnnotationDB db = new AnnotationDB();
         db.setScanClassAnnotations(false);
@@ -127,6 +177,11 @@ public class Patcher {
                     }
                     Enum<?> enumValue = buster.make(enumName);
                     buster.addByValue(enumValue);
+                    try {
+                        Field constantField = field.getType().getField(enumName);
+                        ReflectionHelper.setStaticFinalField(constantField, enumValue);
+                    } catch (NoSuchFieldException ignored) {
+                    }
 
                     field.setAccessible(true);
                     field.set(null, enumValue);

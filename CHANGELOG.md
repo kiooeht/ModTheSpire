@@ -1,6 +1,8 @@
 ## Changelog ##
 #### dev ####
 * Make mods use StS version of Gson, not Gson packaged with MTS
+* Patch fields onto enums for SpireEnum
+  * Allows Gson to work with SpireEnum values instead of crashing
 
 #### v3.8.3 ####
 * Fix being unable to SpireOverride the same method on multiple subclasses
