@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Make mods use StS version of Gson, not Gson packaged with MTS
 
 #### v3.8.3 ####
 * Fix being unable to SpireOverride the same method on multiple subclasses
