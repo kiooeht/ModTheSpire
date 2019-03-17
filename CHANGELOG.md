@@ -1,6 +1,7 @@
 ## Changelog ##
 #### dev ####
 * Main menu no longer lists all mods, instead just the number of mods
+* Separate MTS from in-game version number and show number of mods
 * Make mods use StS version of Gson, not Gson packaged with MTS
 * Patch fields onto enums for SpireEnum
   * Allows Gson to work with SpireEnum values instead of crashing

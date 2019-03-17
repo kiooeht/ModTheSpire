@@ -1,12 +1,20 @@
 package com.evacipated.cardcrawl.modthespire.patches;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.evacipated.cardcrawl.modthespire.Loader;
-import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
+import com.evacipated.cardcrawl.modthespire.lib.*;
 import com.megacrit.cardcrawl.core.Settings;
+import com.megacrit.cardcrawl.helpers.FontHelper;
 import com.megacrit.cardcrawl.helpers.Hitbox;
+import com.megacrit.cardcrawl.helpers.SeedHelper;
 import com.megacrit.cardcrawl.helpers.TipHelper;
 import com.megacrit.cardcrawl.ui.panels.TopPanel;
+import javassist.CannotCompileException;
+import javassist.CtBehavior;
+import javassist.expr.ExprEditor;
+import javassist.expr.FieldAccess;
+import javassist.expr.MethodCall;
 
 @SpirePatch(
     clz=TopPanel.class,
@@ -17,6 +25,12 @@ public class TopPanelModList
     private static final float MOD_LIST_TIP_X = 1550.0F * Settings.scale;
     private static final float MOD_LIST_TIP_Y = Settings.HEIGHT - 120.0F * Settings.scale;
     private static Hitbox hb;
+
+    public static String alterVersion(String version)
+    {
+        int pos = version.indexOf(" [ModTheSpire");
+        return pos == -1 ? version : version.substring(0, pos);
+    }
 
     public static void Postfix(TopPanel __instance)
     {
@@ -50,7 +64,7 @@ public class TopPanelModList
     }
 
     @SpirePatch(
-        cls="com.megacrit.cardcrawl.ui.panels.TopPanel",
+        clz=TopPanel.class,
         method="render"
     )
     public static class Render
@@ -59,6 +73,62 @@ public class TopPanelModList
         {
             if (hb != null) {
                 hb.render(sb);
+            }
+        }
+
+        public static ExprEditor Instrument()
+        {
+            return new ExprEditor() {
+                private int count = 0;
+
+                @Override
+                public void edit(MethodCall m) throws CannotCompileException
+                {
+                    if (m.getMethodName().equals("renderFontRightTopAligned")) {
+                        ++count;
+                        if (count == 2) {
+                            m.replace(
+                                "{" +
+                                    String.format("$5 -= 24 * %s.scale;", Settings.class.getName()) +
+                                    "$_ = $proceed($$);" +
+                                    "}"
+                            );
+                        }
+                    }
+                }
+
+                @Override
+                public void edit(FieldAccess f) throws CannotCompileException
+                {
+                    if (f.getFieldName().equals("VERSION_NUM")) {
+                        f.replace(String.format("$_ = %s.alterVersion($proceed($$));", TopPanelModList.class.getName()));
+                    }
+                }
+            };
+        }
+
+        @SpireInsertPatch(
+            locator=Locator.class
+        )
+        public static void Insert(TopPanel __instance, SpriteBatch sb)
+        {
+            FontHelper.renderFontRightTopAligned(
+                sb,
+                FontHelper.cardDescFont_N,
+                "ModTheSpire " + Loader.MTS_VERSION + " - " + Loader.MODINFOS.length + " mod" + (Loader.MODINFOS.length > 1 ? "s" : ""),
+                Settings.WIDTH - 16 * Settings.scale,
+                Settings.HEIGHT - 104 * Settings.scale,
+                new Color(1, 1, 1, 0.3f)
+            );
+        }
+
+        private static class Locator extends SpireInsertLocator
+        {
+            @Override
+            public int[] Locate(CtBehavior ctMethodToPatch) throws Exception
+            {
+                Matcher finalMatcher = new Matcher.MethodCallMatcher(SeedHelper.class, "getUserFacingSeedString");
+                return LineFinder.findInOrder(ctMethodToPatch, finalMatcher);
             }
         }
     }
