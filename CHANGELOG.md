@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.9.0 ####
 * Main menu no longer lists all mods, instead just the number of mods
 * Separate MTS from in-game version number and show number of mods
 * Make mods use StS version of Gson, not Gson packaged with MTS
