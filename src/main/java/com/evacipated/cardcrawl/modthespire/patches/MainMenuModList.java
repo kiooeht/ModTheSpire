@@ -11,6 +11,9 @@ import javassist.expr.ExprEditor;
 import javassist.expr.FieldAccess;
 import javassist.expr.MethodCall;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 @SpirePatch(
     clz=MainMenuScreen.class,
     method="render"
@@ -43,12 +46,36 @@ public class MainMenuModList
         };
     }
 
+    private static Pattern re = Pattern.compile("(\\[.+] \\(.+\\)) \\[(ModTheSpire .+)]( BETA)?");
+
     public static String alterVersion(String version)
     {
-        String ver = CardCrawlGame.VERSION_NUM;
-        String mtsver = ver.substring(ver.indexOf("ModTheSpire"), ver.length()-1);
-        ver = ver.substring(0, ver.indexOf(" [ModTheSpire"));
-        return MainMenuScreen.TEXT[0] + " NL " + ver + " NL " + mtsver + " - " + Loader.MODINFOS.length + " mod" + (Loader.MODINFOS.length > 1 ? "s" : "");
+        Matcher m = re.matcher(version);
+        if (!m.find()) {
+            return version;
+        }
+
+        String ver = m.group(1);
+        String mtsver = m.group(2);
+        String beta = m.group(3);
+        return MainMenuScreen.TEXT[0] + " NL " + ver + (beta == null ? "" : beta) + " NL " + makeMTSVersionModCount(mtsver);
+    }
+
+    public static String alterVersion2(String version)
+    {
+        Matcher m = re.matcher(version);
+        if (!m.find()) {
+            return version;
+        }
+
+        String ver = m.group(1);
+        String beta = m.group(3);
+        return ver + (beta == null ? "" : beta);
+    }
+
+    public static String makeMTSVersionModCount(String version)
+    {
+        return version + " - " + Loader.MODINFOS.length + " mod" + (Loader.MODINFOS.length > 1 ? "s" : "");
     }
 
     public static float getSmartHeight(BitmapFont font, String msg, float lineWidth, float lineSpacing)

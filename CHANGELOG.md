@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Fix new version display to work on StS beta
 
 #### v3.9.1 ####
 * Fix duplicate SpireEnum crash

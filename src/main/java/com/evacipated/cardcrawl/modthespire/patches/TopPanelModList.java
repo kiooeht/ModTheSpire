@@ -26,12 +26,6 @@ public class TopPanelModList
     private static final float MOD_LIST_TIP_Y = Settings.HEIGHT - 120.0F * Settings.scale;
     private static Hitbox hb;
 
-    public static String alterVersion(String version)
-    {
-        int pos = version.indexOf(" [ModTheSpire");
-        return pos == -1 ? version : version.substring(0, pos);
-    }
-
     public static void Postfix(TopPanel __instance)
     {
         if (hb == null) {
@@ -101,7 +95,7 @@ public class TopPanelModList
                 public void edit(FieldAccess f) throws CannotCompileException
                 {
                     if (f.getFieldName().equals("VERSION_NUM")) {
-                        f.replace(String.format("$_ = %s.alterVersion($proceed($$));", TopPanelModList.class.getName()));
+                        f.replace(String.format("$_ = %s.alterVersion2($proceed($$));", MainMenuModList.class.getName()));
                     }
                 }
             };
@@ -115,7 +109,7 @@ public class TopPanelModList
             FontHelper.renderFontRightTopAligned(
                 sb,
                 FontHelper.cardDescFont_N,
-                "ModTheSpire " + Loader.MTS_VERSION + " - " + Loader.MODINFOS.length + " mod" + (Loader.MODINFOS.length > 1 ? "s" : ""),
+                MainMenuModList.makeMTSVersionModCount("ModTheSpire " + Loader.MTS_VERSION),
                 Settings.WIDTH - 16 * Settings.scale,
                 Settings.HEIGHT - 104 * Settings.scale,
                 new Color(1, 1, 1, 0.3f)
