@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.9.1 ####
 * Fix duplicate SpireEnum crash
 
 #### v3.9.0 ####
