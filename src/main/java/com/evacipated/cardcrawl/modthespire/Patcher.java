@@ -5,6 +5,7 @@ import com.evacipated.cardcrawl.modthespire.patcher.*;
 import com.evacipated.cardcrawl.modthespire.patcher.InsertPatchInfo.LineNumberAndPatchType;
 import com.evacipated.cardcrawl.modthespire.patcher.javassist.MyCodeConverter;
 import javassist.*;
+import javassist.bytecode.DuplicateMemberException;
 import javassist.expr.ExprEditor;
 import javassist.expr.MethodCall;
 import org.scannotation.AnnotationDB;
@@ -112,6 +113,8 @@ public class Patcher {
             return ctClasses;
         }
 
+        boolean hasPrintedWarning = false;
+
         for (String s : annotations) {
             Class<?> cls = loader.loadClass(s);
             for (Field field : cls.getDeclaredFields()) {
@@ -123,11 +126,20 @@ public class Patcher {
                     }
 
                     // Patch new field onto the enum
-                    CtClass ctClass = pool.get(field.getType().getName());
-                    CtField f = new CtField(ctClass, enumName, ctClass);
-                    f.setModifiers(Modifier.PUBLIC | Modifier.STATIC | Modifier.FINAL | Modifier.ENUM);
-                    ctClass.addField(f);//, CtField.Initializer.byNew(ctClass));
-                    ctClasses.add(ctClass);
+                    try {
+                        CtClass ctClass = pool.get(field.getType().getName());
+                        CtField f = new CtField(ctClass, enumName, ctClass);
+                        f.setModifiers(Modifier.PUBLIC | Modifier.STATIC | Modifier.FINAL | Modifier.ENUM);
+                        ctClass.addField(f);
+                        ctClasses.add(ctClass);
+                    } catch (DuplicateMemberException ignore) {
+                        // Field already exists
+                        if (!Loader.DEBUG && !hasPrintedWarning) {
+                            hasPrintedWarning = true;
+                            System.out.println();
+                        }
+                        System.out.println(String.format("Warning: @SpireEnum %s %s is already defined.", field.getType().getName(), enumName));
+                    }
                 }
             }
         }

@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Fix duplicate SpireEnum crash
 
 #### v3.9.0 ####
 * Main menu no longer lists all mods, instead just the number of mods
