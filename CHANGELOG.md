@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.9.2 ####
 * Fix new version display to work on StS beta
 
 #### v3.9.1 ####
