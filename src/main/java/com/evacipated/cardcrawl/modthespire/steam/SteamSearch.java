@@ -181,12 +181,19 @@ public class SteamSearch
     {
         private final String title;
         private final Path installPath;
+        private final int timeUpdated;
         private List<String> tags;
 
-        public WorkshopInfo(String title, String installPath, String tagsString)
+        public WorkshopInfo(String title, String installPath, String timeUpdated, String tagsString)
         {
             this.title = title;
             this.installPath = Paths.get(installPath).toAbsolutePath();
+            int tmpTime = 0;
+            try {
+                tmpTime = Integer.parseInt(timeUpdated);
+            } catch (NumberFormatException ignore) {
+            }
+            this.timeUpdated = tmpTime;
             String[] tmp = tagsString.split(",");
             tags = new ArrayList<>();
             for (String s : tmp) {
@@ -202,6 +209,11 @@ public class SteamSearch
         public Path getInstallPath()
         {
             return installPath;
+        }
+
+        public int getTimeUpdated()
+        {
+            return timeUpdated;
         }
 
         public List<String> getTags()

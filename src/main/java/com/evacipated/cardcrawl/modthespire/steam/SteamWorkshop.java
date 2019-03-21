@@ -75,6 +75,7 @@ public class SteamWorkshop
                             if (workshop.getItemInstallInfo(details.getPublishedFileID(), info)) {
                                 System.out.println(details.getTitle());
                                 System.out.println(info.getFolder());
+                                System.out.println(details.getTimeUpdated());
                                 System.out.println(details.getTags());
                             }
                         }

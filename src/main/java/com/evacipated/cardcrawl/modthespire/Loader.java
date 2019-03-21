@@ -4,6 +4,8 @@ import com.evacipated.cardcrawl.modthespire.lib.SpireConfig;
 import com.evacipated.cardcrawl.modthespire.steam.SteamSearch;
 import com.evacipated.cardcrawl.modthespire.steam.SteamWorkshop;
 import com.evacipated.cardcrawl.modthespire.ui.ModSelectWindow;
+import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
 import com.vdurmont.semver4j.Semver;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -17,7 +19,10 @@ import java.awt.event.WindowEvent;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.net.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
 import java.util.Timer;
@@ -180,6 +185,7 @@ public class Loader
             BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
             String title = null;
             String installPath = null;
+            String timeUpdated = null;
             String line = null;
             while ((line = reader.readLine()) != null) {
                 System.out.println(line);
@@ -187,13 +193,16 @@ public class Loader
                     title = line;
                 } else if (installPath == null) {
                     installPath = line;
+                } else if (timeUpdated == null) {
+                    timeUpdated = line;
                 } else {
-                    SteamSearch.WorkshopInfo info = new SteamSearch.WorkshopInfo(title, installPath, line);
+                    SteamSearch.WorkshopInfo info = new SteamSearch.WorkshopInfo(title, installPath, timeUpdated, line);
                     if (!info.hasTag("tool") && !info.hasTag("tools")) {
                         workshopInfos.add(info);
                     }
                     title = null;
                     installPath = null;
+                    timeUpdated = null;
                 }
             }
             reader.close();
@@ -205,10 +214,42 @@ public class Loader
         for (SteamSearch.WorkshopInfo info : workshopInfos) {
             System.out.println(info.getTitle());
             System.out.println(info.getInstallPath());
+            System.out.println(info.getTimeUpdated());
             System.out.println(Arrays.toString(info.getTags().toArray()));
         }
         //*/
         System.out.println("Got " + workshopInfos.size() + " workshop items");
+
+        // Save workshop last updated times
+        try {
+            Map<String, Integer> lastUpdated;
+            String path = SpireConfig.makeFilePath(null, "WorkshopUpdated", "json");
+            if (new File(path).isFile()) {
+                String data = new String(Files.readAllBytes(Paths.get(path)));
+                Gson gson = new Gson();
+                Type type = new TypeToken<Map<String, Integer>>(){}.getType();
+                lastUpdated = gson.fromJson(data, type);
+            } else {
+                lastUpdated = new HashMap<>();
+            }
+
+            for (SteamSearch.WorkshopInfo info : workshopInfos) {
+                int savedTime = lastUpdated.getOrDefault(info.getInstallPath().toString(), 0);
+                if (savedTime < info.getTimeUpdated()) {
+                    lastUpdated.put(info.getInstallPath().toString(), info.getTimeUpdated());
+                    if (savedTime != 0) {
+                        System.out.println(info.getTitle() + " WAS UPDATED!");
+                    }
+                }
+            }
+
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            String data = gson.toJson(lastUpdated);
+            Files.write(Paths.get(SpireConfig.makeFilePath(null, "WorkshopUpdated", "json")), data.getBytes());
+        } catch (IOException e) {
+            // TODO
+            e.printStackTrace();
+        }
 
         findGameVersion();
 
