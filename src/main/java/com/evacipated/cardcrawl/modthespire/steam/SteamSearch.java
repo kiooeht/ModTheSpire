@@ -180,13 +180,15 @@ public class SteamSearch
     public static class WorkshopInfo
     {
         private final String title;
+        private final String id;
         private final Path installPath;
         private final int timeUpdated;
         private List<String> tags;
 
-        public WorkshopInfo(String title, String installPath, String timeUpdated, String tagsString)
+        public WorkshopInfo(String title, String id, String installPath, String timeUpdated, String tagsString)
         {
             this.title = title;
+            this.id = id;
             this.installPath = Paths.get(installPath).toAbsolutePath();
             int tmpTime = 0;
             try {
@@ -204,6 +206,11 @@ public class SteamSearch
         public String getTitle()
         {
             return title;
+        }
+
+        public String getID()
+        {
+            return id;
         }
 
         public Path getInstallPath()

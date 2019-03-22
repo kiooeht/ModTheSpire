@@ -184,6 +184,7 @@ public class Loader
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
             String title = null;
+            String id = null;
             String installPath = null;
             String timeUpdated = null;
             String line = null;
@@ -191,16 +192,19 @@ public class Loader
                 System.out.println(line);
                 if (title == null) {
                     title = line;
+                } else if (id == null) {
+                    id = line;
                 } else if (installPath == null) {
                     installPath = line;
                 } else if (timeUpdated == null) {
                     timeUpdated = line;
                 } else {
-                    SteamSearch.WorkshopInfo info = new SteamSearch.WorkshopInfo(title, installPath, timeUpdated, line);
+                    SteamSearch.WorkshopInfo info = new SteamSearch.WorkshopInfo(title, id, installPath, timeUpdated, line);
                     if (!info.hasTag("tool") && !info.hasTag("tools")) {
                         workshopInfos.add(info);
                     }
                     title = null;
+                    id = null;
                     installPath = null;
                     timeUpdated = null;
                 }
@@ -234,9 +238,9 @@ public class Loader
             }
 
             for (SteamSearch.WorkshopInfo info : workshopInfos) {
-                int savedTime = lastUpdated.getOrDefault(info.getInstallPath().toString(), 0);
+                int savedTime = lastUpdated.getOrDefault(info.getID(), 0);
                 if (savedTime < info.getTimeUpdated()) {
-                    lastUpdated.put(info.getInstallPath().toString(), info.getTimeUpdated());
+                    lastUpdated.put(info.getID(), info.getTimeUpdated());
                     if (savedTime != 0) {
                         System.out.println(info.getTitle() + " WAS UPDATED!");
                     }
