@@ -139,6 +139,12 @@
                                         <exclude>**</exclude>
                                     </excludes>
                                 </filter>
+                                <filter>
+                                    <artifact>javassist:javassist</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </filter>
                             </filters>
                         </configuration>
                     </execution>

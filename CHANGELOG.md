@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Include all of javassist library for use
 
 #### v3.9.2 ####
 * Fix new version display to work on StS beta
