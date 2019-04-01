@@ -1,6 +1,7 @@
 ## Changelog ##
 #### dev ####
 * Include all of javassist library for use
+* Fix SpireReturn not working on constructors in Insert patches
 
 #### v3.9.2 ####
 * Fix new version display to work on StS beta
