@@ -1,5 +1,6 @@
 package com.evacipated.cardcrawl.modthespire.patcher.javassist;
 
+import com.evacipated.cardcrawl.modthespire.lib.SpireOverride;
 import com.evacipated.cardcrawl.modthespire.patcher.javassist.convert.TransformSpecialCallVirtual;
 import javassist.CannotCompileException;
 import javassist.CodeConverter;
@@ -28,7 +29,9 @@ public class MyCodeConverter extends CodeConverter
             )
             && !done.contains(origMethod.getLongName())
         ) {
-            throw new CannotCompileException("invoke-type not special/private " + origMethod.getLongName());
+            if (!Modifier.isPrivate(mod1) && !origMethod.hasAnnotation(SpireOverride.class)) {
+                throw new CannotCompileException("invoke-type not special/private " + origMethod.getLongName());
+            }
         }
 
         origMethod.setModifiers(Modifier.setProtected(origMethod.getModifiers()));
