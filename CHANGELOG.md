@@ -3,6 +3,7 @@
 * Include all of javassist library for use
 * Fix SpireReturn not working on constructors in Insert patches
 * Allow SpireOverride to work of methods that already have SpireOverride
+* Fix StaticSpireField not working
 
 #### v3.9.2 ####
 * Fix new version display to work on StS beta
