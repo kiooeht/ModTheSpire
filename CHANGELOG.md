@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.10.1 ####
 * Fix crash in incomplete last-update code
 
 #### v3.10.0 ####
