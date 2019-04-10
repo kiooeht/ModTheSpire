@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Fix crash in incomplete last-update code
 
 #### v3.10.0 ####
 * Include all of javassist library for use

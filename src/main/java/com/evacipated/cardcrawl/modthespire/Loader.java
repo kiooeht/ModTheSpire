@@ -226,18 +226,22 @@ public class Loader
 
         // Save workshop last updated times
         try {
-            Map<String, Integer> lastUpdated;
+            Map<String, Integer> lastUpdated = null;
             String path = SpireConfig.makeFilePath(null, "WorkshopUpdated", "json");
             if (new File(path).isFile()) {
                 String data = new String(Files.readAllBytes(Paths.get(path)));
                 Gson gson = new Gson();
                 Type type = new TypeToken<Map<String, Integer>>(){}.getType();
                 lastUpdated = gson.fromJson(data, type);
-            } else {
+            }
+            if (lastUpdated == null) {
                 lastUpdated = new HashMap<>();
             }
 
             for (SteamSearch.WorkshopInfo info : workshopInfos) {
+                if (info == null) {
+                    continue;
+                }
                 int savedTime = lastUpdated.getOrDefault(info.getID(), 0);
                 if (savedTime < info.getTimeUpdated()) {
                     lastUpdated.put(info.getID(), info.getTimeUpdated());
