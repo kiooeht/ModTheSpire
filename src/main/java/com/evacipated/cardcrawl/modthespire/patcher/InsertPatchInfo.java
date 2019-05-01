@@ -105,7 +105,17 @@ public class InsertPatchInfo extends PatchInfo
                     throw new PatchingException("Insufficient method parameters to accept localvars");
                 }
                 if (localVarTypeNames[i] != null) {
-                    src += localVarTypeNames[i] + " __" + info.localvars()[i] + " = new " + localVarTypeNames[i] + "{" + info.localvars()[i] + "};\n";
+                    String tmp = localVarTypeNames[i].substring(0, localVarTypeNames[i].indexOf('[')+1);
+                    tmp = tmp + "1" + localVarTypeNames[i].substring(localVarTypeNames[i].indexOf('[')+1);
+                    // This does
+                    //   T[][] __var = new T[1][];
+                    //   __var[0] = var;
+                    // instead of
+                    //   T[][] __var = new T[][]{var};
+                    // to avoid a limitation in the javassist compiler being unable to compile
+                    // multi-dimensional array initializers
+                    src += localVarTypeNames[i] + " __" + info.localvars()[i] + " = new " + tmp + ";\n";
+                    src += "__" + info.localvars()[i] + "[0] = " + info.localvars()[i] + ";\n";
                 }
             }
         }
