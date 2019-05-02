@@ -296,9 +296,17 @@ public class ModSelectWindow extends JFrame
         settingsBtn.addActionListener((ActionEvent event) -> {
             // TODO
         });
+        // Toggle all button
+        JButton toggleAllBtn = new JButton(UIManager.getIcon("Tree.collapsedIcon"));
+        toggleAllBtn.setToolTipText("Toggle all mods On/Off");
+        toggleAllBtn.addActionListener((ActionEvent event) -> {
+            modList.toggleAllMods();
+            repaint();
+        });
 
         JPanel topPanel = new JPanel(new GridLayout(1, 0));
         //topPanel.add(settingsBtn);
+        topPanel.add(toggleAllBtn);
         topPanel.add(updatesBtn);
         topPanel.add(openFolderBtn);
         panel.add(topPanel, BorderLayout.NORTH);

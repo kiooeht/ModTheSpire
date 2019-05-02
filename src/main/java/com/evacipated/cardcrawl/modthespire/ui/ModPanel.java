@@ -136,6 +136,13 @@ public class ModPanel extends JPanel
         return checkBox.isEnabled() && checkBox.isSelected();
     }
 
+    public void setSelected(boolean b)
+    {
+        if (checkBox.isEnabled()) {
+            checkBox.setSelected(b);
+        }
+    }
+
     public synchronized void setUpdateIcon(ModSelectWindow.UpdateIconType type)
     {
         switch (type) {

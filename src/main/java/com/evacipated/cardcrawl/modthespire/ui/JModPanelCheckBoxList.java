@@ -83,6 +83,30 @@ public class JModPanelCheckBoxList extends JList<ModPanel> {
         return ret;
     }
 
+    public void toggleAllMods()
+    {
+        int on = 0;
+        for (int i=0; i<getModel().getSize(); ++i) {
+            if (getModel().getElementAt(i).isSelected()) {
+                ++on;
+            }
+        }
+
+        if (on >= getModel().getSize() / 2) {
+            // Toggle off
+            for (int i=0; i<getModel().getSize(); ++i) {
+                getModel().getElementAt(i).setSelected(false);
+            }
+        } else {
+            // Toggle on
+            for (int i=0; i<getModel().getSize(); ++i) {
+                getModel().getElementAt(i).setSelected(true);
+            }
+        }
+
+        publishBoxChecked();
+    }
+
     public synchronized void setUpdateIcon(ModInfo info, ModSelectWindow.UpdateIconType type)
     {
         for (int i=0; i<getModel().getSize(); ++i) {
