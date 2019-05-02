@@ -37,6 +37,9 @@ public class PrefixPatchInfo extends PatchInfo
             Object[][] prefixParamAnnotations = patchMethod.getParameterAnnotations();
             for (int i = 0; i < prefixParamTypes.length; ++i) {
                 if (paramByRef(prefixParamAnnotations[i])) {
+                    if (!prefixParamTypes[i].isArray()) {
+                        throw new ByRefParameterNotArrayException(i);
+                    }
                     src += prefixParamTypes[i].getName() + " __param" + i + " = new " + prefixParamTypes[i].getName() + "{" + "$" + (i + paramOffset) + "};\n";
                     funccall += "__param" + i;
 

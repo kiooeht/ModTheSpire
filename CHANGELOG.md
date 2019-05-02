@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Add check to Prefix for ByRef not being array type
 
 #### v3.10.1 ####
 * Fix crash in incomplete last-update code
