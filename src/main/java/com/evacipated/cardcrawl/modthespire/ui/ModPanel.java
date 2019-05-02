@@ -96,31 +96,38 @@ public class ModPanel extends JPanel
         parent.publishBoxChecked();
     }
     
-    public void recalcModWarnings(JModPanelCheckBoxList parent) {
+    public void recalcModWarnings(JModPanelCheckBoxList parent)
+    {
+        info.statusMsg = " ";
+        checkBox.setBackground(Color.WHITE);
+        infoPanel.setBackground(Color.WHITE);
+
         if (info.MTS_Version.compareTo(Loader.MTS_VERSION) > 0) {
             checkBox.setEnabled(false);
             checkBox.setBackground(lightRed);
             infoPanel.setBackground(lightRed);
             info.statusMsg = "This mod requires ModTheSpire v" + info.MTS_Version + " or higher.";
-        } else if (checkBox.isSelected() && !dependenciesChecked(info, parent)) {
+            return;
+        }
+
+        if (checkBox.isSelected() && !dependenciesChecked(info, parent)) {
             checkBox.setBackground(lightOrange);
             infoPanel.setBackground(lightOrange);
             String[] missingDependencies = missingDependencies(info, parent);
-            StringBuilder tooltip = new StringBuilder("");
+            StringBuilder tooltip = new StringBuilder();
             tooltip.append("Missing dependencies: [");
             tooltip.append(String.join(", ", missingDependencies));
             tooltip.append("]");
             info.statusMsg = tooltip.toString();
-        } else if (Loader.STS_VERSION != null && info.STS_Version != null && !Loader.STS_VERSION.equals(info.STS_Version)) {
+        }
+        if (Loader.STS_VERSION != null && info.STS_Version != null && !Loader.STS_VERSION.equals(info.STS_Version)) {
             //checkBox.setBackground(lightYellow);
             //infoPanel.setBackground(lightYellow);
-            info.statusMsg = "This mod explicitly supports StS " + info.STS_Version + ".\n" +
-                "You are running StS " + Loader.STS_VERSION + ".\n" +
-                "You may encounter problems running it.";
-        } else {
-            checkBox.setBackground(Color.WHITE);
-            infoPanel.setBackground(Color.WHITE);
-            info.statusMsg = " ";
+            if (info.statusMsg == " ") {
+                info.statusMsg = "This mod explicitly supports StS " + info.STS_Version + ".\n" +
+                    "You are running StS " + Loader.STS_VERSION + ".\n" +
+                    "You may encounter problems running it.";
+            }
         }
     }
 

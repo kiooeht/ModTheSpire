@@ -2,6 +2,7 @@
 #### dev ####
 * Add check to Prefix for ByRef not being array type
 * Fix ByRef not working on array types
+* Fix some weirdness of UI warnings
 
 #### v3.10.1 ####
 * Fix crash in incomplete last-update code
