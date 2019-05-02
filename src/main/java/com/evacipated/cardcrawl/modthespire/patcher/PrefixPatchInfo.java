@@ -40,7 +40,18 @@ public class PrefixPatchInfo extends PatchInfo
                     if (!prefixParamTypes[i].isArray()) {
                         throw new ByRefParameterNotArrayException(i);
                     }
-                    src += prefixParamTypes[i].getName() + " __param" + i + " = new " + prefixParamTypes[i].getName() + "{" + "$" + (i + paramOffset) + "};\n";
+                    String tmp = prefixParamTypes[i].getName();
+                    String paramTypeName = tmp.substring(0, tmp.indexOf('[')+1);
+                    paramTypeName = paramTypeName + "1" + tmp.substring(tmp.indexOf('[')+1);
+                    // This does
+                    //   T[][] __var = new T[1][];
+                    //   __var[0] = var;
+                    // instead of
+                    //   T[][] __var = new T[][]{var};
+                    // to avoid a limitation in the javassist compiler being unable to compile
+                    // multi-dimensional array initializers
+                    src += prefixParamTypes[i].getName() + " __param" + i + " = new " + paramTypeName + ";\n";
+                    src += "__param" + i + "[0] = $" + (i + paramOffset) + ";\n";
                     funccall += "__param" + i;
 
                     postcallsrc += "$" + (i + paramOffset) + " = ";
