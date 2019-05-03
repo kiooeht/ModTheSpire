@@ -304,11 +304,33 @@ public class ModSelectWindow extends JFrame
             repaint();
         });
 
-        JPanel topPanel = new JPanel(new GridLayout(1, 0));
-        //topPanel.add(settingsBtn);
-        topPanel.add(toggleAllBtn);
-        topPanel.add(updatesBtn);
-        topPanel.add(openFolderBtn);
+        JPanel btnPanel = new JPanel(new GridLayout(1, 0));
+        //btnPanel.add(settingsBtn);
+        btnPanel.add(updatesBtn);
+        btnPanel.add(openFolderBtn);
+
+        JComboBox profilesList = new JComboBox<>(new String[] {"<Default>"});
+        JPanel profilesPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.BOTH;
+        c.ipady = 2;
+        profilesPanel.add(toggleAllBtn, c);
+        c.weightx = 0.9;
+        c.ipady = 0;
+        profilesPanel.add(profilesList, c);
+        c.weightx = 0;
+        c.ipady = 2;
+        JButton addProfile = new JButton("+");
+        addProfile.setToolTipText("Add new profile");
+        profilesPanel.add(addProfile, c);
+        JButton delProfile = new JButton("-");
+        delProfile.setToolTipText("Delete profile");
+        delProfile.setEnabled(false);
+        profilesPanel.add(delProfile, c);
+
+        JPanel topPanel = new JPanel(new GridLayout(0, 1));
+        topPanel.add(btnPanel);
+        topPanel.add(profilesPanel);
         panel.add(topPanel, BorderLayout.NORTH);
 
         return panel;
