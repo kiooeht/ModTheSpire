@@ -221,7 +221,8 @@ public class ModSelectWindow extends JFrame
         // Mod List
         DefaultListModel<ModPanel> model = new DefaultListModel<>();
         modList = new JModPanelCheckBoxList(this, model);
-        LoadOrder.loadModsInOrder(model, info, modList);
+        ModList mods = ModList.loadModLists();
+        mods.loadModsInOrder(model, info, modList);
         modList.publishBoxChecked();
 
         JScrollPane modScroller = new JScrollPane(modList);
@@ -254,7 +255,7 @@ public class ModSelectWindow extends JFrame
 
             Thread tCfg = new Thread(() -> {
                 // Save new load order cfg
-                LoadOrder.saveCfg(modList.getCheckedMods());
+                ModList.save(ModList.DEFAULT_LIST, modList.getCheckedMods());
             });
             tCfg.start();
 
