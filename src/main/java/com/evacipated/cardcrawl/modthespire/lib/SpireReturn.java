@@ -5,9 +5,10 @@ import java.util.NoSuchElementException;
 public final class SpireReturn<T>
 {
     private static final SpireReturn<?> EMPTY = new SpireReturn<>();
+    private static final SpireReturn<Object> PLACEHOLDER = new SpireReturn<>(null);
 
     private final boolean hasValue;
-    private final T value;
+    private T value;
 
     private SpireReturn()
     {
@@ -30,7 +31,8 @@ public final class SpireReturn<T>
 
     public static<T> SpireReturn<T> Return(T value)
     {
-        return new SpireReturn<>(value);
+        PLACEHOLDER.value = value;
+        return (SpireReturn<T>) PLACEHOLDER;
     }
 
     public T get()

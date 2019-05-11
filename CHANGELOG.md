@@ -4,6 +4,7 @@
 * Fix ByRef not working on array types
 * Fix some weirdness of UI warnings
 * Add toggle all mods button
+* Fix SpireReturn memory leak
 
 #### v3.10.1 ####
 * Fix crash in incomplete last-update code
