@@ -232,7 +232,11 @@ public class Loader
                 String data = new String(Files.readAllBytes(Paths.get(path)));
                 Gson gson = new Gson();
                 Type type = new TypeToken<Map<String, Integer>>(){}.getType();
-                lastUpdated = gson.fromJson(data, type);
+                try {
+                    lastUpdated = gson.fromJson(data, type);
+                } catch (JsonSyntaxException ignore) {
+                    lastUpdated = null;
+                }
             }
             if (lastUpdated == null) {
                 lastUpdated = new HashMap<>();
