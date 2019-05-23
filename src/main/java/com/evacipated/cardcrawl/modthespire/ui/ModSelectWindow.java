@@ -356,14 +356,18 @@ public class ModSelectWindow extends JFrame
         // Delete profile button
         delProfile.setToolTipText("Delete profile");
         delProfile.addActionListener((ActionEvent event) -> {
+            String profileName = (String) profilesList.getSelectedItem();
+
             int n = JOptionPane.showConfirmDialog(
                 this,
                 "Are you sure?\nThis action cannot be undone.",
-                "Delete Profile",
+                "Delete Profile \"" + profileName + "\"",
                 JOptionPane.YES_NO_OPTION
             );
             if (n == 0) {
-                System.out.println("delete");
+                profilesList.removeItem(profileName);
+                profilesList.setSelectedItem(ModList.DEFAULT_LIST);
+                ModList.delete(profileName);
             }
         });
         profilesPanel.add(delProfile, c);

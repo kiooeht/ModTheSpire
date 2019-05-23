@@ -116,6 +116,7 @@ public class ModList
         }
 
         name = list;
+        saveData.lists.putIfAbsent(name, Collections.emptyList());
         mods = saveData.lists.getOrDefault(name, Collections.emptyList());
     }
 
@@ -194,6 +195,11 @@ public class ModList
         }
         saveData.lists.put(list, modList);
 
+        save();
+    }
+
+    private static void save()
+    {
         try {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             String data = gson.toJson(saveData);
@@ -201,5 +207,12 @@ public class ModList
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void delete(String list)
+    {
+        saveData.defaultList = DEFAULT_LIST;
+        saveData.lists.remove(list);
+        save();
     }
 }
