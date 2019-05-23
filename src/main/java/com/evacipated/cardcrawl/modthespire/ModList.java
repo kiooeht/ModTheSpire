@@ -5,6 +5,7 @@ import com.evacipated.cardcrawl.modthespire.ui.JModPanelCheckBoxList;
 import com.evacipated.cardcrawl.modthespire.ui.ModPanel;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -73,6 +74,8 @@ public class ModList
                 String data = new String(Files.readAllBytes(Paths.get(CFG_FILE)));
                 Gson gson = new Gson();
                 saveData = gson.fromJson(data, ModListSaveData.class);
+            } catch (JsonSyntaxException e) {
+                saveData = new ModListSaveData();
             } catch (IOException e) {
                 e.printStackTrace();
             }
