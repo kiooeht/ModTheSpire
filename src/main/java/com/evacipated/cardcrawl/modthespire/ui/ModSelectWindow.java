@@ -12,9 +12,8 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.List;
-import java.util.Properties;
 
 public class ModSelectWindow extends JFrame
 {
@@ -255,7 +254,7 @@ public class ModSelectWindow extends JFrame
 
             Thread tCfg = new Thread(() -> {
                 // Save new load order cfg
-                ModList.save(ModList.DEFAULT_LIST, modList.getCheckedMods());
+                ModList.save(ModList.getDefaultList(), modList.getCheckedMods());
             });
             tCfg.start();
 
@@ -310,7 +309,25 @@ public class ModSelectWindow extends JFrame
         btnPanel.add(updatesBtn);
         btnPanel.add(openFolderBtn);
 
-        JComboBox profilesList = new JComboBox<>(new String[] {"<Default>"});
+        JComboBox<String> profilesList = new JComboBox<>(ModList.getAllModListNames().toArray(new String[0]));
+        JButton addProfile = new JButton("+");
+        JButton delProfile = new JButton("-");
+
+        profilesList.addActionListener((ActionEvent event) -> {
+            String profileName = (String) profilesList.getSelectedItem();
+            delProfile.setEnabled(!ModList.DEFAULT_LIST.equals(profileName));
+            ModList newList = new ModList(profileName);
+            DefaultListModel<ModPanel> newModel = (DefaultListModel<ModPanel>) modList.getModel();
+            newList.loadModsInOrder(newModel, info, modList);
+
+            Thread tCfg = new Thread(() -> {
+                // Save new load order cfg
+                ModList.save(profileName, modList.getCheckedMods());
+            });
+            tCfg.start();
+        });
+        profilesList.setSelectedItem(ModList.getDefaultList());
+
         JPanel profilesPanel = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
         c.fill = GridBagConstraints.BOTH;
@@ -321,12 +338,34 @@ public class ModSelectWindow extends JFrame
         profilesPanel.add(profilesList, c);
         c.weightx = 0;
         c.ipady = 2;
-        JButton addProfile = new JButton("+");
+        // Add profile button
         addProfile.setToolTipText("Add new profile");
+        addProfile.addActionListener((ActionEvent event) -> {
+            String s = JOptionPane.showInputDialog(
+                this,
+                "Profile Name:",
+                "New Profile",
+                JOptionPane.PLAIN_MESSAGE
+            );
+            if (s != null && !s.isEmpty()) {
+                profilesList.addItem(s);
+                profilesList.setSelectedIndex(profilesList.getItemCount() - 1);
+            }
+        });
         profilesPanel.add(addProfile, c);
-        JButton delProfile = new JButton("-");
+        // Delete profile button
         delProfile.setToolTipText("Delete profile");
-        delProfile.setEnabled(false);
+        delProfile.addActionListener((ActionEvent event) -> {
+            int n = JOptionPane.showConfirmDialog(
+                this,
+                "Are you sure?\nThis action cannot be undone.",
+                "Delete Profile",
+                JOptionPane.YES_NO_OPTION
+            );
+            if (n == 0) {
+                System.out.println("delete");
+            }
+        });
         profilesPanel.add(delProfile, c);
 
         JPanel topPanel = new JPanel(new GridLayout(0, 1));

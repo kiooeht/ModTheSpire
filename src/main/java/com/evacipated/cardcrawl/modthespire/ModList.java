@@ -50,6 +50,19 @@ public class ModList
         }
     }
 
+    public static String getDefaultList()
+    {
+        if (saveData == null) {
+            return DEFAULT_LIST;
+        }
+        return saveData.defaultList;
+    }
+
+    public static Collection<String> getAllModListNames()
+    {
+        return saveData.lists.keySet();
+    }
+
     public static ModList loadModLists()
     {
         File oldConfig = new File(OLD_CFG_FILE);
@@ -106,8 +119,15 @@ public class ModList
         mods = saveData.lists.getOrDefault(name, Collections.emptyList());
     }
 
+    public String getName()
+    {
+        return name;
+    }
+
     public void loadModsInOrder(DefaultListModel<ModPanel> model, ModInfo[] info, JModPanelCheckBoxList parent)
     {
+        model.clear();
+
         File[] modFiles = new File[info.length];
         for (int i = 0; i < info.length; ++i) {
             if (info[i].jarURL == null) {
