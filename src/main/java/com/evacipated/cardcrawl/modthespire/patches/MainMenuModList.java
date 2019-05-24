@@ -46,7 +46,7 @@ public class MainMenuModList
         };
     }
 
-    private static Pattern re = Pattern.compile("(\\[.+] \\(.+\\)) \\[(ModTheSpire .+)]( BETA)?");
+    private static Pattern re = Pattern.compile("(\\[.+] \\(.+\\)(?:v\\d)*) \\[(ModTheSpire .+)]( BETA)?");
 
     public static String alterVersion(String version)
     {
@@ -58,7 +58,7 @@ public class MainMenuModList
         String ver = m.group(1);
         String mtsver = m.group(2);
         String beta = m.group(3);
-        return MainMenuScreen.TEXT[0] + " NL " + ver + (beta == null ? "" : beta) + " NL " + makeMTSVersionModCount(mtsver);
+        return ver + (beta == null ? "" : beta) + " NL " + makeMTSVersionModCount(mtsver);
     }
 
     public static String alterVersion2(String version)

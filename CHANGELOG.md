@@ -8,6 +8,7 @@
 * Fix crash if update save contains an error
 * Add mod profiles
 * Fix StS version finding failing on v2 version numbers
+* Fix displaying version incorrectly in-game for v2 version numbers
 
 #### v3.10.1 ####
 * Fix crash in incomplete last-update code
