@@ -7,6 +7,7 @@
 * Fix SpireReturn memory leak
 * Fix crash if update save contains an error
 * Add mod profiles
+* Fix StS version finding failing on v2 version numbers
 
 #### v3.10.1 ####
 * Fix crash in incomplete last-update code

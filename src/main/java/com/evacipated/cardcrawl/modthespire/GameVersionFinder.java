@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 
 public class GameVersionFinder extends ClassVisitor
 {
-    Pattern pattern = Pattern.compile("\\[.+] (\\(.+\\))");
+    Pattern pattern = Pattern.compile("\\[.+] (\\(.+\\))(?:v\\d)*");
 
     public GameVersionFinder()
     {
