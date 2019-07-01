@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.11.0 ####
 * Add check to Prefix for ByRef not being array type
 * Fix ByRef not working on array types
 * Fix some weirdness of UI warnings
