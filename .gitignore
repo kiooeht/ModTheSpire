@@ -30,6 +30,7 @@ ModTheSpire.iml
 .classpath
 .project
 .settings/
+.factorypath
 
 # maven build target
 target/
