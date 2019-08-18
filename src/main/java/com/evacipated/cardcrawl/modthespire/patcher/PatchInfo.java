@@ -2,6 +2,10 @@ package com.evacipated.cardcrawl.modthespire.patcher;
 
 import com.evacipated.cardcrawl.modthespire.lib.ByRef;
 import javassist.*;
+import javassist.bytecode.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class PatchInfo
 {
@@ -22,7 +26,7 @@ public abstract class PatchInfo
     {
         System.out.println("Patch Class: [" + patchClassName() + "]");
         System.out.println(" - Patching [" + ctMethodToPatch.getLongName() + "]");
-        System.out.printf(" - ");
+        System.out.print(" - ");
         System.out.println(debugMsg());
     }
 
@@ -48,7 +52,30 @@ public abstract class PatchInfo
 
     public abstract void doPatch() throws PatchingException;
 
-    protected static boolean paramByRef(Object[] annotations) {
+    protected static List<ParamInfo> paramInfo(CtBehavior ctMethod)
+    {
+        List<ParamInfo> ret = new ArrayList<>();
+
+        MethodInfo methodInfo = ctMethod.getMethodInfo();
+        LocalVariableAttribute table = (LocalVariableAttribute) methodInfo.getCodeAttribute().getAttribute(LocalVariableAttribute.tag);
+        if (table != null) {
+            int position = 0;
+            for (int i=0; i<table.tableLength(); ++i) {
+                if (table.startPc(i) == 0) {
+                    if (position == 0 && !table.variableName(i).equals("this")) {
+                        ++position; // Skip to position 1 if `this` doesn't exist (static method)
+                    }
+                    ret.add(new ParamInfo(position, table.variableName(i)));
+                    ++position;
+                }
+            }
+        }
+
+         return ret;
+    }
+
+    protected static boolean paramByRef(Object[] annotations)
+    {
         for (Object o : annotations) {
             if (o instanceof ByRef) {
                 return true;
@@ -58,7 +85,8 @@ public abstract class PatchInfo
     }
 
     // Gets the typename from the ByRef annotation
-    protected static String paramByRefTypename(Object[] annotations) {
+    protected static String paramByRefTypename(Object[] annotations)
+    {
         for (Object o : annotations) {
             if (o instanceof ByRef) {
                 return ((ByRef) o).type();
@@ -78,5 +106,12 @@ public abstract class PatchInfo
         } catch (ArrayIndexOutOfBoundsException e) {
             return null;
         }
+    }
+
+    protected static String paramByRefTypenamePrivateCapture(CtBehavior ctMethodToPatch, String paramName) throws NotFoundException
+    {
+        CtClass ctClass = ctMethodToPatch.getDeclaringClass();
+        CtField ctField = ctClass.getField(paramName);
+        return ctField.getType().getName();
     }
 }
