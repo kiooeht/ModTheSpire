@@ -4,6 +4,9 @@ import com.evacipated.cardcrawl.modthespire.Loader;
 import com.evacipated.cardcrawl.modthespire.lib.SpireReturn;
 import javassist.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class PrefixPatchInfo extends PatchInfo
 {
     public PrefixPatchInfo(CtBehavior ctMethodToPatch, CtMethod patchMethod)
@@ -27,6 +30,13 @@ public class PrefixPatchInfo extends PatchInfo
     public void doPatch() throws PatchingException
     {
         try {
+            Map<Integer, ParamInfo> privateCaptures = new HashMap<>();
+            for (ParamInfo paramInfo : paramInfo(patchMethod)) {
+                if (paramInfo.isPrivateCapture()) {
+                    privateCaptures.put(paramInfo.getPosition(), paramInfo);
+                }
+            }
+
             String src = "{\n";
             String funccall = patchMethod.getDeclaringClass().getName() + "." + patchMethod.getName() + "(";
             String postcallsrc = "";
@@ -36,6 +46,13 @@ public class PrefixPatchInfo extends PatchInfo
             CtClass[] prefixParamTypes = patchMethod.getParameterTypes();
             Object[][] prefixParamAnnotations = patchMethod.getParameterAnnotations();
             for (int i = 0; i < prefixParamTypes.length; ++i) {
+                String paramName;
+                if (i >= prefixParamTypes.length - privateCaptures.size()) {
+                    paramName = privateCaptures.get(i+1).getName();
+                } else {
+                    paramName = "$" + (i + paramOffset);
+                }
+
                 if (paramByRef(prefixParamAnnotations[i])) {
                     if (!prefixParamTypes[i].isArray()) {
                         throw new ByRefParameterNotArrayException(i);
@@ -51,13 +68,16 @@ public class PrefixPatchInfo extends PatchInfo
                     // to avoid a limitation in the javassist compiler being unable to compile
                     // multi-dimensional array initializers
                     src += prefixParamTypes[i].getName() + " __param" + i + " = new " + paramTypeName + ";\n";
-                    src += "__param" + i + "[0] = $" + (i + paramOffset) + ";\n";
+                    src += "__param" + i + "[0] = " + paramName + ";\n";
                     funccall += "__param" + i;
 
-                    postcallsrc += "$" + (i + paramOffset) + " = ";
-                    postcallsrc2 += "$" + (i + paramOffset) + " = ";
+                    postcallsrc += paramName + " = ";
+                    postcallsrc2 += paramName + " = ";
 
                     String typename = paramByRefTypename2(ctMethodToPatch, i);
+                    if (i >= prefixParamTypes.length - privateCaptures.size()) {
+                        typename = paramByRefTypenamePrivateCapture(ctMethodToPatch, paramName);
+                    }
                     if (!typename.isEmpty()) {
                         postcallsrc += "(" + typename + ")";
                         postcallsrc2 += "(com.megacrit.cardcrawl." + typename + ")";
@@ -65,7 +85,7 @@ public class PrefixPatchInfo extends PatchInfo
                     postcallsrc += "__param" + i + "[0];\n";
                     postcallsrc2 += "__param" + i + "[0];\n";
                 } else {
-                    funccall += "$" + (i + paramOffset);
+                    funccall += paramName;
                 }
                 if (i < prefixParamTypes.length - 1) {
                     funccall += ", ";
