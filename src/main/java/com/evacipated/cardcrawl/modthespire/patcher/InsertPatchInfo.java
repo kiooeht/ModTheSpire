@@ -7,7 +7,7 @@ import com.evacipated.cardcrawl.modthespire.lib.SpireInsertPatch;
 import com.evacipated.cardcrawl.modthespire.lib.SpireReturn;
 import javassist.*;
 
-public class InsertPatchInfo extends PatchInfo
+public class InsertPatchInfo extends ParameterPatchInfo
 {
 
     public static class LineNumberAndPatchType {
@@ -38,6 +38,8 @@ public class InsertPatchInfo extends PatchInfo
     public InsertPatchInfo(SpireInsertPatch info, List<LineNumberAndPatchType> locs, CtBehavior ctMethodToPatch, CtMethod patchMethod)
     {
         super(ctMethodToPatch, patchMethod);
+        canSpireReturn = true;
+        canByRefParams = true;
         this.info = info;
         this.locs = locs;
     }
@@ -65,164 +67,43 @@ public class InsertPatchInfo extends PatchInfo
         return -2;
     }
     
-    private void doPatch(int loc) throws NotFoundException, ClassNotFoundException, CannotCompileException, PatchingException {
-        CtClass returnType = patchMethod.getReturnType();
-        boolean hasEarlyReturn = false;
-        if (ctMethodToPatch instanceof CtMethod
-            && !returnType.equals(CtPrimitiveType.voidType)
-            && returnType.equals(returnType.getClassPool().get(SpireReturn.class.getName()))) {
+    @Override
+    protected ParamTransformer makeTransformer(ParamInfo src, ParamInfo dest)
+    {
+        return new InsertParamTransformer(src, dest);
+    }
 
-            hasEarlyReturn = true;
-        } else if (ctMethodToPatch instanceof CtConstructor
-            && !returnType.equals(CtPrimitiveType.voidType)
-            && returnType.equals(returnType.getClassPool().get(SpireReturn.class.getName()))) {
-
-            hasEarlyReturn = true;
-        }
-
-        CtClass[] insertParamTypes = patchMethod.getParameterTypes();
-        Object[][] insertParamAnnotations = patchMethod.getParameterAnnotations();
-        int insertParamsStartIndex = ctMethodToPatch.getParameterTypes().length;
-        if (!Modifier.isStatic(ctMethodToPatch.getModifiers())) {
-            insertParamsStartIndex += 1;
-        }
-        String[] localVarTypeNames = new String[insertParamAnnotations.length - insertParamsStartIndex];
-        for (int i = insertParamsStartIndex; i < insertParamAnnotations.length; ++i) {
-            if (paramByRef(insertParamAnnotations[i])) {
-                if (!insertParamTypes[i].isArray()) {
-                    throw new ByRefParameterNotArrayException(i);
-                } else {
-                    localVarTypeNames[i - insertParamsStartIndex] = insertParamTypes[i].getName();
-                }
-            }
-        }
-
-        String src = "{\n";
-        if (info != null) {
-            // Setup array holders for each local variable
-            for (int i = 0; i < info.localvars().length; ++i) {
-                if (i >= localVarTypeNames.length) {
-                    throw new PatchingException("Insufficient method parameters to accept localvars");
-                }
-                if (localVarTypeNames[i] != null) {
-                    String tmp = localVarTypeNames[i].substring(0, localVarTypeNames[i].indexOf('[')+1);
-                    tmp = tmp + "1" + localVarTypeNames[i].substring(localVarTypeNames[i].indexOf('[')+1);
-                    // This does
-                    //   T[][] __var = new T[1][];
-                    //   __var[0] = var;
-                    // instead of
-                    //   T[][] __var = new T[][]{var};
-                    // to avoid a limitation in the javassist compiler being unable to compile
-                    // multi-dimensional array initializers
-                    src += localVarTypeNames[i] + " __" + info.localvars()[i] + " = new " + tmp + ";\n";
-                    src += "__" + info.localvars()[i] + "[0] = " + info.localvars()[i] + ";\n";
-                }
-            }
-        }
-
-        if (hasEarlyReturn) {
-            src += SpireReturn.class.getName() + " opt = ";
-        }
-
-        src += patchMethod.getDeclaringClass().getName() + "." + patchMethod.getName() + "(";
-        if (!Modifier.isStatic(ctMethodToPatch.getModifiers())) {
-            if (src.charAt(src.length()-1) != '(') {
-                src += ", ";
-            }
-            src += "$0";
-        }
-        if (src.charAt(src.length()-1) != '(') {
-            src += ", ";
-        }
-        src += "$$";
-        if (info != null) {
-            for (int i = 0; i < info.localvars().length; ++i) {
-                src += ", ";
-                if (localVarTypeNames[i] != null) {
-                    src += "__";
-                }
-                src += info.localvars()[i];
-            }
-        }
-        src += ");\n";
-
-        String src2 = src;
-        if (info != null) {
-            // Set local variables to changed values
-            for (int i = 0; i < info.localvars().length; ++i) {
-                if (localVarTypeNames[i] != null) {
-                    src += info.localvars()[i] + " = ";
-                    src2 += info.localvars()[i] + " = ";
-
-                    String typename = paramByRefTypename(insertParamAnnotations[i + insertParamsStartIndex]);
-                    if (!typename.isEmpty()) {
-                        src += "(" + typename + ")";
-                        src2 += "(com.megacrit.cardcrawl." + typename + ")";
-                    }
-                    src += "__" + info.localvars()[i] + "[0];\n";
-                    src2 += "__" + info.localvars()[i] + "[0];\n";
-                }
-            }
-        }
-
-        if (hasEarlyReturn) {
-            String earlyReturn = "if (opt.isPresent()) { return";
-            if (ctMethodToPatch instanceof CtMethod && !((CtMethod) ctMethodToPatch).getReturnType().equals(CtPrimitiveType.voidType)) {
-                CtClass toPatchReturnType = ((CtMethod) ctMethodToPatch).getReturnType();
-                String toPatchReturnTypeName = toPatchReturnType.getName();
-                if (toPatchReturnType.isPrimitive()) {
-                    if (toPatchReturnType.equals(CtPrimitiveType.intType)) {
-                        toPatchReturnTypeName = "Integer";
-                    } else if (toPatchReturnType.equals(CtPrimitiveType.charType)) {
-                        toPatchReturnTypeName = "Character";
-                    } else {
-                        toPatchReturnTypeName = toPatchReturnTypeName.substring(0, 1).toUpperCase() + toPatchReturnTypeName.substring(1);
-                    }
-                    earlyReturn += " (";
-                }
-                earlyReturn += " (" + toPatchReturnTypeName + ")opt.get()";
-                if (toPatchReturnType.isPrimitive()) {
-                    earlyReturn += ")." + toPatchReturnType.getName() + "Value()";
-                }
-            }
-            earlyReturn += "; }\n";
-
-            src += earlyReturn;
-            src2 += earlyReturn;
-        }
-
-        src += "}";
-        src2 += "}";
-
-        try {
-            ctMethodToPatch.insertAt(loc, src);
-            if (Loader.DEBUG) {
-                System.out.println(src);
-            }
-        } catch (CannotCompileException e) {
-            try {
-                ctMethodToPatch.insertAt(loc, src2);
-                if (Loader.DEBUG) {
-                    System.out.println(src2);
-                }
-            } catch (CannotCompileException e2) {
-                if (Loader.DEBUG) {
-                    System.out.println(src);
-                }
-                throw e;
-            }
-        }
+    private void applyPatch(String src, int loc) throws CannotCompileException
+    {
+        ctMethodToPatch.insertAt(loc, src);
     }
 
     @Override
-    public void doPatch() throws PatchingException
+    protected void applyPatch(String src) throws CannotCompileException
     {
         for (LineNumberAndPatchType patchLoc : locs) {
-            try {
-                doPatch(patchLoc.lineNumber);
-            } catch (CannotCompileException | NotFoundException | ClassNotFoundException e) {
-                throw new PatchingException(e);
+            applyPatch(src, patchLoc.lineNumber);
+        }
+    }
+
+    protected class InsertParamTransformer extends ParamTransformer
+    {
+
+        protected InsertParamTransformer(ParamInfo src, ParamInfo dest)
+        {
+            super(src, dest);
+        }
+
+        @Override
+        protected String getParamName() throws PatchingException
+        {
+            int localVarStartPosition = destInfo.getParamCount() - info.localvars().length + 1;
+            if (destInfo.getPosition() >= localVarStartPosition) {
+                int idx = destInfo.getPosition() - localVarStartPosition;
+                return info.localvars()[idx];
             }
+
+            return super.getParamName();
         }
     }
 }
