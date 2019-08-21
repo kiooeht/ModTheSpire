@@ -2,10 +2,6 @@ package com.evacipated.cardcrawl.modthespire.patcher;
 
 import com.evacipated.cardcrawl.modthespire.lib.ByRef;
 import javassist.*;
-import javassist.bytecode.*;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public abstract class PatchInfo
 {
@@ -51,28 +47,6 @@ public abstract class PatchInfo
     public abstract int patchOrdering();
 
     public abstract void doPatch() throws PatchingException;
-
-    protected static List<ParamInfo> paramInfo(CtBehavior ctMethod)
-    {
-        List<ParamInfo> ret = new ArrayList<>();
-
-        MethodInfo methodInfo = ctMethod.getMethodInfo();
-        LocalVariableAttribute table = (LocalVariableAttribute) methodInfo.getCodeAttribute().getAttribute(LocalVariableAttribute.tag);
-        if (table != null) {
-            int position = 0;
-            for (int i=0; i<table.tableLength(); ++i) {
-                if (table.startPc(i) == 0) {
-                    if (position == 0 && !table.variableName(i).equals("this")) {
-                        ++position; // Skip to position 1 if `this` doesn't exist (static method)
-                    }
-                    ret.add(new ParamInfo(position, table.variableName(i)));
-                    ++position;
-                }
-            }
-        }
-
-         return ret;
-    }
 
     protected static boolean paramByRef(Object[] annotations)
     {
