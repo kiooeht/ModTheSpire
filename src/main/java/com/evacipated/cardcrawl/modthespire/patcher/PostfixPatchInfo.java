@@ -4,11 +4,15 @@ import com.evacipated.cardcrawl.modthespire.Loader;
 
 import javassist.*;
 
-public class PostfixPatchInfo extends PatchInfo
+public class PostfixPatchInfo extends ParameterPatchInfo
 {
+    private boolean returnsValue = false;
+    private boolean takesResultParam = false;
+
     public PostfixPatchInfo(CtBehavior ctMethodToPatch, CtMethod patchMethod)
     {
         super(ctMethodToPatch, patchMethod);
+        canByRefParams = true;
     }
 
     @Override
@@ -24,51 +28,66 @@ public class PostfixPatchInfo extends PatchInfo
     }
 
     @Override
-    public void doPatch() throws PatchingException
+    protected ParamTransformer makeTransformer(ParamInfo src, ParamInfo dest)
     {
-        try {
-            CtClass returnType = patchMethod.getReturnType();
-            CtClass[] parameters = patchMethod.getParameterTypes();
+        return new PostfixParamTransformer(src, dest);
+    }
 
-            boolean returnsValue = false;
-            boolean takesResultParam = false;
+    @Override
+    protected void alterSrc()
+    {
+        if (returnsValue) {
+            funccall = "return ($r)" + funccall;
+        }
+    }
 
-            if (!returnType.equals(CtPrimitiveType.voidType)) {
-                returnsValue = true;
-                if (Loader.DEBUG) {
-                    System.out.println("      Return: " + returnType.getName());
+    @Override
+    protected void applyPatch(String src) throws CannotCompileException
+    {
+        ctMethodToPatch.insertAfter(src);
+    }
+
+    protected class PostfixParamTransformer extends ParamTransformer
+    {
+        protected PostfixParamTransformer(ParamInfo src, ParamInfo dest)
+        {
+            super(src, dest);
+        }
+
+        @Override
+        protected boolean advanceSrcPosition()
+        {
+            if (destInfo.getPosition() == 1 && takesResultParam) {
+                return false;
+            }
+            return super.advanceSrcPosition();
+        }
+
+        @Override
+        protected String getParamName() throws PatchingException
+        {
+            if (destInfo.getPosition() == 1) {
+                try {
+                    CtClass returnType = patchMethod.getReturnType();
+
+                    if (!returnType.equals(CtPrimitiveType.voidType)) {
+                        returnsValue = true;
+                        if (Loader.DEBUG) {
+                            System.out.println("      Return: " + returnType.getName());
+                        }
+                    }
+                    if (destInfo.getType().equals(returnType)) {
+                        takesResultParam = true;
+                        if (Loader.DEBUG) {
+                            System.out.println("      Result param: " + destInfo.getTypename());
+                        }
+                        return "$_";
+                    }
+                } catch (NotFoundException e) {
+                    throw new PatchingException(e);
                 }
             }
-            if (parameters.length >= 1 && parameters[0].equals(returnType)) {
-                takesResultParam = true;
-                if (Loader.DEBUG) {
-                    System.out.println("      Result param: " + parameters[0].getName());
-                }
-            }
-
-            String src = patchMethod.getDeclaringClass().getName() + "." + patchMethod.getName() + "(";
-            if (returnsValue) {
-                src = "return ($r)" + src;
-            }
-            if (takesResultParam) {
-                src += "$_";
-            }
-            if (!Modifier.isStatic(ctMethodToPatch.getModifiers())) {
-                if (src.charAt(src.length() - 1) != '(') {
-                    src += ", ";
-                }
-                src += "$0";
-            }
-            if (src.charAt(src.length() - 1) != '(') {
-                src += ", ";
-            }
-            src += "$$);";
-            if (Loader.DEBUG) {
-                System.out.println("      " + src);
-            }
-            ctMethodToPatch.insertAfter(src);
-        } catch (CannotCompileException | NotFoundException e) {
-            throw new PatchingException(e);
+            return super.getParamName();
         }
     }
 }

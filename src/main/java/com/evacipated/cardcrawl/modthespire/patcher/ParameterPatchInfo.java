@@ -6,14 +6,15 @@ import javassist.*;
 
 abstract class ParameterPatchInfo extends PatchInfo
 {
+    // Feature toggles
     protected boolean canSpireReturn = false;
     protected boolean canByRefParams = false;
 
-    private String src;
-    private String funccall;
-    private String funccallargs;
-    private String postcallsrc;
-    private String postcallsrc2;
+    protected String src;
+    protected String funccall;
+    protected String funccallargs;
+    protected String postcallsrc;
+    protected String postcallsrc2;
 
     public ParameterPatchInfo(CtBehavior ctMethodToPatch, CtMethod patchMethod)
     {
@@ -23,6 +24,11 @@ abstract class ParameterPatchInfo extends PatchInfo
     protected ParamTransformer makeTransformer(ParamInfo src, ParamInfo dest)
     {
         return new ParamTransformer(src, dest);
+    }
+
+    protected void alterSrc()
+    {
+        // NOP
     }
 
     protected abstract void applyPatch(String src) throws CannotCompileException;
@@ -53,9 +59,15 @@ abstract class ParameterPatchInfo extends PatchInfo
 
             funccallargs = "";
             CtClass[] paramTypes = patchMethod.getParameterTypes();
-            for (int i = 0; i < paramTypes.length; ++i) {
-                ParamTransformer transformer = makeTransformer(new ParamInfo(ctMethodToPatch, i), new ParamInfo(patchMethod, i));
+            int i = 0;
+            int j = 0;
+            while (j < paramTypes.length) {
+                ParamTransformer transformer = makeTransformer(new ParamInfo(ctMethodToPatch, i), new ParamInfo(patchMethod, j));
                 transformer.makeSource();
+                if (transformer.advanceSrcPosition()) {
+                    ++i;
+                }
+                ++j;
             }
 
             // Trim ending spaces and ,
@@ -65,6 +77,8 @@ abstract class ParameterPatchInfo extends PatchInfo
             }
 
             funccall = String.format(funccall, funccallargs);
+
+            alterSrc();
 
             src += funccall;
             String src2 = src;
@@ -126,6 +140,11 @@ abstract class ParameterPatchInfo extends PatchInfo
         {
             srcInfo = src;
             destInfo = dest;
+        }
+
+        protected boolean advanceSrcPosition()
+        {
+            return true;
         }
 
         protected String getParamName() throws PatchingException
