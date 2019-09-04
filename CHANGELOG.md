@@ -2,6 +2,7 @@
 #### dev ####
 * Make ByRef work on all Insert patch parameters, not just localvars
 * Add capturing private fields as patch parameters
+* Add ability to load different mod file on beta branch
 
 #### v3.11.0 ####
 * Add check to Prefix for ByRef not being array type

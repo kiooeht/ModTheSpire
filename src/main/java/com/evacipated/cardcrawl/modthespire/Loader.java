@@ -4,7 +4,9 @@ import com.evacipated.cardcrawl.modthespire.lib.SpireConfig;
 import com.evacipated.cardcrawl.modthespire.steam.SteamSearch;
 import com.evacipated.cardcrawl.modthespire.steam.SteamWorkshop;
 import com.evacipated.cardcrawl.modthespire.ui.ModSelectWindow;
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import com.vdurmont.semver4j.Semver;
 import javassist.ClassPool;
@@ -23,9 +25,10 @@ import java.lang.reflect.Type;
 import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
 import java.util.List;
 import java.util.Timer;
+import java.util.*;
+import java.util.function.BiConsumer;
 
 public class Loader
 {
@@ -34,6 +37,7 @@ public class Loader
 
     public static Semver MTS_VERSION;
     public static String MOD_DIR = "mods/";
+    private static String BETA_SUBDIR = "beta/";
     public static String STS_JAR = "desktop-1.0.jar";
     private static String MAC_STS_JAR = "SlayTheSpire.app/Contents/Resources/" + STS_JAR;
     private static String STS_JAR2 = "SlayTheSpire.jar";
@@ -498,6 +502,17 @@ public class Loader
     {
         List<ModInfo> modInfos = new ArrayList<>();
 
+        // Beta version of mods
+        if (STS_BETA) {
+            for (File f : getAllModFiles(MOD_DIR + BETA_SUBDIR)) {
+                ModInfo info = ModInfo.ReadModInfo(f);
+                if (info != null) {
+                    if (modInfos.stream().noneMatch(i -> i.ID == null || i.ID.equals(info.ID))) {
+                        modInfos.add(info);
+                    }
+                }
+            }
+        }
         // "mods/" directory
         for (File f : getAllModFiles(MOD_DIR)) {
             ModInfo info = ModInfo.ReadModInfo(f);
@@ -508,36 +523,46 @@ public class Loader
             }
         }
 
-        // Workshop content
-        for (SteamSearch.WorkshopInfo workshopInfo : workshopInfos) {
-            for (File f : getAllModFiles(workshopInfo.getInstallPath().toString())) {
-                ModInfo info = ModInfo.ReadModInfo(f);
-                if (info != null) {
-                    // Disable the update json url for workshop content
-                    info.UpdateJSON = null;
-                    info.isWorkshop = true;
+        BiConsumer<File, Boolean> lambda = (f, beta) -> {
+            ModInfo info = ModInfo.ReadModInfo(f);
+            if (info != null) {
+                // Disable the update json url for workshop content
+                info.UpdateJSON = null;
+                info.isWorkshop = true;
 
-                    // If the workshop item is a newer version, use it instead of the local mod
-                    boolean doAdd = true;
-                    Iterator<ModInfo> it = modInfos.iterator();
-                    while (it.hasNext()) {
-                        ModInfo modInfo = it.next();
-                        if (modInfo.ID != null && modInfo.ID.equals(info.ID)) {
-                            if (modInfo.ModVersion == null || info.ModVersion == null) {
-                                doAdd = false;
-                                break;
-                            }
-                            if (info.ModVersion.isGreaterThan(modInfo.ModVersion)) {
-                                it.remove();
-                            } else {
-                                doAdd = false;
-                                break;
-                            }
+                // If the workshop item is a newer version, use it instead of the local mod
+                boolean doAdd = true;
+                Iterator<ModInfo> it = modInfos.iterator();
+                while (it.hasNext()) {
+                    ModInfo modInfo = it.next();
+                    if (modInfo.ID != null && modInfo.ID.equals(info.ID)) {
+                        if (modInfo.ModVersion == null || info.ModVersion == null) {
+                            doAdd = false;
+                            break;
+                        }
+                        if (beta || info.ModVersion.isGreaterThan(modInfo.ModVersion)) {
+                            it.remove();
+                        } else {
+                            doAdd = false;
+                            break;
                         }
                     }
-                    if (doAdd) {
-                        modInfos.add(info);
-                    }
+                }
+                if (doAdd) {
+                    modInfos.add(info);
+                }
+            }
+        };
+        // Workshop content
+        for (SteamSearch.WorkshopInfo workshopInfo : workshopInfos) {
+            // Normal
+            for (File f : getAllModFiles(workshopInfo.getInstallPath().toString())) {
+                lambda.accept(f, false);
+            }
+            // Beta
+            if (STS_BETA) {
+                for (File f : getAllModFiles(Paths.get(workshopInfo.getInstallPath().toString(), BETA_SUBDIR).toString())) {
+                    lambda.accept(f, true);
                 }
             }
         }
