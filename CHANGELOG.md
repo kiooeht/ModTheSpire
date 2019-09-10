@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Save workshop item locations so they can be used later without Steam running
 
 #### v3.12.0 ####
 * Make ByRef work on all Insert patch parameters, not just localvars

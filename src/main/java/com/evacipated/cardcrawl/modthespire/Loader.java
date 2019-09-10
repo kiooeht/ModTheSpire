@@ -267,6 +267,27 @@ public class Loader
             e.printStackTrace();
         }
 
+
+        // Save workshop locations
+        if (!workshopInfos.isEmpty()) {
+            try {
+                List<String> workshopLocations = new ArrayList<>();
+                for (SteamSearch.WorkshopInfo info : workshopInfos) {
+                    if (info == null) {
+                        continue;
+                    }
+                    workshopLocations.add(info.getInstallPath().toAbsolutePath().toString());
+                }
+
+                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                String data = gson.toJson(workshopLocations);
+                Files.write(Paths.get(SpireConfig.makeFilePath(null, "WorkshopLocations", "json")), data.getBytes());
+            } catch (IOException e) {
+                // TODO
+                e.printStackTrace();
+            }
+        }
+
         findGameVersion();
 
         EventQueue.invokeLater(() -> {
@@ -554,16 +575,53 @@ public class Loader
             }
         };
         // Workshop content
-        for (SteamSearch.WorkshopInfo workshopInfo : workshopInfos) {
-            // Normal
-            for (File f : getAllModFiles(workshopInfo.getInstallPath().toString())) {
-                lambda.accept(f, false);
-            }
-            // Beta
-            if (STS_BETA) {
-                for (File f : getAllModFiles(Paths.get(workshopInfo.getInstallPath().toString(), BETA_SUBDIR).toString())) {
-                    lambda.accept(f, true);
+        if (!workshopInfos.isEmpty()) {
+            for (SteamSearch.WorkshopInfo workshopInfo : workshopInfos) {
+                // Normal
+                for (File f : getAllModFiles(workshopInfo.getInstallPath().toString())) {
+                    lambda.accept(f, false);
                 }
+                // Beta
+                if (STS_BETA) {
+                    for (File f : getAllModFiles(Paths.get(workshopInfo.getInstallPath().toString(), BETA_SUBDIR).toString())) {
+                        lambda.accept(f, true);
+                    }
+                }
+            }
+        } else {
+            // Load workshop locations
+            try {
+                List<String> workshopLocations = null;
+                String path = SpireConfig.makeFilePath(null, "WorkshopLocations", "json");
+                if (new File(path).isFile()) {
+                    String data = new String(Files.readAllBytes(Paths.get(path)));
+                    Gson gson = new Gson();
+                    Type type = new TypeToken<List<String>>(){}.getType();
+                    try {
+                        workshopLocations = gson.fromJson(data, type);
+                    } catch (JsonSyntaxException ignore) {
+                        workshopLocations = null;
+                    }
+                }
+                if (workshopLocations == null) {
+                    workshopLocations = new ArrayList<>();
+                }
+
+                for (String location : workshopLocations) {
+                    // Normal
+                    for (File f : getAllModFiles(location)) {
+                        lambda.accept(f, false);
+                    }
+                    // Beta
+                    if (STS_BETA) {
+                        for (File f : getAllModFiles(Paths.get(location, BETA_SUBDIR).toString())) {
+                            lambda.accept(f, true);
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                // TODO
+                e.printStackTrace();
             }
         }
 
