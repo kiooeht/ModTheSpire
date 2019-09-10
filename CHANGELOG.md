@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.12.0 ####
 * Make ByRef work on all Insert patch parameters, not just localvars
 * Add capturing private fields as patch parameters
 * Add ability to load different mod file on beta branch
