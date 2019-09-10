@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.13.0 ####
 * Save workshop item locations so they can be used later without Steam running
 * Fix regression of ByRef named type parameter
 
