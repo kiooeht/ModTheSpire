@@ -1,6 +1,7 @@
 package com.evacipated.cardcrawl.modthespire.patcher;
 
 import com.evacipated.cardcrawl.modthespire.Loader;
+import com.evacipated.cardcrawl.modthespire.lib.ByRef;
 import com.evacipated.cardcrawl.modthespire.lib.SpireReturn;
 import javassist.*;
 
@@ -187,6 +188,11 @@ abstract class ParameterPatchInfo extends PatchInfo
                 postcallsrc2 += getParamName() + " = ";
 
                 String typename = srcInfo.getTypename();
+                for (Object o : destInfo.getAnnotations()) {
+                    if (o instanceof ByRef && !((ByRef) o).type().isEmpty()) {
+                        typename = ((ByRef) o).type();
+                    }
+                }
                 if (!typename.isEmpty()) {
                     postcallsrc  += "(" + typename + ")";
                     postcallsrc2 += "(com.megacrit.cardcrawl." + typename + ")";

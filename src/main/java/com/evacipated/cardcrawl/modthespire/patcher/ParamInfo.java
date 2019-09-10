@@ -1,6 +1,5 @@
 package com.evacipated.cardcrawl.modthespire.patcher;
 
-import com.evacipated.cardcrawl.modthespire.lib.ByRef;
 import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.Modifier;
@@ -93,16 +92,8 @@ class ParamInfo
         return ctBehavior.getParameterTypes()[position - 1];
     }
 
-    String getTypename() throws NotFoundException, ClassNotFoundException
+    String getTypename() throws NotFoundException
     {
-        if (position > 0) {
-            for (Object o : ctBehavior.getParameterAnnotations()[position - 1]) {
-                if (o instanceof ByRef) {
-                    return ((ByRef) o).type();
-                }
-            }
-        }
-
         CtClass type = getType();
         if (type == null) {
             return "";

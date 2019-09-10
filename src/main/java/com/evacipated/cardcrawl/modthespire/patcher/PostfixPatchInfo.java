@@ -83,7 +83,7 @@ public class PostfixPatchInfo extends ParameterPatchInfo
                         }
                         return "$_";
                     }
-                } catch (NotFoundException | ClassNotFoundException e) {
+                } catch (NotFoundException e) {
                     throw new PatchingException(e);
                 }
             }
