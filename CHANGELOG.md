@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.13.1 ####
 * Fix loading workshop beta mods when local beta mod should be loaded
 
 #### v3.13.0 ####
