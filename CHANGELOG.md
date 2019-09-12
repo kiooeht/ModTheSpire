@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Fix loading workshop beta mods when local beta mod should be loaded
 
 #### v3.13.0 ####
 * Save workshop item locations so they can be used later without Steam running

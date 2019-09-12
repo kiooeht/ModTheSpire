@@ -561,7 +561,7 @@ public class Loader
                             doAdd = false;
                             break;
                         }
-                        if (beta || info.ModVersion.isGreaterThan(modInfo.ModVersion)) {
+                        if (info.ModVersion.isGreaterThan(modInfo.ModVersion)) {
                             it.remove();
                         } else {
                             doAdd = false;
