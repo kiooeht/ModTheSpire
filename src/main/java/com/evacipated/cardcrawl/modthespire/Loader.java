@@ -128,6 +128,8 @@ public class Loader
             allowBeta = true;
         }
 
+        boolean skipLauncher = Arrays.asList(args).contains("--skip-launcher");
+
         try {
             Properties properties = new Properties();
             properties.load(Loader.class.getResourceAsStream("/META-INF/version.prop"));
@@ -292,7 +294,7 @@ public class Loader
 
         EventQueue.invokeLater(() -> {
             ModInfo[] modInfos = getAllMods(workshopInfos);
-            ex = new ModSelectWindow(modInfos);
+            ex = new ModSelectWindow(modInfos, skipLauncher);
             ex.setVisible(true);
 
             ex.warnAboutMissingVersions();

@@ -78,7 +78,7 @@ public class ModSelectWindow extends JFrame
         return properties;
     }
     
-    public ModSelectWindow(ModInfo[] modInfos)
+    public ModSelectWindow(ModInfo[] modInfos, boolean skipLauncher)
     {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -89,7 +89,7 @@ public class ModSelectWindow extends JFrame
         info = modInfos;
         readWindowPosSize();
         setupDetectMaximize();
-        initUI();
+        initUI(skipLauncher);
         if (Loader.MTS_CONFIG.getBool("maximize")) {
             isMaximized = true;
             this.setExtendedState(this.getExtendedState() | JFrame.MAXIMIZED_BOTH);
@@ -183,7 +183,7 @@ public class ModSelectWindow extends JFrame
         });
     }
 
-    private void initUI()
+    private void initUI(boolean skipLauncher)
     {
         setTitle("ModTheSpire " + Loader.MTS_VERSION);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -205,10 +205,14 @@ public class ModSelectWindow extends JFrame
             setLocation(location.getLocation());
         }
 
-        // Default focus Play button
-        JRootPane rootPane = SwingUtilities.getRootPane(playBtn);
-        rootPane.setDefaultButton(playBtn);
-        EventQueue.invokeLater(playBtn::requestFocusInWindow);
+        if (skipLauncher) {
+            playBtn.doClick();
+        } else {
+            // Default focus Play button
+            JRootPane rootPane = SwingUtilities.getRootPane(playBtn);
+            rootPane.setDefaultButton(playBtn);
+            EventQueue.invokeLater(playBtn::requestFocusInWindow);
+        }
     }
 
     private JPanel makeModListPanel()
