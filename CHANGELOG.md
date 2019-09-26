@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.14.0 ####
 * Add flag for skipping launcher UI
 * Add flag for selecting profile
 
