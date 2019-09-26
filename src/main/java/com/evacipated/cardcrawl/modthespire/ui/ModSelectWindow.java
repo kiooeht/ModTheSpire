@@ -330,7 +330,11 @@ public class ModSelectWindow extends JFrame
             });
             tCfg.start();
         });
-        profilesList.setSelectedItem(ModList.getDefaultList());
+        if (Loader.profileArg != null) {
+            profilesList.setSelectedItem(Loader.profileArg);
+        } else {
+            profilesList.setSelectedItem(ModList.getDefaultList());
+        }
 
         JPanel profilesPanel = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();

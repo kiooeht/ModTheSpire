@@ -51,6 +51,7 @@ public class Loader
     public static String STS_VERSION = null;
     public static boolean STS_BETA = false;
     public static boolean allowBeta = false;
+    public static String profileArg = null;
 
     static String[] ARGS;
     private static ModSelectWindow ex;
@@ -129,6 +130,12 @@ public class Loader
         }
 
         boolean skipLauncher = Arrays.asList(args).contains("--skip-launcher");
+
+        List<String> argList = Arrays.asList(args);
+        int profileArgIndex = argList.indexOf("--profile");
+        if (profileArgIndex >= 0 && argList.size() > profileArgIndex + 1) {
+            profileArg = argList.get(profileArgIndex+1);
+        }
 
         try {
             Properties properties = new Properties();

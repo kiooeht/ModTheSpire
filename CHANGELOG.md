@@ -1,6 +1,7 @@
 ## Changelog ##
 #### dev ####
 * Add flag for skipping launcher UI
+* Add flag for selecting profile
 
 #### v3.13.1 ####
 * Fix loading workshop beta mods when local beta mod should be loaded
