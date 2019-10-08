@@ -16,7 +16,7 @@ class ParamInfo
 
     private static String findName(CtBehavior ctBehavior, int position)
     {
-        MethodInfo methodInfo = ctBehavior.getMethodInfo();
+        MethodInfo methodInfo = ctBehavior.getMethodInfo2();
         LocalVariableAttribute table = (LocalVariableAttribute) methodInfo.getCodeAttribute().getAttribute(LocalVariableAttribute.tag);
         if (table != null) {
             int j = 0;

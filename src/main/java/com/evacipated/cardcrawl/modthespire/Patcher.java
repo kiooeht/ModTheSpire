@@ -88,21 +88,19 @@ public class Patcher {
         return patchSetList;
     }
 
-    public static HashSet<CtClass> patchEnums(ClassLoader loader, ClassPool pool, ModInfo[] modInfos)
+    public static void patchEnums(ClassLoader loader, ClassPool pool, ModInfo[] modInfos)
         throws IOException, ClassNotFoundException, NotFoundException, CannotCompileException
     {
         URL[] urls = new URL[modInfos.length];
         for (int i = 0; i < modInfos.length; i++) {
             urls[i] = modInfos[i].jarURL;
         }
-        return patchEnums(loader, pool, urls);
+        patchEnums(loader, pool, urls);
     }
 
-    public static HashSet<CtClass> patchEnums(ClassLoader loader, ClassPool pool, URL... urls)
+    public static void patchEnums(ClassLoader loader, ClassPool pool, URL... urls)
         throws IOException, ClassNotFoundException, NotFoundException, CannotCompileException
     {
-        HashSet<CtClass> ctClasses = new HashSet<>();
-
         AnnotationDB db = new AnnotationDB();
         db.setScanClassAnnotations(false);
         db.setScanMethodAnnotations(false);
@@ -110,7 +108,7 @@ public class Patcher {
 
         Set<String> annotations = db.getAnnotationIndex().get(SpireEnum.class.getName());
         if (annotations == null) {
-            return ctClasses;
+            return;
         }
 
         boolean hasPrintedWarning = false;
@@ -131,7 +129,6 @@ public class Patcher {
                         CtField f = new CtField(ctClass, enumName, ctClass);
                         f.setModifiers(Modifier.PUBLIC | Modifier.STATIC | Modifier.FINAL | Modifier.ENUM);
                         ctClass.addField(f);
-                        ctClasses.add(ctClass);
                     } catch (DuplicateMemberException ignore) {
                         // Field already exists
                         if (!Loader.DEBUG && !hasPrintedWarning) {
@@ -143,8 +140,6 @@ public class Patcher {
                 }
             }
         }
-
-        return ctClasses;
     }
 
     public static void bustEnums(ClassLoader loader, ModInfo[] modInfos)
@@ -230,12 +225,18 @@ public class Patcher {
         System.out.println("Done.");
     }
 
-    public static void compilePatches(ClassLoader loader, SortedMap<String, CtClass> ctClasses) throws CannotCompileException
+    public static void compilePatches(ClassLoader loader, MTSClassPool pool) throws CannotCompileException
     {
         System.out.printf("Compiling patched classes...");
         if (Loader.DEBUG) {
             System.out.println();
         }
+
+        SortedMap<String, CtClass> ctClasses = new TreeMap<>();
+        for (CtClass cls : pool.getModifiedClasses()) {
+            ctClasses.put(countSuperClasses(cls) + cls.getName(), cls);
+        }
+
         for (Map.Entry<String, CtClass> cls : ctClasses.entrySet()) {
             if (Loader.DEBUG) {
                 System.out.println("  " + cls.getValue().getName());
@@ -245,25 +246,36 @@ public class Patcher {
         System.out.println("Done.");
     }
 
-    public static HashSet<CtClass> injectPatches(ClassLoader loader, ClassPool pool, List<Iterable<String>> class_names) throws Exception
+    private static int countSuperClasses(CtClass cls)
     {
-        HashSet<CtClass> ctClasses = new HashSet<>();
-        for (Iterable<String> it : class_names) {
-            HashSet<CtClass> tmp = injectPatches(loader, pool, it);
-            if (tmp != null) {
-                ctClasses.addAll(tmp);
+        String name = cls.getName();
+        int count = 0;
+
+        while (cls != null) {
+            try {
+                cls = cls.getSuperclass();
+            } catch (NotFoundException e) {
+                break;
             }
-            PatchInfo.nextMod();
+            ++count;
         }
-        return ctClasses;
+
+        return count;
     }
 
-    public static HashSet<CtClass> injectPatches(ClassLoader loader, ClassPool pool, Iterable<String> class_names) throws Exception
+    public static void injectPatches(ClassLoader loader, ClassPool pool, List<Iterable<String>> class_names) throws Exception
+    {
+        for (Iterable<String> it : class_names) {
+            injectPatches(loader, pool, it);
+            PatchInfo.nextMod();
+        }
+    }
+
+    public static void injectPatches(ClassLoader loader, ClassPool pool, Iterable<String> class_names) throws Exception
     {
         if (class_names == null)
-            return null;
+            return;
 
-        HashSet<CtClass> ctClasses = new HashSet<>();
         for (String cls_name : class_names) {
             CtClass ctPatchClass = pool.get(cls_name);
             
@@ -320,8 +332,6 @@ public class Patcher {
                         }
                     } else if (patch.method().equals(SpirePatch.CLASS)) {
                         patchInfos.add(new ClassPatchInfo(ctClsToPatch, ctPatchClass));
-                        ctClasses.add(ctClsToPatch);
-                        ctClasses.add(ctPatchClass);
                     } else {
                         if (ctParamTypes == null) {
                             CtMethod[] methods = ctClsToPatch.getDeclaredMethods(patch.method());
@@ -414,12 +424,8 @@ public class Patcher {
                         patchInfos.add(p);
                     }
                 }
-
-                ctClasses.add(ctClsToPatch);
             }
         }
-
-        return ctClasses;
     }
 
     private static boolean isInsertPatchValid(SpireInsertPatch insertPatch, LocatorInfo locatorInfo) {
@@ -493,12 +499,11 @@ public class Patcher {
         }
     }
 
-    static HashSet<CtClass> patchOverrides(ClassLoader loader, ClassPool pool, ModInfo[] modInfos) throws PatchingException
+    static void patchOverrides(ClassLoader loader, ClassPool pool, ModInfo[] modInfos) throws PatchingException
     {
         System.out.println("Patching Overrides...");
         MyCodeConverter.reset();
 
-        HashSet<CtClass> ctClasses = new HashSet<>();
         for (AnnotationDB db : annotationDBMap.values()) {
             Set<String> classNames = db.getAnnotationIndex().get(SpireOverride.class.getName());
             if (classNames != null) {
@@ -564,8 +569,6 @@ public class Patcher {
                                     }
                                 };
                                 ctMethod.instrument(exprEditor);
-                                ctClasses.add(superMethod.getDeclaringClass());
-                                ctClasses.add(ctMethod.getDeclaringClass());
                             }
                         }
                     } catch (NotFoundException | CannotCompileException e) {
@@ -574,8 +577,6 @@ public class Patcher {
                 }
             }
         }
-
-        return ctClasses;
     }
 
     private static CtMethod findSuperMethod(CtMethod ctMethod) throws NotFoundException

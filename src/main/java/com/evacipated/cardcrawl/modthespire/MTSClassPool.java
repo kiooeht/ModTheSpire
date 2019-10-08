@@ -1,6 +1,10 @@
 package com.evacipated.cardcrawl.modthespire;
 
 import javassist.ClassPool;
+import javassist.CtClass;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class MTSClassPool extends ClassPool
 {
@@ -21,5 +25,17 @@ public class MTSClassPool extends ClassPool
     public void setParent(ClassPool parent)
     {
         this.parent = parent;
+    }
+
+    public Set<CtClass> getModifiedClasses()
+    {
+        Set<CtClass> ret = new HashSet<>();
+        for (Object v : classes.values()) {
+            CtClass cls = (CtClass) v;
+            if (cls.isModified()) {
+                ret.add(cls);
+            }
+        }
+        return ret;
     }
 }
