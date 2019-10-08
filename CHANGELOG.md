@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.14.1 ####
 * Fix shading an older, incorrect version of javassist
 
 #### v3.14.0 ####
