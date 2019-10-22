@@ -54,6 +54,12 @@ public class MTSClassLoader extends URLClassLoader
     }
 
     @Override
+    public void addURL(URL url)
+    {
+        super.addURL(url);
+    }
+
+    @Override
     public Class<?> loadClass(String name) throws ClassNotFoundException
     {
         if (name.startsWith("com.codedisaster.steamworks") || name.startsWith("com.google.gson") || name.equals("com.megacrit.cardcrawl.desktop.DesktopLauncher")) {

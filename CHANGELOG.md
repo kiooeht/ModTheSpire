@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Allow mods to sideload other mods, loading them even if not selected
 
 #### v3.14.1 ####
 * Fix shading an older, incorrect version of javassist

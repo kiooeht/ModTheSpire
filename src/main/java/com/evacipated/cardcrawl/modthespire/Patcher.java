@@ -34,7 +34,13 @@ public class Patcher {
                         System.out.println("   - " + initializer);
                         try {
                             long startTime = System.nanoTime();
-                            Method init = loader.loadClass(initializer).getDeclaredMethod("initialize");
+                            Method init = null;
+                            if (info.ID.startsWith("__sideload_")) {
+                                init = loader.loadClass(initializer).getDeclaredMethod("sideload");
+                            }
+                            if (init == null) {
+                                init = loader.loadClass(initializer).getDeclaredMethod("initialize");
+                            }
                             init.invoke(null);
                             long endTime = System.nanoTime();
                             long duration = endTime - startTime;
@@ -48,6 +54,67 @@ public class Patcher {
                 System.err.println(info.jarURL + " Not in DB map. Something is very wrong");
             }
         }
+    }
+
+    public static ModInfo[] sideloadMods(MTSClassLoader tmpPatchingLoader, MTSClassLoader loader, ClassPool pool, ModInfo[] allModInfos, ModInfo[] modInfos)
+        throws IOException, NotFoundException, ClassNotFoundException
+    {
+        List<String> sideloadList = new ArrayList<>();
+        for (ModInfo modInfo : modInfos) {
+            if (modInfo.MTS_Version.compareTo(Loader.MTS_VERSION) <= 0) {
+                AnnotationDB db;
+                if (annotationDBMap.containsKey(modInfo.jarURL)) {
+                    db = annotationDBMap.get(modInfo.jarURL);
+                } else {
+                    db = new AnnotationDB();
+                    annotationDBMap.put(modInfo.jarURL, db);
+                }
+                db.scanArchives(modInfo.jarURL);
+                Iterable<String> tmp = db.getAnnotationIndex().get(SpireSideload.class.getName());
+                if (tmp != null) {
+                    tmp.forEach(sideloadList::add);
+                }
+            } else {
+                String str = "ERROR: " + modInfo.Name + " requires ModTheSpire v" + modInfo.MTS_Version + " or greater!";
+                System.out.println(str);
+                JOptionPane.showMessageDialog(null, str);
+            }
+        }
+
+        for (String class_name : sideloadList) {
+            CtClass ctSideloadClass = pool.get(class_name);
+
+            SpireSideload sideload = (SpireSideload) ctSideloadClass.getAnnotation(SpireSideload.class);
+            if (sideload != null) {
+                for (String modid : sideload.modIDs()) {
+                    if (!Loader.isModLoaded(modid)) {
+                        System.out.print("Sideloading " + modid + "...");
+                        ModInfo info = null;
+                        for (ModInfo allInfo : allModInfos) {
+                            if (allInfo.ID.equals(modid)) {
+                                info = allInfo;
+                                break;
+                            }
+                        }
+                        if (info != null) {
+                            // Add dummy value to modid TODO?
+                            info.ID = "__sideload_" + info.ID;
+                            // Sideload mod into classloaders
+                            tmpPatchingLoader.addURL(info.jarURL);
+                            loader.addURL(info.jarURL);
+                            // Sideload mod into MODINFOS
+                            modInfos = Arrays.copyOf(modInfos, modInfos.length + 1);
+                            modInfos[modInfos.length - 1] = info;
+                            System.out.println("Done.");
+                        } else {
+                            System.out.println("Not found.");
+                        }
+                    }
+                }
+            }
+        }
+
+        return modInfos;
     }
 
     public static List<Iterable<String>> findPatches(URL[] urls) throws IOException

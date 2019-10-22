@@ -43,6 +43,7 @@ public class Loader
     public static String STS_PATCHED_JAR = "desktop-1.0-patched.jar";
     public static String JRE_51_DIR = "jre1.8.0_51";
     public static ModInfo[] MODINFOS;
+    private static ModInfo[] ALLMODINFOS;
     private static ClassPool POOL;
 
     public static SpireConfig MTS_CONFIG;
@@ -62,6 +63,22 @@ public class Loader
             }
         }
         return false;
+    }
+
+    public static boolean isModSideloaded(String modID)
+    {
+        modID = "__sideload_" + modID;
+        for (int i=0; i<MODINFOS.length; ++i) {
+            if (modID.equals(MODINFOS[i].ID)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean isModLoadedOrSideloaded(String modID)
+    {
+        return isModLoaded(modID) || isModSideloaded(modID);
     }
 
     public static ClassPool getClassPool()
@@ -298,8 +315,8 @@ public class Loader
         findGameVersion();
 
         EventQueue.invokeLater(() -> {
-            ModInfo[] modInfos = getAllMods(workshopInfos);
-            ex = new ModSelectWindow(modInfos, skipLauncher);
+            ALLMODINFOS = getAllMods(workshopInfos);
+            ex = new ModSelectWindow(ALLMODINFOS, skipLauncher);
             ex.setVisible(true);
 
             ex.warnAboutMissingVersions();
@@ -327,28 +344,32 @@ public class Loader
             System.out.println();
         }
         try {
-            ModInfo[] modInfos = buildInfoArray(modJars);
-            checkDependencies(modInfos);
-            modInfos = orderDependencies(modInfos);
-            MODINFOS = modInfos;
+            {
+                ModInfo[] modInfos = buildInfoArray(modJars);
+                checkDependencies(modInfos);
+                modInfos = orderDependencies(modInfos);
+                MODINFOS = modInfos;
+            }
 
             printMTSInfo();
 
-            MTSClassLoader loader = new MTSClassLoader(Loader.class.getResourceAsStream(COREPATCHES_JAR), buildUrlArray(modInfos), Loader.class.getClassLoader());
+            MTSClassLoader loader = new MTSClassLoader(Loader.class.getResourceAsStream(COREPATCHES_JAR), buildUrlArray(MODINFOS), Loader.class.getClassLoader());
 
             if (modJars.length > 0) {
-                MTSClassLoader tmpPatchingLoader = new MTSClassLoader(Loader.class.getResourceAsStream(COREPATCHES_JAR), buildUrlArray(modInfos), Loader.class.getClassLoader());
+                MTSClassLoader tmpPatchingLoader = new MTSClassLoader(Loader.class.getResourceAsStream(COREPATCHES_JAR), buildUrlArray(MODINFOS), Loader.class.getClassLoader());
                 
                 System.out.println("Begin patching...");
                 MTSClassPool pool = new MTSClassPool(tmpPatchingLoader);
                 pool.insertClassPath(new LoaderClassPath(tmpPatchingLoader));
                 tmpPatchingLoader.addStreamToClassPool(pool); // Inserts infront of above path
 
+                MODINFOS = Patcher.sideloadMods(tmpPatchingLoader, loader, pool, ALLMODINFOS, MODINFOS);
+
                 // Patch enums
                 System.out.printf("Patching enums...");
                 Patcher.patchEnums(tmpPatchingLoader, pool, Loader.class.getResource(Loader.COREPATCHES_JAR));
                 // Patch SpireEnums from mods
-                Patcher.patchEnums(tmpPatchingLoader, pool, modInfos);
+                Patcher.patchEnums(tmpPatchingLoader, pool, MODINFOS);
                 System.out.println("Done.");
 
                 // Find and inject core patches
@@ -376,7 +397,7 @@ public class Loader
                 System.out.printf("Busting enums...");
                 Patcher.bustEnums(loader, Loader.class.getResource(Loader.COREPATCHES_JAR));
                 // Bust SpireEnums from mods
-                Patcher.bustEnums(loader, modInfos);
+                Patcher.bustEnums(loader, MODINFOS);
                 System.out.println("Done.");
                 System.out.println();
 
@@ -412,7 +433,7 @@ public class Loader
 
                 // Initialize any mods that implement SpireInitializer.initialize()
                 System.out.println("Initializing mods...");
-                Patcher.initializeMods(loader, modInfos);
+                Patcher.initializeMods(loader, MODINFOS);
                 System.out.println("Done.");
                 System.out.println();
             }
