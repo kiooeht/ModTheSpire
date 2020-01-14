@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.15.0 ####
 * Allow mods to sideload other mods, loading them even if not selected
 
 #### v3.14.1 ####
