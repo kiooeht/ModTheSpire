@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Fix patch error with ByRef while mixing primitive and wrapper types
 
 #### v3.15.0 ####
 * Allow mods to sideload other mods, loading them even if not selected

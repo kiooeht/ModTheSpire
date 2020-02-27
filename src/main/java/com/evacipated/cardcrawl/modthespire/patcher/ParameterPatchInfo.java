@@ -162,6 +162,18 @@ abstract class ParameterPatchInfo extends PatchInfo
             throw new PatchingException("Illegal patch parameter: Cannot determine name");
         }
 
+        protected String boxing(String paramName) throws NotFoundException
+        {
+            if (!destInfo.getType().equals(srcInfo.getType())) {
+                CtClass ctComponentType = destInfo.getType().getComponentType();
+                if (srcInfo.getType() != null && srcInfo.getType().isPrimitive() && !ctComponentType.isPrimitive()) {
+                    return "new " + ctComponentType.getName() + "(" + paramName + ")";
+                }
+            }
+
+            return paramName;
+        }
+
         protected void makeSource()
             throws ClassNotFoundException, PatchingException, NotFoundException
         {
@@ -181,7 +193,7 @@ abstract class ParameterPatchInfo extends PatchInfo
                 // to avoid a limitation in the javassist compiler being unable to compile
                 // multi-dimensional array initializers
                 src += tmp + " __param" + destInfo.getPosition() + " = new " + paramTypeName + ";\n";
-                src += "__param" + destInfo.getPosition() + "[0] = " + getParamName() + ";\n";
+                src += "__param" + destInfo.getPosition() + "[0] = " + boxing(getParamName()) + ";\n";
                 funccallargs += "__param" + destInfo.getPosition();
 
                 postcallsrc  += getParamName() + " = ";
@@ -197,8 +209,19 @@ abstract class ParameterPatchInfo extends PatchInfo
                     postcallsrc  += "(" + typename + ")";
                     postcallsrc2 += "(com.megacrit.cardcrawl." + typename + ")";
                 }
-                postcallsrc  += "__param" + destInfo.getPosition() + "[0];\n";
-                postcallsrc2 += "__param" + destInfo.getPosition() + "[0];\n";
+                postcallsrc  += "__param" + destInfo.getPosition() + "[0]";
+                postcallsrc2 += "__param" + destInfo.getPosition() + "[0]";
+                // Unboxing wrapper types
+                if (srcInfo.getType() != null && destInfo.getType() != null) {
+                    CtClass ctComponentType = destInfo.getType().getComponentType();
+                    if (srcInfo.getType().isPrimitive() && ctComponentType != null && !ctComponentType.isPrimitive()) {
+                        CtPrimitiveType ctPrimitive = (CtPrimitiveType) srcInfo.getType();
+                        postcallsrc += "." + ctPrimitive.getGetMethodName() + "()";
+                        postcallsrc2 += "." + ctPrimitive.getGetMethodName() + "()";
+                    }
+                }
+                postcallsrc  += ";\n";
+                postcallsrc2 += ";\n";
             } else {
                 funccallargs += getParamName();
             }
