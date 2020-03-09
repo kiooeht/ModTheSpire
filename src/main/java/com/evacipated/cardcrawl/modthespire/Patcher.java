@@ -483,7 +483,7 @@ public class Patcher {
                         p = new InstrumentPatchInfo(ctMethodToPatch, loader.loadClass(cls_name).getDeclaredMethod(m.getName()));
                     } else if (m.getName().equals("Replace")) {
                         p = new ReplacePatchInfo(ctMethodToPatch, m);
-                    } else if (m.getName().equals("Raw")) {
+                    } else if (m.getName().equals("Raw") || m.hasAnnotation(SpireRawPatch.class)) {
                         p = new RawPatchInfo(ctMethodToPatch, findRawMethod(loader.loadClass(cls_name), m.getName()));
                     }
 
