@@ -66,12 +66,20 @@ public class ClassPatchInfo extends PatchInfo
                         // Make the field
                         String fieldName = String.format("%s_%d", f.getName(), new Random().nextInt(1000));
                         String fieldType = f.getGenericSignature();
-                        Pattern pattern = Pattern.compile("Lcom/evacipated/cardcrawl/modthespire/lib/(?:Static)?SpireField<L(.+);>;");
+                        Pattern pattern = Pattern.compile("Lcom/evacipated/cardcrawl/modthespire/lib/(?:Static)?SpireField<(\\[?)L(.+);>;");
                         Matcher matcher = pattern.matcher(fieldType);
-                        matcher.find();
-                        fieldType = matcher.group(1).replace('/', '.');
+                        if (!matcher.find()) {
+                            if (Loader.DEBUG) {
+                                System.out.println(fieldType);
+                            }
+                        }
+                        boolean isArrayType = !matcher.group(1).isEmpty();
+                        fieldType = matcher.group(2).replace('/', '.');
                         if (fieldType.contains("<")) {
                             fieldType = fieldType.substring(0, fieldType.indexOf('<'));
+                        }
+                        if (isArrayType) {
+                            fieldType += "[]";
                         }
                         String str = String.format("public%s %s %s;",
                             (isStatic ? " static" : ""),
