@@ -162,11 +162,16 @@ abstract class ParameterPatchInfo extends PatchInfo
             throw new PatchingException("Illegal patch parameter: Cannot determine name");
         }
 
-        protected String boxing(String paramName) throws NotFoundException
+        protected String boxing(String paramName) throws NotFoundException, PatchingException
         {
-            if (!destInfo.getType().equals(srcInfo.getType())) {
-                CtClass ctComponentType = destInfo.getType().getComponentType();
-                if (srcInfo.getType() != null && srcInfo.getType().isPrimitive() && !ctComponentType.isPrimitive()) {
+            CtClass srcType = srcInfo.getType();
+            CtClass destType = destInfo.getType();
+            if (srcType == null && destInfo.isPrivateCapture()) {
+                srcType = srcInfo.getPrivateCaptureType(destInfo);
+            }
+            if (!destType.equals(srcType)) {
+                CtClass ctComponentType = destType.getComponentType();
+                if (srcType != null && srcType.isPrimitive() && !ctComponentType.isPrimitive()) {
                     return "new " + ctComponentType.getName() + "(" + paramName + ")";
                 }
             }
@@ -212,10 +217,15 @@ abstract class ParameterPatchInfo extends PatchInfo
                 postcallsrc  += "__param" + destInfo.getPosition() + "[0]";
                 postcallsrc2 += "__param" + destInfo.getPosition() + "[0]";
                 // Unboxing wrapper types
-                if (srcInfo.getType() != null && destInfo.getType() != null) {
-                    CtClass ctComponentType = destInfo.getType().getComponentType();
-                    if (srcInfo.getType().isPrimitive() && ctComponentType != null && !ctComponentType.isPrimitive()) {
-                        CtPrimitiveType ctPrimitive = (CtPrimitiveType) srcInfo.getType();
+                CtClass srcType = srcInfo.getType();
+                CtClass destType = destInfo.getType();
+                if (srcType == null && destInfo.isPrivateCapture()) {
+                    srcType = srcInfo.getPrivateCaptureType(destInfo);
+                }
+                if (srcType != null && destType != null) {
+                    CtClass ctComponentType = destType.getComponentType();
+                    if (srcType.isPrimitive() && ctComponentType != null && !ctComponentType.isPrimitive()) {
+                        CtPrimitiveType ctPrimitive = (CtPrimitiveType) srcType;
                         postcallsrc += "." + ctPrimitive.getGetMethodName() + "()";
                         postcallsrc2 += "." + ctPrimitive.getGetMethodName() + "()";
                     }

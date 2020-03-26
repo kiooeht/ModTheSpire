@@ -66,6 +66,20 @@ class ParamInfo
         return isPrivate;
     }
 
+    CtClass getPrivateCaptureType(ParamInfo destInfo) throws PatchingException
+    {
+        if (!destInfo.isPrivateCapture()) {
+            throw new PatchingException("Not a private capture, this shouldn't have been called");
+        }
+
+        CtClass declaringClass = ctBehavior.getDeclaringClass();
+        try {
+            return declaringClass.getDeclaredField(destInfo.getName()).getType();
+        } catch (NotFoundException e) {
+            return null;
+        }
+    }
+
     int getParamCount()
     {
         return ctBehavior.getAvailableParameterAnnotations().length;
