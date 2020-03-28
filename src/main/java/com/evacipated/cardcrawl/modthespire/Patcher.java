@@ -479,7 +479,7 @@ public class Patcher {
 
                         p = new InsertPatchInfo(insertPatch, locs, ctMethodToPatch, m);
                     
-                    } else if (m.getName().equals("Instrument")) {
+                    } else if (m.getName().equals("Instrument") || m.hasAnnotation(SpireInstrumentPatch.class)) {
                         p = new InstrumentPatchInfo(ctMethodToPatch, loader.loadClass(cls_name).getDeclaredMethod(m.getName()));
                     } else if (m.getName().equals("Replace")) {
                         p = new ReplacePatchInfo(ctMethodToPatch, m);
