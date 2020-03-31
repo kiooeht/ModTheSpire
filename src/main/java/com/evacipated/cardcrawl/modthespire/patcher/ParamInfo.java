@@ -1,5 +1,6 @@
 package com.evacipated.cardcrawl.modthespire.patcher;
 
+import com.evacipated.cardcrawl.modthespire.lib.ByRef;
 import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.Modifier;
@@ -75,6 +76,22 @@ class ParamInfo
         CtClass declaringClass = ctBehavior.getDeclaringClass();
         try {
             return declaringClass.getDeclaredField(destInfo.getName()).getType();
+        } catch (NotFoundException e) {
+            return null;
+        }
+    }
+
+    CtClass getDestByRefType(ParamInfo destInfo) throws ClassNotFoundException
+    {
+        String typename = null;
+        for (Object o : destInfo.getAnnotations()) {
+            if (o instanceof ByRef && !((ByRef) o).type().isEmpty()) {
+                typename = ((ByRef) o).type();
+            }
+        }
+
+        try {
+            return ctBehavior.getDeclaringClass().getClassPool().get(typename);
         } catch (NotFoundException e) {
             return null;
         }

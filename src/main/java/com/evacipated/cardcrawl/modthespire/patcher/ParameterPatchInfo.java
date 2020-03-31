@@ -162,12 +162,15 @@ abstract class ParameterPatchInfo extends PatchInfo
             throw new PatchingException("Illegal patch parameter: Cannot determine name");
         }
 
-        protected String boxing(String paramName) throws NotFoundException, PatchingException
+        protected String boxing(String paramName) throws NotFoundException, PatchingException, ClassNotFoundException
         {
             CtClass srcType = srcInfo.getType();
             CtClass destType = destInfo.getType();
             if (srcType == null && destInfo.isPrivateCapture()) {
                 srcType = srcInfo.getPrivateCaptureType(destInfo);
+            }
+            if (srcType == null) {
+                srcType = srcInfo.getDestByRefType(destInfo);
             }
             if (!destType.equals(srcType)) {
                 CtClass ctComponentType = destType.getComponentType();
@@ -221,6 +224,9 @@ abstract class ParameterPatchInfo extends PatchInfo
                 CtClass destType = destInfo.getType();
                 if (srcType == null && destInfo.isPrivateCapture()) {
                     srcType = srcInfo.getPrivateCaptureType(destInfo);
+                }
+                if (srcType == null) {
+                    srcType = srcInfo.getDestByRefType(destInfo);
                 }
                 if (srcType != null && destType != null) {
                     CtClass ctComponentType = destType.getComponentType();
