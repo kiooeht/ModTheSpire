@@ -4,6 +4,8 @@
 * Fix patch error with ByRef and private captures while mixing primitive and wrapper types
 * Make ByRef type work for primative/wrapper types
 * Fix crash from SpireField of array type
+* Add annotation for Raw patches
+* Add annotation for Instrument patches
 
 #### v3.15.0 ####
 * Allow mods to sideload other mods, loading them even if not selected
