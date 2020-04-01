@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.16.0 ####
 * Fix patch error with ByRef while mixing primitive and wrapper types
 * Fix patch error with ByRef and private captures while mixing primitive and wrapper types
 * Make ByRef type work for primative/wrapper types
