@@ -345,7 +345,10 @@ public class Patcher {
 
         for (String cls_name : class_names) {
             CtClass ctPatchClass = pool.get(cls_name);
-            
+            if (!Modifier.isPublic(ctPatchClass.getModifiers())) {
+                ctPatchClass.setModifiers(Modifier.setPublic(ctPatchClass.getModifiers()));
+            }
+
             SpirePatch[] patchArr = null;
             SpirePatches patches = (SpirePatches) ctPatchClass.getAnnotation(SpirePatches.class);
             if (patches != null) {
@@ -478,9 +481,8 @@ public class Patcher {
                         }
 
                         p = new InsertPatchInfo(insertPatch, locs, ctMethodToPatch, m);
-                    
                     } else if (m.getName().equals("Instrument") || m.hasAnnotation(SpireInstrumentPatch.class)) {
-                        p = new InstrumentPatchInfo(ctMethodToPatch, loader.loadClass(cls_name).getDeclaredMethod(m.getName()));
+                        p = new InstrumentPatchInfo(ctMethodToPatch, findInstrumentMethod(loader.loadClass(cls_name), m.getName()));
                     } else if (m.getName().equals("Replace")) {
                         p = new ReplacePatchInfo(ctMethodToPatch, m);
                     } else if (m.getName().equals("Raw") || m.hasAnnotation(SpireRawPatch.class)) {
@@ -488,6 +490,10 @@ public class Patcher {
                     }
 
                     if (p != null) {
+                        if (!Modifier.isPublic(m.getModifiers())) {
+                            m.setModifiers(Modifier.setPublic(m.getModifiers()));
+                        }
+
                         patchInfos.add(p);
                     }
                 }
@@ -530,10 +536,22 @@ public class Patcher {
         return pool.get(names);
     }
 
+    private static Method findInstrumentMethod(Class<?> cls, String name) throws NoSuchMethodException
+    {
+        for (Method m : cls.getDeclaredMethods()) {
+            if (m.getName().equals(name) && m.getParameterCount() == 0) {
+                m.setAccessible(true);
+                return m;
+            }
+        }
+        throw new NoSuchMethodException();
+    }
+
     private static Method findRawMethod(Class<?> cls, String name) throws NoSuchMethodException
     {
         for (Method m : cls.getDeclaredMethods()) {
             if (m.getName().equals(name) && m.getParameterCount() == 1) {
+                m.setAccessible(true);
                 return m;
             }
         }
