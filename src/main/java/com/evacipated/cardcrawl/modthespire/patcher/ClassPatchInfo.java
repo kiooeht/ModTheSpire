@@ -4,9 +4,7 @@ import com.evacipated.cardcrawl.modthespire.Loader;
 import com.evacipated.cardcrawl.modthespire.lib.SpireField;
 import com.evacipated.cardcrawl.modthespire.lib.StaticSpireField;
 import javassist.*;
-import javassist.bytecode.AnnotationsAttribute;
-import javassist.bytecode.ConstPool;
-import javassist.bytecode.DuplicateMemberException;
+import javassist.bytecode.*;
 import javassist.bytecode.annotation.Annotation;
 import javassist.bytecode.annotation.AnnotationImpl;
 
@@ -65,22 +63,43 @@ public class ClassPatchInfo extends PatchInfo
                         --tries;
                         // Make the field
                         String fieldName = String.format("%s_%d", f.getName(), new Random().nextInt(1000));
-                        String fieldType = f.getGenericSignature();
-                        Pattern pattern = Pattern.compile("Lcom/evacipated/cardcrawl/modthespire/lib/(?:Static)?SpireField<(\\[?)L(.+);>;");
-                        Matcher matcher = pattern.matcher(fieldType);
-                        if (!matcher.find()) {
-                            if (Loader.DEBUG) {
-                                System.out.println(fieldType);
+                        String fieldType;
+
+                        try {
+                            // Determine field type using javassist signature descriptors
+                            SignatureAttribute.ObjectType fieldSig = SignatureAttribute.toFieldSignature(f.getGenericSignature());
+                            if (fieldSig instanceof SignatureAttribute.ClassType) {
+                                SignatureAttribute.TypeArgument[] typeArguments = ((SignatureAttribute.ClassType) fieldSig).getTypeArguments();
+                                if (typeArguments == null || typeArguments.length != 1) {
+                                    throw new BadBytecode("fake");
+                                }
+                                String descriptor = typeArguments[0].getType().encode();
+                                descriptor = descriptor.replaceAll("<.+>", "");
+                                fieldType = Descriptor.toClassName(descriptor);
+                            } else {
+                                throw new BadBytecode("fake");
+                            }
+                        } catch (BadBytecode e) {
+                            // Fallback to the old method of determining the field type
+                            // Regex and string manip the type descriptor
+                            fieldType = f.getGenericSignature();
+                            Pattern pattern = Pattern.compile("Lcom/evacipated/cardcrawl/modthespire/lib/(?:Static)?SpireField<(\\[?)L(.+);>;");
+                            Matcher matcher = pattern.matcher(fieldType);
+                            if (!matcher.find()) {
+                                if (Loader.DEBUG) {
+                                    System.out.println(fieldType);
+                                }
+                            }
+                            boolean isArrayType = !matcher.group(1).isEmpty();
+                            fieldType = matcher.group(2).replace('/', '.');
+                            if (fieldType.contains("<")) {
+                                fieldType = fieldType.substring(0, fieldType.indexOf('<'));
+                            }
+                            if (isArrayType) {
+                                fieldType += "[]";
                             }
                         }
-                        boolean isArrayType = !matcher.group(1).isEmpty();
-                        fieldType = matcher.group(2).replace('/', '.');
-                        if (fieldType.contains("<")) {
-                            fieldType = fieldType.substring(0, fieldType.indexOf('<'));
-                        }
-                        if (isArrayType) {
-                            fieldType += "[]";
-                        }
+
                         String str = String.format("public%s %s %s;",
                             (isStatic ? " static" : ""),
                             fieldType, fieldName);
