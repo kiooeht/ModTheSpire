@@ -1,6 +1,7 @@
 ## Changelog ##
 #### dev ####
 * No longer require patch classes and methods to be public
+* Improve the efficiency of SpireField
 
 #### v3.16.0 ####
 * Fix patch error with ByRef while mixing primitive and wrapper types

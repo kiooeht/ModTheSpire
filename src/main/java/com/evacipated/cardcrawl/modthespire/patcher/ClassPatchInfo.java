@@ -138,16 +138,49 @@ public class ClassPatchInfo extends PatchInfo
                             continue;
                         }
 
+                        CtClass ctSpireField = f.getType().getClassPool().get(SpireField.class.getName());
+                        // Create field accessor to avoid reflection at runtime
+                        CtClass ctAccessor = ctPatchClass.makeNestedClass(fieldName + "_Accessor", true);
+                        ctAccessor.setSuperclass(f.getType());
+                        ctAccessor.addConstructor(CtNewConstructor.make(
+                            new CtClass[]{ctSpireField},
+                            null,
+                            CtNewConstructor.PASS_PARAMS,
+                            null,
+                            null,
+                            ctAccessor
+                        ));
+                        // Getter
+                        ctAccessor.addMethod(CtNewMethod.make(
+                            String.format("public Object get(Object __instance) {" +
+                                "return ((%s) __instance).%s;" +
+                                "}",
+                                ctClassToPatch.getName(), fieldName
+                            ),
+                            ctAccessor
+                        ));
+                        // Setter
+                        ctAccessor.addMethod(CtNewMethod.make(
+                            String.format("public void set(Object __instance, Object value) {" +
+                                    "((%s) __instance).%s = (%s) value;" +
+                                    "}",
+                                ctClassToPatch.getName(), fieldName, fieldType
+                            ),
+                            ctAccessor
+                        ));
+
                         // Make and initialize SpireField object
                         CtConstructor staticinit = ctPatchClass.getClassInitializer();
                         if (staticinit == null) {
                             staticinit = ctPatchClass.makeClassInitializer();
                         }
                         String src = String.format("{\n" +
-                                "if (%s == null) { %s = new %s(null); }\n" +
+                                //"if (%s == null) { %s = new %s(null); }\n" +
+                                "%s = new %s(%s);" +
                                 "%s.initialize(%s, \"%s\");\n" +
                                 "}",
-                            f.getName(), f.getName(), (isStatic ? StaticSpireField.class.getCanonicalName() : SpireField.class.getCanonicalName()),
+                            //f.getName(), f.getName(), (isStatic ? StaticSpireField.class.getCanonicalName() : SpireField.class.getCanonicalName()),
+                            f.getName(), ctAccessor.getName(), f.getName(),
                             f.getName(), ctClassToPatch.getName() + ".class", fieldName);
                         if (Loader.DEBUG) {
                             System.out.println(src);

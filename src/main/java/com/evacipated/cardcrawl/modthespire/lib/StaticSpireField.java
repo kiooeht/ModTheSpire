@@ -7,13 +7,18 @@ public class StaticSpireField<T> extends SpireField<T>
         super(defaultValue);
     }
 
+    public StaticSpireField(SpireField<T> originalSpireField)
+    {
+        super(originalSpireField);
+    }
+
     public T get()
     {
-        return super.get(null);
+        return get(null);
     }
 
     public void set(T value)
     {
-        super.set(null, value);
+        set(null, value);
     }
 }
