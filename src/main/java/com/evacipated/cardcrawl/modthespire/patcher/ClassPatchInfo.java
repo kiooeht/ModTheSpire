@@ -7,6 +7,9 @@ import javassist.*;
 import javassist.bytecode.*;
 import javassist.bytecode.annotation.Annotation;
 import javassist.bytecode.annotation.AnnotationImpl;
+import javassist.expr.ExprEditor;
+import javassist.expr.MethodCall;
+import javassist.expr.NewExpr;
 
 import java.lang.reflect.Proxy;
 import java.util.Random;
@@ -138,10 +141,20 @@ public class ClassPatchInfo extends PatchInfo
                             continue;
                         }
 
-                        CtClass ctSpireField = f.getType().getClassPool().get(SpireField.class.getName());
+                        CtConstructor staticinit = ctPatchClass.getClassInitializer();
+                        if (staticinit == null) {
+                            staticinit = ctPatchClass.makeClassInitializer();
+                        }
+
                         // Create field accessor to avoid reflection at runtime
                         CtClass ctAccessor = ctPatchClass.makeNestedClass(fieldName + "_Accessor", true);
                         ctAccessor.setSuperclass(f.getType());
+                        // Check for any pre-existing initializers for SpireFields
+                        FindSpireFieldInitializers found = new FindSpireFieldInitializers(ctPatchClass.getClassPool(), ctAccessor);
+                        ctPatchClass.instrument(found);
+
+                        // Finish creating field accessor
+                        CtClass ctSpireField = f.getType().getClassPool().get(SpireField.class.getName());
                         ctAccessor.addConstructor(CtNewConstructor.make(
                             new CtClass[]{ctSpireField},
                             null,
@@ -151,18 +164,28 @@ public class ClassPatchInfo extends PatchInfo
                             ctAccessor
                         ));
                         // Getter
+                        String getStr = "";
+                        if (found.madeGet) {
+                            getStr = "super_get(__instance);";
+                        }
                         ctAccessor.addMethod(CtNewMethod.make(
                             String.format("public Object get(Object __instance) {" +
-                                "return ((%s) __instance).%s;" +
-                                "}",
+                                    getStr +
+                                    "return ((%s) __instance).%s;" +
+                                    "}",
                                 ctClassToPatch.getName(), fieldName
                             ),
                             ctAccessor
                         ));
                         // Setter
+                        String setStr = "";
+                        if (found.madeSet) {
+                            setStr = String.format("super_set(__instance, (%s) value);", found.setType.getName());
+                        }
                         ctAccessor.addMethod(CtNewMethod.make(
                             String.format("public void set(Object __instance, Object value) {" +
                                     "((%s) __instance).%s = (%s) value;" +
+                                    setStr +
                                     "}",
                                 ctClassToPatch.getName(), fieldName, fieldType
                             ),
@@ -170,16 +193,10 @@ public class ClassPatchInfo extends PatchInfo
                         ));
 
                         // Make and initialize SpireField object
-                        CtConstructor staticinit = ctPatchClass.getClassInitializer();
-                        if (staticinit == null) {
-                            staticinit = ctPatchClass.makeClassInitializer();
-                        }
                         String src = String.format("{\n" +
-                                //"if (%s == null) { %s = new %s(null); }\n" +
                                 "%s = new %s(%s);" +
                                 "%s.initialize(%s, \"%s\");\n" +
                                 "}",
-                            //f.getName(), f.getName(), (isStatic ? StaticSpireField.class.getCanonicalName() : SpireField.class.getCanonicalName()),
                             f.getName(), ctAccessor.getName(), f.getName(),
                             f.getName(), ctClassToPatch.getName() + ".class", fieldName);
                         if (Loader.DEBUG) {
@@ -196,6 +213,90 @@ public class ClassPatchInfo extends PatchInfo
             }
         } catch (CannotCompileException | NotFoundException e) {
             throw new PatchingException(e);
+        }
+    }
+
+    private static class FindSpireFieldInitializers extends ExprEditor
+    {
+        private ClassPool pool;
+        private CtClass ctSpireField;
+        private CtClass ctStaticSpireField;
+        private CtClass ctAccessor;
+
+        boolean madeGet = false;
+        boolean madeSet = false;
+        CtClass setType = null;
+
+        FindSpireFieldInitializers(ClassPool pool, CtClass ctAccessor) throws NotFoundException
+        {
+            this.pool = pool;
+            ctSpireField = pool.get(SpireField.class.getName());
+            ctStaticSpireField = pool.get(StaticSpireField.class.getName());
+            this.ctAccessor = ctAccessor;
+        }
+
+        @Override
+        public void edit(NewExpr e) throws CannotCompileException
+        {
+            if (e.getClassName().endsWith("_Accessor")) {
+                return;
+            }
+
+            try {
+                CtClass ctOriginal = pool.get(e.getClassName());
+                CtClass ctClass = ctOriginal;
+
+                do {
+                    if (ctSpireField.equals(ctClass) || ctStaticSpireField.equals(ctClass)) {
+                        if (!ctOriginal.equals(ctClass)) {
+                            scrubSuperMethodCalls(ctOriginal, "get");
+                            scrubSuperMethodCalls(ctOriginal, "set");
+                        }
+                        break;
+                    }
+                    ctClass = ctClass.getSuperclass();
+                } while (ctClass != null);
+            } catch (NotFoundException ignored) {
+            }
+        }
+
+        private void scrubSuperMethodCalls(CtClass ctClass, String methodName) throws NotFoundException, CannotCompileException
+        {
+            for (CtMethod m : ctClass.getDeclaredMethods(methodName)) {
+                try {
+                    ctAccessor.getDeclaredMethod("super_" + methodName);
+                } catch (NotFoundException e) {
+                    CtMethod newMethod = CtNewMethod.copy(m, "super_" + methodName, ctAccessor, null);
+                    // Remove calls to super.get/set
+                    newMethod.instrument(new ExprEditor() {
+                        @Override
+                        public void edit(MethodCall m) throws CannotCompileException
+                        {
+                            CtMethod method;
+                            try {
+                                method = m.getMethod();
+
+                                if (method.getName().equals(methodName) && method.getDeclaringClass().equals(ctClass.getSuperclass())) {
+                                    m.replace("$_ = null;");
+                                }
+                            } catch (NotFoundException e) {
+                                throw new CannotCompileException(e);
+                            }
+                        }
+                    });
+                    ctAccessor.addMethod(newMethod);
+
+                    switch (methodName) {
+                        case "get":
+                            madeGet = true;
+                            break;
+                        case "set":
+                            madeSet = true;
+                            setType = newMethod.getParameterTypes()[1];
+                            break;
+                    }
+                }
+            }
         }
     }
 }
