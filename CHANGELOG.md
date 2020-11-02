@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.17.0 ####
 * No longer require patch classes and methods to be public
 * Improve the efficiency of SpireField
 
