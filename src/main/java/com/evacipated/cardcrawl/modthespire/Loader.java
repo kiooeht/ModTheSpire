@@ -22,6 +22,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.net.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Timer;
@@ -40,6 +41,7 @@ public class Loader
     private static String MAC_STS_JAR = "SlayTheSpire.app/Contents/Resources/" + STS_JAR;
     private static String STS_JAR2 = "SlayTheSpire.jar";
     public static String COREPATCHES_JAR = "/corepatches.jar";
+    private static String KOTLIN_JAR = "/kotlin.jar";
     public static String STS_PATCHED_JAR = "desktop-1.0-patched.jar";
     public static String JRE_51_DIR = "jre1.8.0_51";
     public static ModInfo[] MODINFOS;
@@ -54,6 +56,8 @@ public class Loader
 
     static String[] ARGS;
     private static ModSelectWindow ex;
+
+    private static List<URL> kotlinJars = new ArrayList<>();
 
     public static boolean isModLoaded(String modID)
     {
@@ -353,6 +357,8 @@ public class Loader
 
             printMTSInfo();
 
+            unpackKotlin();
+
             MTSClassLoader loader = new MTSClassLoader(Loader.class.getResourceAsStream(COREPATCHES_JAR), buildUrlArray(MODINFOS), Loader.class.getClassLoader());
 
             if (modJars.length > 0) {
@@ -494,16 +500,55 @@ public class Loader
         }
     }
 
+    private static void unpackKotlin()
+    {
+        try {
+            Path tmpDir = Paths.get(System.getProperty("java.io.tmpdir"), "ModTheSpire");
+            {
+                File f = tmpDir.toFile();
+                if (!f.exists()) {
+                    f.mkdirs();
+                }
+            }
+
+            Path tmpFile = tmpDir.resolve("kotlin.jar");
+
+            InputStream input = Loader.class.getResourceAsStream(KOTLIN_JAR);
+            OutputStream output = new FileOutputStream(tmpFile.toFile());
+
+            byte[] buf = new byte[8192];
+            int length;
+            while ((length = input.read(buf)) > 0) {
+                output.write(buf, 0, length);
+            }
+
+            output.close();
+            input.close();
+
+            kotlinJars.add(tmpFile.toUri().toURL());
+        } catch (Exception e) {
+            System.out.println("Failed to unpack Kotlin");
+            e.printStackTrace();
+        }
+    }
+
     // buildUrlArray - builds the URL array to pass to the ClassLoader
     private static URL[] buildUrlArray(ModInfo[] modInfos) throws MalformedURLException
     {
-        URL[] urls = new URL[modInfos.length + 1];
-        for (int i = 0; i < modInfos.length; i++) {
-            urls[i] = modInfos[i].jarURL;
+        List<URL> urls = new ArrayList<>(modInfos.length + 1);
+
+        // Kotlin
+        urls.addAll(kotlinJars);
+
+        // Mods
+        for (ModInfo modInfo : modInfos) {
+            urls.add(modInfo.jarURL);
         }
 
-        urls[modInfos.length] = new File(STS_JAR).toURI().toURL();
-        return urls;
+        // Slay the Spire
+        urls.add(new File(STS_JAR).toURI().toURL());
+
+        return urls.toArray(new URL[0]);
     }
 
     private static ModInfo[] buildInfoArray(File[] modJars)
