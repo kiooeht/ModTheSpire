@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.18.0 ####
 * Include Kotlin in ModTheSpire
 
 #### v3.17.0 ####
