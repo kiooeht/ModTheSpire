@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.18.1 ####
 * Fix main menu order
 
 #### v3.18.0 ####
