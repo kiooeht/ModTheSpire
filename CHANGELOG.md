@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Fix main menu order
 
 #### v3.18.0 ####
 * Include Kotlin in ModTheSpire
