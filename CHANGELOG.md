@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.18.2 ####
 * Fix crash on Linux because java.exe exists
 
 #### v3.18.1 ####
