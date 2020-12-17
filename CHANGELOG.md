@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Fix crash on Linux because java.exe exists
 
 #### v3.18.1 ####
 * Fix main menu order

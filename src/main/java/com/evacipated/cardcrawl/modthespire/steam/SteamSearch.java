@@ -27,14 +27,14 @@ public class SteamSearch
 
     public static String findJRE(String jreBase)
     {
-        Path local = Paths.get(jreBase, "bin", "java.exe");
-        if (local.toFile().exists()) {
-            System.out.println("Using local StS JRE");
-            return local.toString();
+        String javaExecName = "java";
+        if (SystemUtils.IS_OS_WINDOWS) {
+            javaExecName = "java.exe";
         }
-        local = Paths.get(jreBase, "bin", "java");
+
+        Path local = Paths.get(jreBase, "bin", javaExecName);
         if (local.toFile().exists()) {
-            System.out.println("Using local StS JRE");
+            System.out.println("Using local StS JRE @ " + local.toAbsolutePath().toString());
             return local.toString();
         }
 
@@ -44,17 +44,12 @@ public class SteamSearch
             return null;
         }
 
-        Path install = Paths.get(installDir, jreBase, "bin", "java.exe");
+        Path install = Paths.get(installDir, jreBase, "bin", javaExecName);
         if (install.toFile().exists()) {
-            System.out.println("Using install StS JRE");
+            System.out.println("Using install StS JRE @ " + install.toAbsolutePath().toString());
             return install.toString();
         }
-        install = Paths.get(installDir, jreBase, "bin", "java");
-        if (install.toFile().exists()) {
-            System.out.println("Using install StS JRE");
-            return install.toString();
-        }
-        return Paths.get(installDir, jreBase, "bin", "java.exe").toString();
+        return null;
     }
 
     public static String findDesktopJar()
