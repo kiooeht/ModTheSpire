@@ -407,6 +407,14 @@ public class Loader
                 System.out.println("Done.");
                 System.out.println();
 
+                // Output JAR if requested
+                if (Loader.OUT_JAR) {
+                    System.out.printf("Dumping JAR...");
+                    OutJar.dumpJar(loader, pool, STS_PATCHED_JAR);
+                    System.out.println("Done.");
+                    return;
+                }
+
                 // Set Settings.isModded = true
                 System.out.printf("Setting isModded = true...");
                 System.out.flush();
@@ -428,14 +436,6 @@ public class Loader
                 VERSION_NUM.set(null, oldVersion + " [ModTheSpire " + MTS_VERSION + "]");
                 System.out.println("Done.");
                 System.out.println();
-                
-                // Output JAR if requested
-                if (Loader.OUT_JAR) {
-                    System.out.printf("Dumping JAR...");
-                    OutJar.dumpJar(loader, pool, STS_PATCHED_JAR);
-                    System.out.println("Done.");
-                    return;
-                }
 
                 // Initialize any mods that implement SpireInitializer.initialize()
                 System.out.println("Initializing mods...");

@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Improve speed of out-jar
 
 #### v3.18.2 ####
 * Fix crash on Linux because java.exe exists
