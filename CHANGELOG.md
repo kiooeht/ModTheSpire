@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.19.0 ####
 * Improve speed of out-jar
 * Add flag for skipping intro slash screen
 
