@@ -55,6 +55,7 @@ public class Loader
     public static String profileArg = null;
 
     static String[] ARGS;
+    public static boolean SKIP_INTRO = false;
     private static ModSelectWindow ex;
 
     private static List<URL> kotlinJars = new ArrayList<>();
@@ -149,6 +150,7 @@ public class Loader
         }
 
         boolean skipLauncher = Arrays.asList(args).contains("--skip-launcher");
+        SKIP_INTRO = Arrays.asList(args).contains("--skip-intro");
 
         List<String> argList = Arrays.asList(args);
         int profileArgIndex = argList.indexOf("--profile");

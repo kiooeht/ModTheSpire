@@ -1,6 +1,7 @@
 ## Changelog ##
 #### dev ####
 * Improve speed of out-jar
+* Add flag for skipping intro slash screen
 
 #### v3.18.2 ####
 * Fix crash on Linux because java.exe exists
