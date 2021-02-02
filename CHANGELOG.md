@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Fix crash if mod list file is corrupted
 
 #### v3.19.0 ####
 * Improve speed of out-jar

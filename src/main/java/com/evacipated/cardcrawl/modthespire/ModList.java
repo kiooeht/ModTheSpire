@@ -77,9 +77,14 @@ public class ModList
             } catch (JsonSyntaxException e) {
                 saveData = new ModListSaveData();
             } catch (IOException e) {
+                saveData = new ModListSaveData();
                 e.printStackTrace();
             }
         } else {
+            saveData = new ModListSaveData();
+        }
+
+        if (saveData == null) {
             saveData = new ModListSaveData();
         }
 
