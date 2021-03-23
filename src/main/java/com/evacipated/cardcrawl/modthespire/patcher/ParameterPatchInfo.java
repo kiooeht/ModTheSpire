@@ -27,6 +27,11 @@ abstract class ParameterPatchInfo extends PatchInfo
         return new ParamTransformer(src, dest);
     }
 
+    protected ParamInfo2 makeInfo2(CtBehavior toPatch, CtMethod patchMethod, int position) throws PatchingException
+    {
+        return new ParamInfo2(ctMethodToPatch, patchMethod, position);
+    }
+
     protected void alterSrc()
     {
         // NOP
@@ -60,15 +65,22 @@ abstract class ParameterPatchInfo extends PatchInfo
 
             funccallargs = "";
             CtClass[] paramTypes = patchMethod.getParameterTypes();
-            int i = 0;
-            int j = 0;
-            while (j < paramTypes.length) {
-                ParamTransformer transformer = makeTransformer(new ParamInfo(ctMethodToPatch, i), new ParamInfo(patchMethod, j));
-                transformer.makeSource();
-                if (transformer.advanceSrcPosition()) {
-                    ++i;
+            if (isSpirePatch2()) {
+                for (int i=0; i<paramTypes.length; ++i) {
+                    ParamTransformer2 transformer = new ParamTransformer2(makeInfo2(ctMethodToPatch, patchMethod, i));
+                    transformer.makeSource();
                 }
-                ++j;
+            } else {
+                int i = 0;
+                int j = 0;
+                while (j < paramTypes.length) {
+                    ParamTransformer transformer = makeTransformer(new ParamInfo(ctMethodToPatch, i), new ParamInfo(patchMethod, j));
+                    transformer.makeSource();
+                    if (transformer.advanceSrcPosition()) {
+                        ++i;
+                    }
+                    ++j;
+                }
             }
 
             // Trim ending spaces and ,
@@ -152,6 +164,7 @@ abstract class ParameterPatchInfo extends PatchInfo
         {
             // Formal parameters of original method ("$0", "$1", "$2", etc.)
             if (srcInfo.getPosition() >= 0) {
+                //return srcInfo.getName();
                 return "$" + srcInfo.getPosition();
             }
 
@@ -227,6 +240,112 @@ abstract class ParameterPatchInfo extends PatchInfo
                 }
                 if (srcType == null) {
                     srcType = srcInfo.getDestByRefType(destInfo);
+                }
+                if (srcType != null && destType != null) {
+                    CtClass ctComponentType = destType.getComponentType();
+                    if (srcType.isPrimitive() && ctComponentType != null && !ctComponentType.isPrimitive()) {
+                        CtPrimitiveType ctPrimitive = (CtPrimitiveType) srcType;
+                        postcallsrc += "." + ctPrimitive.getGetMethodName() + "()";
+                        postcallsrc2 += "." + ctPrimitive.getGetMethodName() + "()";
+                    }
+                }
+                postcallsrc  += ";\n";
+                postcallsrc2 += ";\n";
+            } else {
+                funccallargs += getParamName();
+            }
+
+            funccallargs += ", ";
+        }
+    }
+
+    protected class ParamTransformer2
+    {
+        protected ParamInfo2 info;
+
+        protected ParamTransformer2(ParamInfo2 info)
+        {
+            this.info = info;
+        }
+
+        protected String getParamName() throws PatchingException
+        {
+            if (info.hasError()) {
+                throw new PatchingException("Illegal patch parameter: " + info.getError());
+            }
+
+            if (info.getArgName() != null) {
+                return info.getArgName();
+            }
+
+            throw new PatchingException("Unknown error acquiring parameter name for \"" + info.getName() + "\"");
+        }
+
+        protected String boxing(String paramName) throws NotFoundException, PatchingException, ClassNotFoundException
+        {
+            CtClass srcType = info.getType();
+            CtClass destType = info.getPatchParamType();
+            if (srcType == null && info.isPrivateCapture()) {
+                srcType = info.getPrivateCaptureType();
+            }
+            if (srcType == null) {
+                srcType = info.getDestByRefType();
+            }
+            if (!destType.equals(srcType)) {
+                CtClass ctComponentType = destType.getComponentType();
+                if (srcType != null && srcType.isPrimitive() && !ctComponentType.isPrimitive()) {
+                    return "new " + ctComponentType.getName() + "(" + paramName + ")";
+                }
+            }
+
+            return paramName;
+        }
+
+        protected void makeSource()
+            throws ClassNotFoundException, PatchingException, NotFoundException
+        {
+            Object[] paramAnnotations = info.getAnnotations();
+            if (canByRefParams && paramByRef(paramAnnotations)) {
+                if (!info.getPatchParamType().isArray()) {
+                    throw new ByRefParameterNotArrayException(info.getName());
+                }
+                String tmp = info.getPatchParamTypename();
+                String paramTypeName = tmp.substring(0, tmp.indexOf('[')+1);
+                paramTypeName = paramTypeName + "1" + tmp.substring(tmp.indexOf('[')+1);
+                // This does
+                //   T[][] __var = new T[1][];
+                //   __var[0] = var;
+                // instead of
+                //   T[][] __var = new T[][]{var};
+                // to avoid a limitation in the javassist compiler being unable to compile
+                // multi-dimensional array initializers
+                src += tmp + " __param" + info.getPatchParamPosition() + " = new " + paramTypeName + ";\n";
+                src += "__param" + info.getPatchParamPosition() + "[0] = " + boxing(getParamName()) + ";\n";
+                funccallargs += "__param" + info.getPatchParamPosition();
+
+                postcallsrc  += getParamName() + " = ";
+                postcallsrc2 += getParamName() + " = ";
+
+                String typename = info.getTypename();
+                for (Object o : info.getAnnotations()) {
+                    if (o instanceof ByRef && !((ByRef) o).type().isEmpty()) {
+                        typename = ((ByRef) o).type();
+                    }
+                }
+                if (!typename.isEmpty()) {
+                    postcallsrc  += "(" + typename + ")";
+                    postcallsrc2 += "(com.megacrit.cardcrawl." + typename + ")";
+                }
+                postcallsrc  += "__param" + info.getPatchParamPosition() + "[0]";
+                postcallsrc2 += "__param" + info.getPatchParamPosition() + "[0]";
+                // Unboxing wrapper types
+                CtClass srcType = info.getType();
+                CtClass destType = info.getPatchParamType();
+                if (srcType == null && info.isPrivateCapture()) {
+                    srcType = info.getPrivateCaptureType();
+                }
+                if (srcType == null) {
+                    srcType = info.getDestByRefType();
                 }
                 if (srcType != null && destType != null) {
                     CtClass ctComponentType = destType.getComponentType();

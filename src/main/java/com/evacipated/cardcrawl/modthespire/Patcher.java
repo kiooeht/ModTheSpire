@@ -6,6 +6,8 @@ import com.evacipated.cardcrawl.modthespire.patcher.InsertPatchInfo.LineNumberAn
 import com.evacipated.cardcrawl.modthespire.patcher.javassist.MyCodeConverter;
 import javassist.*;
 import javassist.bytecode.DuplicateMemberException;
+import javassist.bytecode.annotation.Annotation;
+import javassist.bytecode.annotation.AnnotationImpl;
 import javassist.expr.ExprEditor;
 import javassist.expr.MethodCall;
 import org.scannotation.AnnotationDB;
@@ -15,6 +17,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.net.URL;
 import java.util.*;
 
@@ -146,6 +149,8 @@ public class Patcher {
                 db.scanArchives(urls[i]);
                 patchSetList.add(db.getAnnotationIndex().get(SpirePatch.class.getName()));
                 patchSetList.add(db.getAnnotationIndex().get(SpirePatches.class.getName()));
+                patchSetList.add(db.getAnnotationIndex().get(SpirePatch2.class.getName()));
+                patchSetList.add(db.getAnnotationIndex().get(SpirePatches2.class.getName()));
             } else {
                 String str = "ERROR: " + modInfos[i].Name + " requires ModTheSpire v" + modInfos[i].MTS_Version + " or greater!";
                 System.out.println(str);
@@ -349,14 +354,26 @@ public class Patcher {
                 ctPatchClass.setModifiers(Modifier.setPublic(ctPatchClass.getModifiers()));
             }
 
-            SpirePatch[] patchArr = null;
+            List<SpirePatch> patchArr = new ArrayList<>();
             SpirePatches patches = (SpirePatches) ctPatchClass.getAnnotation(SpirePatches.class);
             if (patches != null) {
-                patchArr = patches.value();
+                Collections.addAll(patchArr, patches.value());
             } else {
                 SpirePatch patch = (SpirePatch) ctPatchClass.getAnnotation(SpirePatch.class);
                 if (patch != null) {
-                    patchArr = new SpirePatch[]{patch};
+                    patchArr.add(patch);
+                }
+            }
+
+            SpirePatches2 patches2 = (SpirePatches2) ctPatchClass.getAnnotation(SpirePatches2.class);
+            if (patches2 != null) {
+                Arrays.stream(patches2.value())
+                    .map(p2 -> convertSpirePatch2To1(loader, pool, p2))
+                    .forEachOrdered(patchArr::add);
+            } else {
+                SpirePatch2 patch2 = (SpirePatch2) ctPatchClass.getAnnotation(SpirePatch2.class);
+                if (patch2 != null) {
+                    patchArr.add(convertSpirePatch2To1(loader, pool, patch2));
                 }
             }
 
@@ -434,9 +451,9 @@ public class Patcher {
                 for (CtMethod m : ctPatchClass.getDeclaredMethods()) {
                     PatchInfo p = null;
                     if (m.getName().equals("Prefix") || m.hasAnnotation(SpirePrefixPatch.class)) {
-                        p = new PrefixPatchInfo(ctMethodToPatch, m);
+                        p = new PrefixPatchInfo(ctMethodToPatch, m).setSpirePatch(patch);
                     } else if (m.getName().equals("Postfix") || m.hasAnnotation(SpirePostfixPatch.class)) {
-                        p = new PostfixPatchInfo(ctMethodToPatch, m);
+                        p = new PostfixPatchInfo(ctMethodToPatch, m).setSpirePatch(patch);
                     } else if (m.getName().equals("Locator")) {
                         continue;
                     } else if (m.getName().equals("Insert") || m.hasAnnotation(SpireInsertPatch.class)) {
@@ -480,13 +497,13 @@ public class Patcher {
                             }
                         }
 
-                        p = new InsertPatchInfo(insertPatch, locs, ctMethodToPatch, m);
+                        p = new InsertPatchInfo(insertPatch, locs, ctMethodToPatch, m).setSpirePatch(patch);
                     } else if (m.getName().equals("Instrument") || m.hasAnnotation(SpireInstrumentPatch.class)) {
-                        p = new InstrumentPatchInfo(ctMethodToPatch, findInstrumentMethod(loader.loadClass(cls_name), m.getName()));
+                        p = new InstrumentPatchInfo(ctMethodToPatch, findInstrumentMethod(loader.loadClass(cls_name), m.getName())).setSpirePatch(patch);
                     } else if (m.getName().equals("Replace")) {
-                        p = new ReplacePatchInfo(ctMethodToPatch, m);
+                        p = new ReplacePatchInfo(ctMethodToPatch, m).setSpirePatch(patch);
                     } else if (m.getName().equals("Raw") || m.hasAnnotation(SpireRawPatch.class)) {
-                        p = new RawPatchInfo(ctMethodToPatch, findRawMethod(loader.loadClass(cls_name), m.getName()));
+                        p = new RawPatchInfo(ctMethodToPatch, findRawMethod(loader.loadClass(cls_name), m.getName())).setSpirePatch(patch);
                     }
 
                     if (p != null) {
@@ -700,5 +717,12 @@ public class Patcher {
         }
 
         return "((" + typename + ") " + value + ")" + extra;
+    }
+
+    private static SpirePatch convertSpirePatch2To1(ClassLoader loader, ClassPool pool, SpirePatch2 patch2)
+    {
+        AnnotationImpl impl = (AnnotationImpl) Proxy.getInvocationHandler(patch2);
+        Annotation a = impl.getAnnotation();
+        return (SpirePatch) AnnotationImpl.make(loader, SpirePatch.class, pool, a);
     }
 }

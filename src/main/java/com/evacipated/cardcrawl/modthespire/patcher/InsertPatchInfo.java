@@ -1,5 +1,7 @@
 package com.evacipated.cardcrawl.modthespire.patcher;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.evacipated.cardcrawl.modthespire.Loader;
@@ -73,6 +75,12 @@ public class InsertPatchInfo extends ParameterPatchInfo
         return new InsertParamTransformer(src, dest);
     }
 
+    @Override
+    protected ParamInfo2 makeInfo2(CtBehavior toPatch, CtMethod patchMethod, int position) throws PatchingException
+    {
+        return new InsertParamInfo2(toPatch, patchMethod, position);
+    }
+
     private void applyPatch(String src, int loc) throws CannotCompileException
     {
         ctMethodToPatch.insertAt(loc, src);
@@ -104,6 +112,25 @@ public class InsertPatchInfo extends ParameterPatchInfo
             }
 
             return super.getParamName();
+        }
+    }
+
+    protected class InsertParamInfo2 extends ParamInfo2
+    {
+        InsertParamInfo2(CtBehavior toPatch, CtMethod patchMethod, int position) throws PatchingException
+        {
+            super(toPatch, patchMethod, position);
+        }
+
+        @Override
+        protected boolean specialNameCheck(String patchParamName) throws PatchingException
+        {
+            if (Arrays.asList(info.localvars()).contains(patchParamName)) {
+                name = patchParamName;
+                argName = patchParamName;
+                return true;
+            }
+            return false;
         }
     }
 }

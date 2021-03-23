@@ -34,6 +34,12 @@ public class PostfixPatchInfo extends ParameterPatchInfo
     }
 
     @Override
+    protected ParamInfo2 makeInfo2(CtBehavior toPatch, CtMethod patchMethod, int position) throws PatchingException
+    {
+        return new PostfixParamInfo2(toPatch, patchMethod, position);
+    }
+
+    @Override
     protected void alterSrc()
     {
         if (returnsValue) {
@@ -88,6 +94,41 @@ public class PostfixPatchInfo extends ParameterPatchInfo
                 }
             }
             return super.getParamName();
+        }
+    }
+
+    protected class PostfixParamInfo2 extends ParamInfo2
+    {
+        PostfixParamInfo2(CtBehavior toPatch, CtMethod patchMethod, int position) throws PatchingException
+        {
+            super(toPatch, patchMethod, position);
+        }
+
+        @Override
+        protected boolean specialNameCheck(String patchParamName) throws PatchingException
+        {
+            if (patchParamName.equals("__result")) {
+                try {
+                    CtClass returnType = patchMethod.getReturnType();
+                    if (!returnType.equals(CtPrimitiveType.voidType)) {
+                        returnsValue = true;
+                        if (Loader.DEBUG) {
+                            System.out.println("      Return: " + returnType.getName());
+                        }
+                    }
+
+                    takesResultParam = true;
+                    if (Loader.DEBUG) {
+                        System.out.println("      Result param: " + getPatchParamTypename());
+                    }
+                } catch (NotFoundException e) {
+                    throw new PatchingException(e);
+                }
+                name = patchParamName;
+                argName = "$_";
+                return true;
+            }
+            return false;
         }
     }
 }

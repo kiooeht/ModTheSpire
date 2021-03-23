@@ -1,13 +1,19 @@
 package com.evacipated.cardcrawl.modthespire.patcher;
 
 import com.evacipated.cardcrawl.modthespire.lib.ByRef;
+import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
+import com.evacipated.cardcrawl.modthespire.lib.SpirePatch2;
 import javassist.*;
+import javassist.bytecode.annotation.AnnotationImpl;
+
+import java.lang.reflect.Proxy;
 
 public abstract class PatchInfo
 {
     private static int modNum = 0;
 
     private int modOrder;
+    SpirePatch patch;
     CtBehavior ctMethodToPatch;
     CtMethod patchMethod;
 
@@ -18,9 +24,18 @@ public abstract class PatchInfo
         this.modOrder = modNum;
     }
 
+    public PatchInfo setSpirePatch(SpirePatch patch)
+    {
+        this.patch = patch;
+        return this;
+    }
+
     public void debugPrint()
     {
         System.out.println("Patch Class: [" + patchClassName() + "]");
+        if (isSpirePatch2()) {
+            System.out.println(" - SpirePatch2");
+        }
         System.out.println(" - Patching [" + ctMethodToPatch.getLongName() + "]");
         System.out.print(" - ");
         System.out.println(debugMsg());
@@ -41,6 +56,20 @@ public abstract class PatchInfo
     final public int modOrdering()
     {
         return modOrder;
+    }
+
+    final public boolean isSpirePatch2()
+    {
+        if (patch == null) {
+            return false;
+        }
+
+        try {
+            AnnotationImpl impl = (AnnotationImpl) Proxy.getInvocationHandler(patch);
+            return SpirePatch2.class.getName().equals(impl.getTypeName());
+        } catch (IllegalArgumentException | ClassCastException ignored) {
+            return false;
+        }
     }
 
     // Lower is earlier

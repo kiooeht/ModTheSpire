@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* SpirePatch2
 
 #### v3.19.1 ####
 * Fix crash if mod list file is corrupted

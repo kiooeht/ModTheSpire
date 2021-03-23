@@ -6,4 +6,9 @@ public class ByRefParameterNotArrayException extends PatchingException
     {
         super(Integer.toString(index));
     }
+
+    public ByRefParameterNotArrayException(String name)
+    {
+        super(name);
+    }
 }
