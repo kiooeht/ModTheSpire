@@ -15,7 +15,7 @@ public class SkipIntro
     {
         if (Loader.SKIP_INTRO) {
             __instance.isDone = true;
-            return SpireReturn.Return(null);
+            return SpireReturn.Return();
         }
         return SpireReturn.Continue();
     }

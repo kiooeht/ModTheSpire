@@ -32,7 +32,14 @@ public final class SpireReturn<T>
     public static<T> SpireReturn<T> Return(T value)
     {
         PLACEHOLDER.value = value;
-        return (SpireReturn<T>) PLACEHOLDER;
+        @SuppressWarnings("unchecked")
+        SpireReturn<T> ret = (SpireReturn<T>) PLACEHOLDER;
+        return ret;
+    }
+
+    public static SpireReturn<Void> Return()
+    {
+        return Return(null);
     }
 
     public T get()

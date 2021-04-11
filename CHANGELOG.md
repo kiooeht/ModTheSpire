@@ -1,6 +1,7 @@
 ## Changelog ##
 #### dev ####
 * SpirePatch2
+* Add Return overload for simpler SpireReturn from void methods
 
 #### v3.19.1 ####
 * Fix crash if mod list file is corrupted
