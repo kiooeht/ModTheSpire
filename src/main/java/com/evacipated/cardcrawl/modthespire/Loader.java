@@ -9,6 +9,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import com.vdurmont.semver4j.Semver;
+import javassist.ClassPath;
 import javassist.ClassPool;
 import javassist.LoaderClassPath;
 import org.objectweb.asm.ClassReader;
@@ -368,8 +369,6 @@ public class Loader
                 
                 System.out.println("Begin patching...");
                 MTSClassPool pool = new MTSClassPool(tmpPatchingLoader);
-                pool.insertClassPath(new LoaderClassPath(tmpPatchingLoader));
-                tmpPatchingLoader.addStreamToClassPool(pool); // Inserts infront of above path
 
                 MODINFOS = Patcher.sideloadMods(tmpPatchingLoader, loader, pool, ALLMODINFOS, MODINFOS);
 
@@ -391,14 +390,13 @@ public class Loader
 
                 Patcher.finalizePatches(tmpPatchingLoader);
 
-                Patcher.compilePatches(loader, pool);
+                ClassPath cp = Patcher.compilePatches(loader, pool);
 
                 tmpPatchingLoader.close();
 
-                POOL = new MTSClassPool(loader);
-                POOL.insertClassPath(new LoaderClassPath(loader));
-                loader.addStreamToClassPool(POOL);
-                ((MTSClassPool) POOL).setParent(pool);
+                pool.resetClassLoader(loader);
+                pool.insertClassPath(cp);
+                POOL = pool;
                 POOL.childFirstLookup = true;
 
                 // Bust enums

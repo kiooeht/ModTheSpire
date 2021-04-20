@@ -297,7 +297,7 @@ public class Patcher {
         System.out.println("Done.");
     }
 
-    public static void compilePatches(ClassLoader loader, MTSClassPool pool) throws CannotCompileException
+    public static ClassPath compilePatches(ClassLoader loader, MTSClassPool pool) throws CannotCompileException
     {
         System.out.printf("Compiling patched classes...");
         if (Loader.DEBUG) {
@@ -309,13 +309,20 @@ public class Patcher {
             ctClasses.put(countSuperClasses(cls) + cls.getName(), cls);
         }
 
+        ByteArrayMapClassPath cp = new ByteArrayMapClassPath();
         for (Map.Entry<String, CtClass> cls : ctClasses.entrySet()) {
             if (Loader.DEBUG) {
                 System.out.println("  " + cls.getValue().getName());
             }
             cls.getValue().toClass(loader, null);
+            cp.addClass(cls.getValue());
+            cls.getValue().detach();
         }
         System.out.println("Done.");
+        if (Loader.DEBUG) {
+            cp.printDebugInfo();
+        }
+        return cp;
     }
 
     private static int countSuperClasses(CtClass cls)

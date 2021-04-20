@@ -2,6 +2,7 @@
 #### dev ####
 * SpirePatch2
 * Add Return overload for simpler SpireReturn from void methods
+* Fix ClassPool not returning modified versions of classes after patching is compelte
 
 #### v3.19.1 ####
 * Fix crash if mod list file is corrupted
