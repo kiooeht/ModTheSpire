@@ -3,6 +3,7 @@ package com.evacipated.cardcrawl.modthespire;
 import javassist.ByteArrayClassPath;
 import javassist.ClassPool;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,6 +25,7 @@ public class MTSClassLoader extends URLClassLoader
     private ClassLoader parent;
     private Map<String, byte[]> classes = new HashMap<>();
     private Map<String, Class<?>> definedClasses = new HashMap<>();
+    private Map<String, byte[]> resources = new HashMap<>();
 
     public MTSClassLoader(InputStream stream, URL[] urls, ClassLoader parent) throws IOException
     {
@@ -37,9 +39,21 @@ public class MTSClassLoader extends URLClassLoader
                 String className = entry.getName().replace(".class", "").replace('/', '.');
                 byte[] classBytes = bufferStream(is);
                 classes.put(className, classBytes);
+            } else if (!entry.isDirectory()) {
+                byte[] bytes = bufferStream(is);
+                resources.put(entry.getName(), bytes);
             }
             entry = is.getNextJarEntry();
         }
+    }
+
+    @Override
+    public InputStream getResourceAsStream(String name)
+    {
+        if (resources.containsKey(name)) {
+            return new ByteArrayInputStream(resources.get(name));
+        }
+        return super.getResourceAsStream(name);
     }
 
     private byte[] bufferStream(InputStream is) throws IOException

@@ -8,12 +8,13 @@ import javax.swing.border.MatteBorder;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.*;
-import java.net.MalformedURLException;
+import java.io.File;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 public class ModSelectWindow extends JFrame
 {
@@ -27,6 +28,7 @@ public class ModSelectWindow extends JFrame
     private static final String PLAY_OPTION = "Play";
     private static final String JAR_DUMP_OPTION = "Dump Patched Jar";
 
+    static final Image APP_ICON = Toolkit.getDefaultToolkit().createImage(ModSelectWindow.class.getResource("/assets/icon.png"));
     static final Icon ICON_UPDATE   = new ImageIcon(ModSelectWindow.class.getResource("/assets/update.gif"));
     static final Icon ICON_LOAD     = new ImageIcon(ModSelectWindow.class.getResource("/assets/ajax-loader.gif"));
     static final Icon ICON_GOOD     = new ImageIcon(ModSelectWindow.class.getResource("/assets/good.gif"));
@@ -85,6 +87,8 @@ public class ModSelectWindow extends JFrame
         } catch (ClassNotFoundException | InstantiationException | UnsupportedLookAndFeelException | IllegalAccessException e) {
             e.printStackTrace();
         }
+
+        setIconImage(APP_ICON);
 
         info = modInfos;
         readWindowPosSize();

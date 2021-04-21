@@ -135,6 +135,13 @@
                                     <include>com.evacipated.cardcrawl:ModTheSpire:jar</include>
                                 </includes>
                             </artifactSet>
+                            <transformers>
+                                <transformer
+                                    implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+                                    <resource>images/ui/icon.png</resource>
+                                    <file>src/main/resources/assets/icon.png</file>
+                                </transformer>
+                            </transformers>
                             <filters>
                                 <filter>
                                     <artifact>com.evacipated.cardcrawl:ModTheSpire</artifact>
