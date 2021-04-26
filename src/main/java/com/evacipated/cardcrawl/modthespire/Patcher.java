@@ -384,6 +384,16 @@ public class Patcher {
                 }
             }
 
+            // Remove patches that require mods that aren't loaded
+            Iterator<SpirePatch> iter = patchArr.iterator();
+            while (iter.hasNext()) {
+                SpirePatch patch = iter.next();
+                String modId = patch.requiredModId();
+                if (!modId.isEmpty() && Arrays.stream(Loader.MODINFOS).noneMatch(x -> modId.equals(x.ID))) {
+                    iter.remove();
+                }
+            }
+
             for (SpirePatch patch : patchArr) {
                 CtClass ctClsToPatch = null;
                 try {

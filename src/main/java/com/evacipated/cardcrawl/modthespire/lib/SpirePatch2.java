@@ -12,5 +12,6 @@ public @interface SpirePatch2
     String method();
     Class<?>[] paramtypez() default {void.class};
     String[] paramtypes() default {"DEFAULT"};
+    String requiredModId() default "";
     boolean optional() default false;
 }

@@ -5,6 +5,8 @@
 * Fix ClassPool not returning modified versions of classes after patching is complete
 * Add ModTheSpire application icon
 * Alter Slay the Spire window title
+* Add option for a SpirePatch to require another mod
+  * If the other mod isn't loaded, the patch is ignored
 
 #### v3.19.1 ####
 * Fix crash if mod list file is corrupted
