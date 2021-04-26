@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.20.0 ####
 * SpirePatch2
 * Add Return overload for simpler SpireReturn from void methods
 * Fix ClassPool not returning modified versions of classes after patching is complete
