@@ -52,6 +52,10 @@ class ParamInfo2
                         toPatchParamPosition = 0;
                     }
                     return;
+                } else if (patchParamName.equals("__args")) {
+                    name = patchParamName;
+                    argName = "$args";
+                    return;
                 }
 
                 if (specialNameCheck(patchParamName)) {
