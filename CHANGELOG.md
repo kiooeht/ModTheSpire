@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.21.0 ####
 * Keep log window open when game crashes
 * SpirePatch2: Parameter name `__args`
   * Receives all original arguments as an array
