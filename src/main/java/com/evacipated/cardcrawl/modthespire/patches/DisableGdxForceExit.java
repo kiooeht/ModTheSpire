@@ -24,7 +24,9 @@ public class DisableGdxForceExit
             Loader.restoreWindowOnCrash();
         } else {
             System.out.println("Game closed.");
-            Loader.closeWindow();
+            if (!Loader.DEBUG) {
+                Loader.closeWindow();
+            }
         }
     }
 
