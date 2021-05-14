@@ -701,7 +701,7 @@ public class Loader
 
     private static void printMTSInfo()
     {
-        System.out.println("ModVersion Info:");
+        System.out.println("Version Info:");
         System.out.printf(" - Java version (%s)\n", System.getProperty("java.version"));
         System.out.printf(" - Slay the Spire (%s)", STS_VERSION);
         if (STS_BETA) {
