@@ -11,7 +11,6 @@ import com.google.gson.reflect.TypeToken;
 import com.vdurmont.semver4j.Semver;
 import javassist.ClassPath;
 import javassist.ClassPool;
-import javassist.LoaderClassPath;
 import org.objectweb.asm.ClassReader;
 
 import javax.swing.*;
@@ -341,6 +340,14 @@ public class Loader
     public static void closeWindow()
     {
         ex.dispatchEvent(new WindowEvent(ex, WindowEvent.WINDOW_CLOSING));
+    }
+
+    public static void restoreWindowOnCrash()
+    {
+        ex.setState(Frame.NORMAL);
+        ex.setVisible(true);
+        ex.toFront();
+        ex.requestFocus();
     }
 
     // runMods - sets up the ClassLoader, sets the isModded flag and launches the game

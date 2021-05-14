@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Keep log window open when game crashes
 
 #### v3.20.0 ####
 * SpirePatch2

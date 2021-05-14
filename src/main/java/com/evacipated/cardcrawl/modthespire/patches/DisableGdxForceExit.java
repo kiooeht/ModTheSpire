@@ -1,14 +1,11 @@
 package com.evacipated.cardcrawl.modthespire.patches;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
-import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
-import com.badlogic.gdx.backends.lwjgl.LwjglGraphics;
 import com.evacipated.cardcrawl.modthespire.Loader;
-import com.evacipated.cardcrawl.modthespire.lib.SpireInsertPatch;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
-
-import java.lang.reflect.Field;
+import javassist.CannotCompileException;
+import javassist.expr.ExprEditor;
+import javassist.expr.FieldAccess;
 
 @SpirePatch(
     clz=LwjglApplication.class,
@@ -16,21 +13,34 @@ import java.lang.reflect.Field;
 )
 public class DisableGdxForceExit
 {
-    @SpireInsertPatch(loc=248)
-    public static void Insert(LwjglApplication __instance)
+    public static Throwable crash = null;
+
+    public static void maybeExit()
     {
-        try {
-            Field f = LwjglGraphics.class.getDeclaredField("config");
-            f.setAccessible(true);
-            LwjglApplicationConfiguration config = (LwjglApplicationConfiguration) f.get(Gdx.app.getGraphics());
-            config.forceExit = false;
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
-        } finally {
+        if (crash != null) {
+            System.out.println("Game crashed.");
+            System.out.println("Cause:");
+            crash.printStackTrace();
+            Loader.restoreWindowOnCrash();
+        } else {
             System.out.println("Game closed.");
-            if (!Loader.DEBUG) {
-                Loader.closeWindow();
-            }
+            Loader.closeWindow();
         }
+    }
+
+    public static ExprEditor Instrument()
+    {
+        return new ExprEditor() {
+            @Override
+            public void edit(FieldAccess f) throws CannotCompileException
+            {
+                if (f.isReader() && f.getFieldName().equals("forceExit")) {
+                    f.replace(
+                            DisableGdxForceExit.class.getName() + ".maybeExit();" +
+                            "$_ = false;"
+                    );
+                }
+            }
+        };
     }
 }
