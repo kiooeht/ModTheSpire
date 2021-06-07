@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.22.0 ####
 * Copy annotations from SpireEnums
 
 #### v3.21.0 ####
