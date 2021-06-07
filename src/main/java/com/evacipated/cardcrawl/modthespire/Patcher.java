@@ -5,6 +5,8 @@ import com.evacipated.cardcrawl.modthespire.patcher.*;
 import com.evacipated.cardcrawl.modthespire.patcher.InsertPatchInfo.LineNumberAndPatchType;
 import com.evacipated.cardcrawl.modthespire.patcher.javassist.MyCodeConverter;
 import javassist.*;
+import javassist.bytecode.AnnotationsAttribute;
+import javassist.bytecode.ConstPool;
 import javassist.bytecode.DuplicateMemberException;
 import javassist.bytecode.annotation.Annotation;
 import javassist.bytecode.annotation.AnnotationImpl;
@@ -186,9 +188,9 @@ public class Patcher {
         boolean hasPrintedWarning = false;
 
         for (String s : annotations) {
-            Class<?> cls = loader.loadClass(s);
-            for (Field field : cls.getDeclaredFields()) {
-                SpireEnum spireEnum = field.getDeclaredAnnotation(SpireEnum.class);
+            CtClass cls = pool.get(s);
+            for (CtField field : cls.getDeclaredFields()) {
+                SpireEnum spireEnum = (SpireEnum) field.getAnnotation(SpireEnum.class);
                 if (spireEnum != null) {
                     String enumName = field.getName();
                     if (!spireEnum.name().isEmpty()) {
@@ -200,6 +202,24 @@ public class Patcher {
                         CtClass ctClass = pool.get(field.getType().getName());
                         CtField f = new CtField(ctClass, enumName, ctClass);
                         f.setModifiers(Modifier.PUBLIC | Modifier.STATIC | Modifier.FINAL | Modifier.ENUM);
+                        ConstPool constPool = ctClass.getClassFile().getConstPool();
+                        AnnotationsAttribute attr = new AnnotationsAttribute(constPool, AnnotationsAttribute.visibleTag);
+                        for (Object a : field.getAvailableAnnotations()) {
+                            if (Proxy.getInvocationHandler(a) instanceof AnnotationImpl) {
+                                AnnotationImpl impl = (AnnotationImpl) Proxy.getInvocationHandler(a);
+                                if (impl.getTypeName().equals(SpireEnum.class.getName())) {
+                                    continue;
+                                }
+                                Annotation annotation = new Annotation(impl.getTypeName(), constPool);
+                                if (impl.getAnnotation().getMemberNames() != null) {
+                                    for (Object memberName : impl.getAnnotation().getMemberNames()) {
+                                        annotation.addMemberValue((String) memberName, impl.getAnnotation().getMemberValue((String) memberName));
+                                    }
+                                }
+                                attr.addAnnotation(annotation);
+                            }
+                        }
+                        f.getFieldInfo().addAttribute(attr);
                         ctClass.addField(f);
                     } catch (DuplicateMemberException ignore) {
                         // Field already exists

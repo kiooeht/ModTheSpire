@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Copy annotations from SpireEnums
 
 #### v3.21.0 ####
 * Keep log window open when game crashes
