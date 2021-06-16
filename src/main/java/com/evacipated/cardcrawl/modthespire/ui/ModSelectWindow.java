@@ -6,6 +6,7 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
@@ -246,13 +247,19 @@ public class ModSelectWindow extends JFrame
             this.getContentPane().removeAll();
 
             JTextArea textArea = new JTextArea();
+            JTextPane textPane = new JTextPane();
+            Font consoleFont = new Font ("monospaced", Font.BOLD, 12);
+
+            textPane.setFont(consoleFont);
+            textArea.setFont(consoleFont);
             textArea.setLineWrap(true);
-            textArea.setFont(new Font("monospaced", Font.PLAIN, 12));
-            JScrollPane logScroller = new JScrollPane(textArea);
+
+            JTextComponent textComponent = Loader.DEBUG ? textPane :  textArea;
+            JScrollPane logScroller = new JScrollPane(textComponent);
             this.getContentPane().add(logScroller, BorderLayout.CENTER);
-            MessageConsole mc = new MessageConsole(textArea);
+            MessageConsole mc = new MessageConsole(textComponent);
             mc.redirectOut(null, System.out);
-            mc.redirectErr(null, System.err);
+            mc.redirectErr(Color.RED, System.err);
 
             setResizable(true);
             pack();
