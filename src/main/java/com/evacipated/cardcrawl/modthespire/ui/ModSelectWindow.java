@@ -246,18 +246,12 @@ public class ModSelectWindow extends JFrame
 
             this.getContentPane().removeAll();
 
-            JTextArea textArea = new JTextArea();
             JTextPane textPane = new JTextPane();
             Font consoleFont = new Font ("monospaced", Font.BOLD, 12);
-
             textPane.setFont(consoleFont);
-            textArea.setFont(consoleFont);
-            textArea.setLineWrap(true);
-
-            JTextComponent textComponent = Loader.DEBUG ? textPane :  textArea;
-            JScrollPane logScroller = new JScrollPane(textComponent);
+            JScrollPane logScroller = new JScrollPane(textPane);
             this.getContentPane().add(logScroller, BorderLayout.CENTER);
-            MessageConsole mc = new MessageConsole(textComponent);
+            MessageConsole mc = new MessageConsole(textPane);
             mc.redirectOut(null, System.out);
             mc.redirectErr(Color.RED, System.err);
 
