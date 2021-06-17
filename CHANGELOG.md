@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.23.0 ####
 * Colorize errors in log window
 * Limit log window to 5000 lines
 
