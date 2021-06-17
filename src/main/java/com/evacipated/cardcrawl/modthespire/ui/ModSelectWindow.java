@@ -253,7 +253,7 @@ public class ModSelectWindow extends JFrame
             this.getContentPane().add(logScroller, BorderLayout.CENTER);
             MessageConsole mc = new MessageConsole(textPane);
             mc.redirectOut(null, System.out);
-            mc.redirectErr(Color.RED, System.err);
+            mc.redirectErr(new Color(210, 0, 0), System.err);
             mc.setMessageLines(MAX_LINES);
 
             setResizable(true);
