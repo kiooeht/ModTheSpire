@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+* Colorize errors in log window
+* Limit log window to 5000 lines
 
 #### v3.22.0 ####
 * Copy annotations from SpireEnums
