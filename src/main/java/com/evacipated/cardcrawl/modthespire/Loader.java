@@ -365,7 +365,7 @@ public class Loader
                 MODINFOS = modInfos;
             }
 
-            printMTSInfo();
+            printMTSInfo(System.out);
 
             unpackKotlin();
 
@@ -699,25 +699,25 @@ public class Loader
         return modInfos.toArray(new ModInfo[0]);
     }
 
-    private static void printMTSInfo()
+    public static void printMTSInfo(PrintStream out)
     {
-        System.out.println("Version Info:");
-        System.out.printf(" - Java version (%s)\n", System.getProperty("java.version"));
-        System.out.printf(" - Slay the Spire (%s)", STS_VERSION);
+        out.println("Version Info:");
+        out.printf(" - Java version (%s)\n", System.getProperty("java.version"));
+        out.printf(" - Slay the Spire (%s)", STS_VERSION);
         if (STS_BETA) {
-            System.out.printf(" BETA");
+            out.printf(" BETA");
         }
-        System.out.printf("\n");
-        System.out.printf(" - ModTheSpire (%s)\n", MTS_VERSION);
-        System.out.printf("Mod list:\n");
+        out.printf("\n");
+        out.printf(" - ModTheSpire (%s)\n", MTS_VERSION);
+        out.printf("Mod list:\n");
         for (ModInfo info : MODINFOS) {
-            System.out.printf(" - %s", info.getIDName());
+            out.printf(" - %s", info.getIDName());
             if (info.ModVersion != null) {
-                System.out.printf(" (%s)", info.ModVersion);
+                out.printf(" (%s)", info.ModVersion);
             }
-            System.out.println();
+            out.println();
         }
-        System.out.println();
+        out.println();
     }
 
     private static void checkDependencies(ModInfo[] modinfos) throws MissingDependencyException, DuplicateModIDException

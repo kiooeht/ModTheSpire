@@ -18,8 +18,9 @@ public class DisableGdxForceExit
     public static void maybeExit()
     {
         if (crash != null) {
-            System.out.println("Game crashed.");
-            System.out.println("Cause:");
+            System.err.println("Game crashed.");
+            Loader.printMTSInfo(System.err);
+            System.err.println("Cause:");
             crash.printStackTrace();
             Loader.restoreWindowOnCrash();
         } else {
