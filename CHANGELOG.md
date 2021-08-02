@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.23.2 ####
 * Revert v3.23.0 changes:
   * Colorize errors in log window
   * Limit log window to 5000 lines
