@@ -27,7 +27,6 @@ public class ModSelectWindow extends JFrame
     private static final String DEBUG_OPTION = "Debug";
     private static final String PLAY_OPTION = "Play";
     private static final String JAR_DUMP_OPTION = "Dump Patched Jar";
-    private static final int MAX_LINES = 5000;
 
     static final Image APP_ICON = Toolkit.getDefaultToolkit().createImage(ModSelectWindow.class.getResource("/assets/icon.png"));
     static final Icon ICON_UPDATE   = new ImageIcon(ModSelectWindow.class.getResource("/assets/update.gif"));
@@ -246,15 +245,14 @@ public class ModSelectWindow extends JFrame
 
             this.getContentPane().removeAll();
 
-            JTextPane textPane = new JTextPane();
-            Font consoleFont = new Font ("monospaced", Font.PLAIN, 12);
-            textPane.setFont(consoleFont);
-            JScrollPane logScroller = new JScrollPane(textPane);
+            JTextArea textArea = new JTextArea();
+            textArea.setLineWrap(true);
+            textArea.setFont(new Font("monospaced", Font.PLAIN, 12));
+            JScrollPane logScroller = new JScrollPane(textArea);
             this.getContentPane().add(logScroller, BorderLayout.CENTER);
-            MessageConsole mc = new MessageConsole(textPane);
+            MessageConsole mc = new MessageConsole(textArea);
             mc.redirectOut(null, System.out);
-            mc.redirectErr(new Color(210, 0, 0), System.err);
-            mc.setMessageLines(MAX_LINES);
+            mc.redirectErr(null, System.err);
 
             setResizable(true);
             pack();

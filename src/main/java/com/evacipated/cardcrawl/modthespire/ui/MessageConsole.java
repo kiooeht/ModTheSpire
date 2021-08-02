@@ -99,7 +99,7 @@ public class MessageConsole
         if (limitLinesListener != null)
             document.removeDocumentListener( limitLinesListener );
 
-        limitLinesListener = new LimitLinesDocumentListener(lines, isAppend);
+        //limitLinesListener = new LimitLinesDocumentListener(lines, isAppend);
         document.addDocumentListener( limitLinesListener );
     }
 
