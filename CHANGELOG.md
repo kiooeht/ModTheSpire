@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Fix finding Steam library folders after latest Steam Beta
 
 #### v3.23.0 ####
 * Colorize errors in log window

@@ -3,10 +3,14 @@ package com.evacipated.cardcrawl.modthespire.steam;
 import com.evacipated.cardcrawl.modthespire.Loader;
 import org.apache.commons.lang3.SystemUtils;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class SteamSearch
@@ -82,7 +86,7 @@ public class SteamSearch
 
         File tmp = Paths.get(steamPath.toString(), "libraryfolders.vdf").toFile();
         if (tmp.exists()) {
-            List<Path> libraries = readLibraryFolders(tmp);
+            List<Path> libraries = readLibraryFolders2(tmp);
             for (Path library : libraries) {
                 if (containsAcfFile(library)) {
                     installDir = steamToSTSPath(library).toString();
@@ -140,6 +144,7 @@ public class SteamSearch
         return acfFilePath.toFile().exists();
     }
 
+    // Parses the old libraryfolders.vdf format
     private static List<Path> readLibraryFolders(File file)
     {
         List<Path> libraries = new ArrayList<>();
@@ -159,6 +164,35 @@ public class SteamSearch
             e.printStackTrace();
         }
 
+        return libraries;
+    }
+
+    // Parses the new (as of 2021/07/29) libraryfolders.vdf format
+    // Falls back to old (readLibraryFolders) if no libraries are found
+    private static List<Path> readLibraryFolders2(File file)
+    {
+        List<Path> libraries = new ArrayList<>();
+
+        try {
+            FileReader fileReader = new FileReader(file);
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                String[] tokens = Arrays.stream(line.split("\t"))
+                    .filter(str -> !str.isEmpty())
+                    .toArray(String[]::new);
+                if (tokens.length == 2 && "\"path\"".equals(tokens[0])) {
+                    libraries.add(Paths.get(tokens[1].substring(1, tokens[1].length()-1), "steamapps"));
+                }
+            }
+            fileReader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (libraries.isEmpty()) {
+            return readLibraryFolders(file);
+        }
         return libraries;
     }
 
