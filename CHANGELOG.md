@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.23.1 ####
 * Fix finding Steam library folders after latest Steam Beta
 
 #### v3.23.0 ####
