@@ -1,6 +1,7 @@
 ## Changelog ##
 #### dev ####
 * Fix patch ordering being affected by SpirePatch, SpirePatches, SpirePatch2, and SpirePatches2 type
+* Patch to not require achievements to unlock Watcher
 
 #### v3.23.2 ####
 * Revert v3.23.0 changes:
