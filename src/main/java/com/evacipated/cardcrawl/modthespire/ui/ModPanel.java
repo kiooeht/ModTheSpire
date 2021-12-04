@@ -102,6 +102,13 @@ public class ModPanel extends JPanel
         checkBox.setBackground(Color.WHITE);
         infoPanel.setBackground(Color.WHITE);
 
+        if (info.MTS_Version == null) {
+            checkBox.setEnabled(false);
+            checkBox.setBackground(lightRed);
+            infoPanel.setBackground(lightRed);
+            info.statusMsg = "This mod is missing a valid ModTheSpire version number.";
+            return;
+        }
         if (info.MTS_Version.compareTo(Loader.MTS_VERSION) > 0) {
             checkBox.setEnabled(false);
             checkBox.setBackground(lightRed);
