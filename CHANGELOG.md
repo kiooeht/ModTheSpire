@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.23.3 ####
 * Fix patch ordering being affected by SpirePatch, SpirePatches, SpirePatch2, and SpirePatches2 type
 * Patch to not require achievements to unlock Watcher
 * Fix crash if a mod's MTS version is invalid
