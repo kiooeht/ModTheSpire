@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.23.4 ####
 * Stop Log4j exploit in mods
 
 #### v3.23.3 ####
