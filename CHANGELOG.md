@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Stop Log4j exploit in mods
 
 #### v3.23.3 ####
 * Fix patch ordering being affected by SpirePatch, SpirePatches, SpirePatch2, and SpirePatches2 type

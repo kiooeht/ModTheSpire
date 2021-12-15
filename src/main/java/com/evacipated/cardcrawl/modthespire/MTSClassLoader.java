@@ -76,6 +76,10 @@ public class MTSClassLoader extends URLClassLoader
     @Override
     public Class<?> loadClass(String name) throws ClassNotFoundException
     {
+        // Stop the log4j exploit by removing this class
+        if (name.equals("org.apache.logging.log4j.core.lookup.JndiLookup")) {
+            throw new ClassNotFoundException();
+        }
         if (name.startsWith("com.codedisaster.steamworks") || name.startsWith("com.google.gson") || name.equals("com.megacrit.cardcrawl.desktop.DesktopLauncher")) {
             Class<?> c = findLoadedClass(name);
             if (c == null) {
