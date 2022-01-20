@@ -179,7 +179,7 @@ public class ClassPatchInfo extends PatchInfo
                         ));
                         // Setter
                         String setStr = "";
-                        if (found.madeSet) {
+                        if (found.madeSet && fieldType.equals(found.setType.getName())) {
                             setStr = String.format("super_set(__instance, (%s) value);", found.setType.getName());
                         }
                         ctAccessor.addMethod(CtNewMethod.make(

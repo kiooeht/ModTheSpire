@@ -1,6 +1,8 @@
 ## Changelog ##
 #### dev ####
 * Change how out-jar backend works
+* Fix very specific SpireField crash
+  * If two SpireFields of different types are defined in the same class, one of them using a custom subclass of SpireField and the other not, the non-subclassed SpireField will cause a crash when used
 
 #### v3.23.4 ####
 * Stop Log4j exploit in mods
