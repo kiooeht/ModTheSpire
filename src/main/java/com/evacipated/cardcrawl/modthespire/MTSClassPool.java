@@ -14,6 +14,7 @@ public class MTSClassPool extends ClassPool
 {
     private ClassLoader classLoader;
     private List<ClassPath> classPaths = new ArrayList<>();
+    private Set<CtClass> outJar = null;
 
     public MTSClassPool(MTSClassLoader classLoader)
     {
@@ -67,6 +68,14 @@ public class MTSClassPool extends ClassPool
                 ret.add(cls);
             }
         }
+        if (Loader.OUT_JAR) {
+            outJar = ret;
+        }
         return ret;
+    }
+
+    public Set<CtClass> getOutJarClasses()
+    {
+        return outJar;
     }
 }

@@ -1,17 +1,14 @@
 package com.evacipated.cardcrawl.modthespire;
 
 import javassist.CannotCompileException;
-import javassist.ClassPool;
 import javassist.CtClass;
-import javassist.NotFoundException;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Vector;
+import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
@@ -27,22 +24,6 @@ class OutJar
             this.path = path;
             this.b = b;
         }
-    }
-
-    /* https://stackoverflow.com/questions/2548384/java-get-a-list-of-all-classes-loaded-in-the-jvm?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa */
-    private static Iterator<Class<?>> getClassList(ClassLoader CL)
-        throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException
-    {
-        Class<?> CL_class = CL.getClass();
-        while (CL_class != java.lang.ClassLoader.class) {
-            CL_class = CL_class.getSuperclass();
-        }
-        java.lang.reflect.Field ClassLoader_classes_field = CL_class
-            .getDeclaredField("classes");
-        ClassLoader_classes_field.setAccessible(true);
-        @SuppressWarnings("unchecked")
-        Vector<Class<?>> classes = (Vector<Class<?>>) ClassLoader_classes_field.get(CL);
-        return classes.iterator();
     }
 
     /* https://stackoverflow.com/questions/22591903/javassist-how-to-inject-a-method-into-a-class-in-jar?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa */
@@ -96,20 +77,18 @@ class OutJar
         }
     }
 
-    public static void dumpJar(ClassLoader loader, ClassPool pool, String jarPath)
-        throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, IOException
+    public static void dumpJar(MTSClassPool pool, String jarPath)
+        throws SecurityException, IllegalArgumentException, IOException
     {
-        Iterator<Class<?>> loadedClasses = getClassList(loader);
+        Set<CtClass> ctClasses = pool.getOutJarClasses();
         List<FilePathAndBytes> files = new ArrayList<>();
-        for (; loadedClasses.hasNext();) {
+        for (CtClass ctClass : ctClasses) {
             try {
-                String className = loadedClasses.next().getName();
-                CtClass ctClass;
-                ctClass = pool.get(className);
+                String className = ctClass.getName();
                 byte[] b = ctClass.toBytecode();
                 String classPath = className.replaceAll("\\.", "/") + ".class";
                 files.add(new FilePathAndBytes(classPath, b));
-            } catch (NotFoundException | IOException | CannotCompileException e) {
+            } catch (IOException | CannotCompileException e) {
                 // eat it - just means this isn't a file we've loaded
             }
         }

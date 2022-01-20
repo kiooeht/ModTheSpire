@@ -417,7 +417,7 @@ public class Loader
                 // Output JAR if requested
                 if (Loader.OUT_JAR) {
                     System.out.printf("Dumping JAR...");
-                    OutJar.dumpJar(loader, pool, STS_PATCHED_JAR);
+                    OutJar.dumpJar(pool, STS_PATCHED_JAR);
                     System.out.println("Done.");
                     return;
                 }

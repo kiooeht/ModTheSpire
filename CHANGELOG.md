@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Change how out-jar backend works
 
 #### v3.23.4 ####
 * Stop Log4j exploit in mods
