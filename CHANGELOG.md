@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.24.0 ####
 * Change how out-jar backend works
 * Fix very specific SpireField crash
   * If two SpireFields of different types are defined in the same class, one of them using a custom subclass of SpireField and the other not, the non-subclassed SpireField will cause a crash when used
