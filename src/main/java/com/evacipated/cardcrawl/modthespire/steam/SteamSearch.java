@@ -210,7 +210,7 @@ public class SteamSearch
     {
         private final String title;
         private final String id;
-        private final Path installPath;
+        private final String installPath;
         private final int timeUpdated;
         private List<String> tags;
 
@@ -218,7 +218,7 @@ public class SteamSearch
         {
             this.title = title;
             this.id = id;
-            this.installPath = Paths.get(installPath).toAbsolutePath();
+            this.installPath = Paths.get(installPath).toAbsolutePath().toString();
             int tmpTime = 0;
             try {
                 tmpTime = Integer.parseInt(timeUpdated);
@@ -242,7 +242,7 @@ public class SteamSearch
             return id;
         }
 
-        public Path getInstallPath()
+        public String getInstallPath()
         {
             return installPath;
         }

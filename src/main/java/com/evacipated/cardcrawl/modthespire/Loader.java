@@ -47,6 +47,7 @@ public class Loader
     public static ModInfo[] MODINFOS;
     private static ModInfo[] ALLMODINFOS;
     private static ClassPool POOL;
+    private static List<SteamSearch.WorkshopInfo> WORKSHOP_INFOS;
 
     public static SpireConfig MTS_CONFIG;
     public static String STS_VERSION = null;
@@ -89,6 +90,11 @@ public class Loader
     public static ClassPool getClassPool()
     {
         return POOL;
+    }
+
+    public static List<SteamSearch.WorkshopInfo> getWorkshopInfos()
+    {
+        return WORKSHOP_INFOS;
     }
 
     public static void main(String[] args)
@@ -258,70 +264,60 @@ public class Loader
         //*/
         System.out.println("Got " + workshopInfos.size() + " workshop items");
 
-        // Save workshop last updated times
+        convertOldWorkshopInfoFiles(workshopInfos);
+
         try {
-            Map<String, Integer> lastUpdated = null;
-            String path = SpireConfig.makeFilePath(null, "WorkshopUpdated", "json");
+            List<SteamSearch.WorkshopInfo> oldWorkshopInfos = null;
+            String path = SpireConfig.makeFilePath(null, "WorkshopInfo", "json");
             if (new File(path).isFile()) {
                 String data = new String(Files.readAllBytes(Paths.get(path)));
                 Gson gson = new Gson();
-                Type type = new TypeToken<Map<String, Integer>>(){}.getType();
+                Type type = new TypeToken<List<SteamSearch.WorkshopInfo>>(){}.getType();
                 try {
-                    lastUpdated = gson.fromJson(data, type);
+                    oldWorkshopInfos = gson.fromJson(data, type);
                 } catch (JsonSyntaxException ignore) {
-                    lastUpdated = null;
                 }
             }
-            if (lastUpdated == null) {
-                lastUpdated = new HashMap<>();
+            if (oldWorkshopInfos == null) {
+                oldWorkshopInfos = new ArrayList<>();
             }
 
             for (SteamSearch.WorkshopInfo info : workshopInfos) {
                 if (info == null) {
                     continue;
                 }
-                int savedTime = lastUpdated.getOrDefault(info.getID(), 0);
+                int savedTime = oldWorkshopInfos.stream()
+                    .filter(x -> Objects.equals(info.getID(), x.getID()))
+                    .findFirst()
+                    .map(SteamSearch.WorkshopInfo::getTimeUpdated)
+                    .orElse(0);
                 if (savedTime < info.getTimeUpdated()) {
-                    lastUpdated.put(info.getID(), info.getTimeUpdated());
                     if (savedTime != 0) {
                         System.out.println(info.getTitle() + " WAS UPDATED!");
                     }
                 }
             }
 
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            String data = gson.toJson(lastUpdated);
-            Files.write(Paths.get(SpireConfig.makeFilePath(null, "WorkshopUpdated", "json")), data.getBytes());
+            if (!workshopInfos.isEmpty()) {
+                // if steam, save this workshop info
+                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                String data = gson.toJson(workshopInfos);
+                Files.write(Paths.get(SpireConfig.makeFilePath(null, "WorkshopInfo", "json")), data.getBytes());
+            } else {
+                // if no steam, use saved workshop info
+                workshopInfos = oldWorkshopInfos;
+            }
         } catch (IOException e) {
             // TODO
             e.printStackTrace();
         }
 
-
-        // Save workshop locations
-        if (!workshopInfos.isEmpty()) {
-            try {
-                List<String> workshopLocations = new ArrayList<>();
-                for (SteamSearch.WorkshopInfo info : workshopInfos) {
-                    if (info == null) {
-                        continue;
-                    }
-                    workshopLocations.add(info.getInstallPath().toAbsolutePath().toString());
-                }
-
-                Gson gson = new GsonBuilder().setPrettyPrinting().create();
-                String data = gson.toJson(workshopLocations);
-                Files.write(Paths.get(SpireConfig.makeFilePath(null, "WorkshopLocations", "json")), data.getBytes());
-            } catch (IOException e) {
-                // TODO
-                e.printStackTrace();
-            }
-        }
+        WORKSHOP_INFOS = workshopInfos;
 
         findGameVersion();
 
         EventQueue.invokeLater(() -> {
-            ALLMODINFOS = getAllMods(workshopInfos);
+            ALLMODINFOS = getAllMods(getWorkshopInfos());
             ex = new ModSelectWindow(ALLMODINFOS, skipLauncher);
             ex.setVisible(true);
 
@@ -644,53 +640,16 @@ public class Loader
             }
         };
         // Workshop content
-        if (!workshopInfos.isEmpty()) {
-            for (SteamSearch.WorkshopInfo workshopInfo : workshopInfos) {
-                // Normal
-                for (File f : getAllModFiles(workshopInfo.getInstallPath().toString())) {
-                    lambda.accept(f, false);
-                }
-                // Beta
-                if (STS_BETA) {
-                    for (File f : getAllModFiles(Paths.get(workshopInfo.getInstallPath().toString(), BETA_SUBDIR).toString())) {
-                        lambda.accept(f, true);
-                    }
-                }
+        for (SteamSearch.WorkshopInfo workshopInfo : workshopInfos) {
+            // Normal
+            for (File f : getAllModFiles(workshopInfo.getInstallPath())) {
+                lambda.accept(f, false);
             }
-        } else {
-            // Load workshop locations
-            try {
-                List<String> workshopLocations = null;
-                String path = SpireConfig.makeFilePath(null, "WorkshopLocations", "json");
-                if (new File(path).isFile()) {
-                    String data = new String(Files.readAllBytes(Paths.get(path)));
-                    Gson gson = new Gson();
-                    Type type = new TypeToken<List<String>>(){}.getType();
-                    try {
-                        workshopLocations = gson.fromJson(data, type);
-                    } catch (JsonSyntaxException ignore) {
-                        workshopLocations = null;
-                    }
+            // Beta
+            if (STS_BETA) {
+                for (File f : getAllModFiles(Paths.get(workshopInfo.getInstallPath(), BETA_SUBDIR).toString())) {
+                    lambda.accept(f, true);
                 }
-                if (workshopLocations == null) {
-                    workshopLocations = new ArrayList<>();
-                }
-
-                for (String location : workshopLocations) {
-                    // Normal
-                    for (File f : getAllModFiles(location)) {
-                        lambda.accept(f, false);
-                    }
-                    // Beta
-                    if (STS_BETA) {
-                        for (File f : getAllModFiles(Paths.get(location, BETA_SUBDIR).toString())) {
-                            lambda.accept(f, true);
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                // TODO
-                e.printStackTrace();
             }
         }
 
@@ -804,6 +763,28 @@ public class Loader
             } else {
                 System.out.println("Unknown");
             }
+        }
+    }
+
+    private static void convertOldWorkshopInfoFiles(List<SteamSearch.WorkshopInfo> workshopInfos)
+    {
+        if (workshopInfos.isEmpty()) {
+            // don't attempt conversion if steam isn't on
+            return;
+        }
+
+        try {
+            String pathUpdated = SpireConfig.makeFilePath(null, "WorkshopUpdated", "json");
+            String pathLocations = SpireConfig.makeFilePath(null, "WorkshopLocations", "json");
+            Files.deleteIfExists(Paths.get(pathUpdated));
+            Files.deleteIfExists(Paths.get(pathLocations));
+
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            String data = gson.toJson(workshopInfos);
+            Files.write(Paths.get(SpireConfig.makeFilePath(null, "WorkshopInfo", "json")), data.getBytes());
+        } catch (IOException e) {
+            // TODO
+            e.printStackTrace();
         }
     }
 }

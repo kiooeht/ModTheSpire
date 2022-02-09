@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Update how workshop info is saved and give mods access to it
 
 #### v3.24.0 ####
 * Change how out-jar backend works
