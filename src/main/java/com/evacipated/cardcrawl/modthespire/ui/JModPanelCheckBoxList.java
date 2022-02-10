@@ -64,7 +64,15 @@ public class JModPanelCheckBoxList extends JList<ModPanel> {
         this(parent);
         setModel(model);
     }
-    
+
+    public File[] getAllMods() {
+        File[] ret = new File[getModel().getSize()];
+        for (int i = 0; i < getModel().getSize(); ++i) {
+            ret[i] = getModel().getElementAt(i).modFile;
+        }
+        return ret;
+    }
+
     public File[] getCheckedMods() {
         int size = 0;
         for (int i = 0; i < getModel().getSize(); ++i) {

@@ -268,7 +268,12 @@ public class ModSelectWindow extends JFrame
 
             Thread t = new Thread(() -> {
                 // Build array of selected mods
-                File[] selectedMods = modList.getCheckedMods();
+                File[] selectedMods;
+                if (Loader.manualModIds != null) {
+                    selectedMods = modList.getAllMods();
+                } else {
+                    selectedMods = modList.getCheckedMods();
+                }
 
                 Loader.runMods(selectedMods);
             });

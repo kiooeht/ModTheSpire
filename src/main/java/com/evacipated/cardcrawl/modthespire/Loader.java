@@ -54,6 +54,7 @@ public class Loader
     public static boolean STS_BETA = false;
     public static boolean allowBeta = false;
     public static String profileArg = null;
+    public static List<String> manualModIds = null;
 
     static String[] ARGS;
     public static boolean SKIP_INTRO = false;
@@ -162,6 +163,14 @@ public class Loader
         int profileArgIndex = argList.indexOf("--profile");
         if (profileArgIndex >= 0 && argList.size() > profileArgIndex + 1) {
             profileArg = argList.get(profileArgIndex+1);
+        }
+
+        int modIdsIndex = argList.indexOf("--mods");
+        if (modIdsIndex >= 0 && argList.size() > modIdsIndex + 1) {
+            String modIds = argList.get(modIdsIndex+1);
+            manualModIds = Arrays.asList(modIds.split(","));
+            profileArg = null;
+            skipLauncher = true;
         }
 
         try {
@@ -316,9 +325,10 @@ public class Loader
 
         findGameVersion();
 
+        final boolean finalSkipLauncher = skipLauncher;
         EventQueue.invokeLater(() -> {
             ALLMODINFOS = getAllMods(getWorkshopInfos());
-            ex = new ModSelectWindow(ALLMODINFOS, skipLauncher);
+            ex = new ModSelectWindow(ALLMODINFOS, finalSkipLauncher);
             ex.setVisible(true);
 
             ex.warnAboutMissingVersions();
@@ -355,7 +365,7 @@ public class Loader
         }
         try {
             {
-                ModInfo[] modInfos = buildInfoArray(modJars);
+                ModInfo[] modInfos = buildInfoArray(modJars, manualModIds);
                 checkDependencies(modInfos);
                 modInfos = orderDependencies(modInfos);
                 MODINFOS = modInfos;
@@ -470,6 +480,9 @@ public class Loader
         } catch (DuplicateModIDException e) {
             System.err.println("ERROR: " + e.getMessage());
             JOptionPane.showMessageDialog(null, e.getMessage(), "Duplicate Mod ID", JOptionPane.ERROR_MESSAGE);
+        } catch (MissingModIDException e) {
+            System.err.println("ERROR: " + e.getMessage());
+            JOptionPane.showMessageDialog(null, e.getMessage(), "Missing Mod ID", JOptionPane.ERROR_MESSAGE);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -554,11 +567,33 @@ public class Loader
         return urls.toArray(new URL[0]);
     }
 
-    private static ModInfo[] buildInfoArray(File[] modJars)
+    private static ModInfo[] buildInfoArray(File[] modJars, List<String> modIds) throws MissingModIDException
     {
-        ModInfo[] infos = new ModInfo[modJars.length];
-        for (int i = 0; i < modJars.length; ++i) {
-            infos[i] = ModInfo.ReadModInfo(modJars[i]);
+        ModInfo[] infos;
+        if (modIds != null) {
+            // if using --mods
+            Map<String, ModInfo> infoMap = new HashMap<>();
+            for (File modJar : modJars) {
+                ModInfo info = ModInfo.ReadModInfo(modJar);
+                if (info != null && info.ID != null && !info.ID.isEmpty()) {
+                    infoMap.put(info.ID, info);
+                }
+            }
+
+            infos = new ModInfo[modIds.size()];
+            for (int i = 0; i < modIds.size(); ++i) {
+                ModInfo info = infoMap.get(modIds.get(i));
+                if (info == null) {
+                    throw new MissingModIDException(modIds.get(i));
+                }
+                infos[i] = info;
+            }
+        } else {
+            // Normal
+            infos = new ModInfo[modJars.length];
+            for (int i = 0; i < modJars.length; ++i) {
+                infos[i] = ModInfo.ReadModInfo(modJars[i]);
+            }
         }
         return infos;
     }
