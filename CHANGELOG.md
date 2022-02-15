@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.25.0 ####
 * Update how workshop info is saved and give mods access to it
 * Add flag for selecting specific mods
   * Implies --skip-launcher
