@@ -16,6 +16,7 @@ public class SteamWorkshop
     public static void main(String[] args)
     {
         try {
+            SteamAPI.loadLibraries();
             if (!SteamAPI.init()) {
                 System.err.println("Could not connect to Steam. Is it running?");
                 System.exit(1);
@@ -117,7 +118,8 @@ public class SteamWorkshop
         }
 
         @Override
-        public void onSubmitItemUpdate(boolean needsToAcceptWLA, SteamResult result) {
+        public void onSubmitItemUpdate(SteamPublishedFileID publishedFileID, boolean needsToAcceptWLA, SteamResult result)
+        {
 
         }
 
@@ -153,6 +155,12 @@ public class SteamWorkshop
 
         @Override
         public void onStopPlaytimeTrackingForAllItems(SteamResult result) {
+
+        }
+
+        @Override
+        public void onDeleteItem(SteamPublishedFileID publishedFileID, SteamResult result)
+        {
 
         }
     }

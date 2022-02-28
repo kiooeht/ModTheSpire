@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Fix steamworks4j version for Slay the Spire v2.3
 
 #### v3.25.0 ####
 * Update how workshop info is saved and give mods access to it
