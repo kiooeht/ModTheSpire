@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.25.1 ####
 * Fix steamworks4j version for Slay the Spire v2.3
 
 #### v3.25.0 ####
