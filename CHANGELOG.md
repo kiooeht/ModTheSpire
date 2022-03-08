@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.25.2 ####
 * Make workshop support still work on older versions of Slay the Spire
 * Update steamworks4j version to match Slay the Spire hotfix
 
