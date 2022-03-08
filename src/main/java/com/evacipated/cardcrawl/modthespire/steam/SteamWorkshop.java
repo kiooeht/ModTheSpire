@@ -16,7 +16,11 @@ public class SteamWorkshop
     public static void main(String[] args)
     {
         try {
-            SteamAPI.loadLibraries();
+            try {
+                SteamAPI.loadLibraries();
+            } catch (NoSuchMethodError ignored) {
+                // Running an older version of the game, before steamworks4j 1.9.0
+            }
             if (!SteamAPI.init()) {
                 System.err.println("Could not connect to Steam. Is it running?");
                 System.exit(1);
