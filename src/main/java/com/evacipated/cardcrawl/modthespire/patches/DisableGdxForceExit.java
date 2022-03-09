@@ -7,6 +7,12 @@ import javassist.CannotCompileException;
 import javassist.expr.ExprEditor;
 import javassist.expr.FieldAccess;
 
+import java.net.URL;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 @SpirePatch(
     clz=LwjglApplication.class,
     method="mainLoop"
@@ -20,7 +26,7 @@ public class DisableGdxForceExit
         if (crash != null) {
             System.err.println("Game crashed.");
             Loader.printMTSInfo(System.err);
-            tryPrintModsInStacktrace();
+            tryPrintModsInStacktrace(crash);
             System.err.println("Cause:");
             crash.printStackTrace();
             Loader.restoreWindowOnCrash();
