@@ -20,6 +20,7 @@ public class DisableGdxForceExit
         if (crash != null) {
             System.err.println("Game crashed.");
             Loader.printMTSInfo(System.err);
+            tryPrintModsInStacktrace();
             System.err.println("Cause:");
             crash.printStackTrace();
             Loader.restoreWindowOnCrash();
@@ -45,5 +46,65 @@ public class DisableGdxForceExit
                 }
             }
         };
+    }
+
+    private static void tryPrintModsInStacktrace(Throwable exception) {
+        try {
+            printModsInStacktrace(exception);
+        } catch (Exception e) {
+            // ignore
+        }
+    }
+
+    private static void printModsInStacktrace(Throwable exception) {
+        Set<String> classes = new HashSet<>();
+        addClassesInThrowable(exception, classes);
+
+        Set<URL> urls = new HashSet<>();
+        for (String className : classes) {
+            try {
+                Class<?> cls = Class.forName(className);
+                urls.add(cls.getProtectionDomain().getCodeSource().getLocation());
+            } catch (ClassNotFoundException ignore) {
+                // ignore
+            }
+        }
+
+        Set<String> modInfoLines = new HashSet<>();
+        for (URL url : urls) {
+            if (url == null) {
+                continue;
+            }
+
+            Arrays.stream(Loader.MODINFOS).filter(m -> m.jarURL.equals(url)).findFirst().ifPresent(modInfo -> {
+                if (!modInfo.ID.equals("basemod")) {
+                    modInfoLines.add(String.format("%s (%s)", modInfo.ID, modInfo.ModVersion));
+                }
+            });
+        }
+
+        if (modInfoLines.size() > 0) {
+            System.err.println("Mods in stacktrace:");
+            for (String modId : modInfoLines.stream().sorted().collect(Collectors.toList())) {
+                System.err.println(" - " + modId);
+            }
+        }
+    }
+
+    private static void addClassesInThrowable(Throwable exception, Set<String> classes) {
+        for (StackTraceElement stackTraceElement : exception.getStackTrace()) {
+            classes.add(stackTraceElement.getClassName());
+        }
+
+        for (Throwable suppressed : exception.getSuppressed()) {
+            if (suppressed != null) {
+                addClassesInThrowable(suppressed, classes);
+            }
+        }
+
+        Throwable cause = exception.getCause();
+        if (cause != null) {
+            addClassesInThrowable(cause, classes);
+        }
     }
 }
