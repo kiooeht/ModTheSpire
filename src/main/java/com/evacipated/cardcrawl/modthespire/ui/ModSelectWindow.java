@@ -27,6 +27,7 @@ public class ModSelectWindow extends JFrame
     private static final String DEBUG_OPTION = "Debug";
     private static final String PLAY_OPTION = "Play";
     private static final String JAR_DUMP_OPTION = "Dump Patched Jar";
+    private static final String PACKAGE_OPTION = "Package";
 
     static final Image APP_ICON = Toolkit.getDefaultToolkit().createImage(ModSelectWindow.class.getResource("/assets/icon.png"));
     static final Icon ICON_UPDATE   = new ImageIcon(ModSelectWindow.class.getResource("/assets/update.gif"));
@@ -237,7 +238,9 @@ public class ModSelectWindow extends JFrame
 
         // Play button
         playBtn = new JButton(
-            Loader.OUT_JAR ? JAR_DUMP_OPTION : PLAY_OPTION
+            Loader.PACKAGE ? PACKAGE_OPTION :
+                Loader.OUT_JAR ? JAR_DUMP_OPTION :
+                PLAY_OPTION
         );
         playBtn.addActionListener((ActionEvent event) -> {
             showingLog = true;

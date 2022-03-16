@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Add ability to create pre-patched version of the game
 
 #### v3.25.2 ####
 * Make workshop support still work on older versions of Slay the Spire
