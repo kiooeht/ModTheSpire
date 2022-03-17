@@ -7,12 +7,14 @@ import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.desktop.DesktopLauncher;
 import javassist.*;
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Paths;
@@ -287,12 +289,13 @@ class PackageJar
 
             src.append("URL baseURL = ").append(PrepackagedLauncher.class.getName()).append(".class.getProtectionDomain().getCodeSource().getLocation();\n");
             src.append("URL oldURL = null;\n");
+            src.append("int index = -1;\n");
             for (int i=0; i<Loader.MODINFOS.length; ++i) {
                 URL oldURL = Loader.MODINFOS[i].jarURL;
                 try {
-                    Loader.MODINFOS[i].jarURL = Paths.get("package").resolve(Paths.get(oldURL.getFile()).getFileName()).toUri().toURL();
-                    Loader.MODINFOS[i].jarURL = new URL("file:package/" + Paths.get(oldURL.getFile()).getFileName().toString());
-                } catch (MalformedURLException e) {
+                    Loader.MODINFOS[i].jarURL = Paths.get("package").resolve(Paths.get(oldURL.toURI()).getFileName()).toUri().toURL();
+                    Loader.MODINFOS[i].jarURL = new URL("file:package/" + Paths.get(oldURL.toURI()).getFileName().toString());
+                } catch (MalformedURLException | URISyntaxException e) {
                     e.printStackTrace();
                 }
                 String json = gson.toJson(Loader.MODINFOS[i]);
@@ -300,7 +303,10 @@ class PackageJar
                 src.append("ret[").append(i).append("] = gson.fromJson(").append("\"").append(json.replaceAll("\"", "\\\\\"")).append("\", ")
                     .append(ModInfo.class.getName()).append(".class);\n");
                 src.append("oldURL = ret[").append(i).append("].jarURL;\n");
-                src.append("ret[").append(i).append("].jarURL = Paths.get(\"package\", new String[0]).resolve(Paths.get(oldURL.getFile(), new String[0]).getFileName()).toUri().toURL();\n");
+                src.append("System.out.println(oldURL);\n");
+                src.append("index = oldURL.toString().lastIndexOf('/') + 1;\n");
+                src.append("System.out.println(oldURL.toString().substring(index, oldURL.toString().length()));\n");
+                src.append("ret[").append(i).append("].jarURL = Paths.get(\"package\", new String[0]).resolve(Paths.get(oldURL.toString().substring(index, oldURL.toString().length()), new String[0])).toUri().toURL();\n");
             }
 
             src.append("return ret;\n");
@@ -321,9 +327,11 @@ class PackageJar
         StringBuilder sb = new StringBuilder();
 
         for (ModInfo info : Loader.MODINFOS) {
-            sb.append("package/")
-                .append(Paths.get(info.jarURL.getFile()).getFileName())
-                .append(" ");
+            try {
+                sb.append("package/")
+                    .append(Paths.get(info.jarURL.toURI()).getFileName())
+                    .append(" ");
+            } catch (URISyntaxException ignored) {}
         }
         // Remove trailing space
         sb.setLength(sb.length() - 1);
@@ -332,7 +340,7 @@ class PackageJar
     }
 
     public static void packageJar(MTSClassPool pool, String jarPath)
-        throws SecurityException, IllegalArgumentException, IOException
+        throws SecurityException, IllegalArgumentException, IOException, URISyntaxException
     {
         CtClass ctPrePackagedLauncher = setupPrepackagedLauncher(pool);
 
@@ -445,7 +453,7 @@ class PackageJar
             // Do mod jars
             new File("package").mkdirs();
             for (ModInfo modInfo : Loader.MODINFOS) {
-                String filename = Paths.get(modInfo.jarURL.getFile()).getFileName().toString();
+                String filename = Paths.get(modInfo.jarURL.toURI()).getFileName().toString();
                 outJar = new JarOutputStream(new FileOutputStream(Paths.get("package", filename).toFile()));
                 System.out.println("  Copying " + modInfo.ID + "...");
                 // Copy mod out-jar
