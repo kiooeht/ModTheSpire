@@ -7,14 +7,12 @@ import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.desktop.DesktopLauncher;
 import javassist.*;
 import org.apache.commons.lang3.NotImplementedException;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Paths;
@@ -482,9 +480,9 @@ class PackageJar
     public static class PrepackagedLauncher
     {
         public static void main(String[] args)
-            throws IOException, ClassNotFoundException, InvocationTargetException, IllegalAccessException, NoSuchFieldException
+            throws IOException, ClassNotFoundException, InvocationTargetException, IllegalAccessException, NoSuchFieldException, URISyntaxException
         {
-            Loader.STS_JAR = PrepackagedLauncher.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+            Loader.STS_JAR = new File(PrepackagedLauncher.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getAbsolutePath();
             Loader.loadMTSVersion("p");
             CardCrawlGame.VERSION_NUM += " [ModTheSpire " + Loader.MTS_VERSION + "]";
 
