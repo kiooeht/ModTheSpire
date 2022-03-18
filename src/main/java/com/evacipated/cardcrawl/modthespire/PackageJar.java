@@ -301,9 +301,9 @@ class PackageJar
                 src.append("ret[").append(i).append("] = gson.fromJson(").append("\"").append(json.replaceAll("\"", "\\\\\"")).append("\", ")
                     .append(ModInfo.class.getName()).append(".class);\n");
                 src.append("oldURL = ret[").append(i).append("].jarURL;\n");
-                src.append("System.out.println(oldURL);\n");
+                //src.append("System.out.println(oldURL);\n");
                 src.append("index = oldURL.toString().lastIndexOf('/') + 1;\n");
-                src.append("System.out.println(oldURL.toString().substring(index, oldURL.toString().length()));\n");
+                //src.append("System.out.println(oldURL.toString().substring(index, oldURL.toString().length()));\n");
                 src.append("ret[").append(i).append("].jarURL = Paths.get(\"package\", new String[0]).resolve(Paths.get(oldURL.toString().substring(index, oldURL.toString().length()), new String[0])).toUri().toURL();\n");
             }
 
