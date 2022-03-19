@@ -15,6 +15,7 @@ import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Function;
@@ -304,7 +305,7 @@ class PackageJar
                 //src.append("System.out.println(oldURL);\n");
                 src.append("index = oldURL.toString().lastIndexOf('/') + 1;\n");
                 //src.append("System.out.println(oldURL.toString().substring(index, oldURL.toString().length()));\n");
-                src.append("ret[").append(i).append("].jarURL = Paths.get(\"package\", new String[0]).resolve(Paths.get(oldURL.toString().substring(index, oldURL.toString().length()), new String[0])).toUri().toURL();\n");
+                src.append("ret[").append(i).append("].jarURL = Paths.get(\"package\", new String[0]).resolve(createModdedJarName(Paths.get(oldURL.toString().substring(index, oldURL.toString().length()), new String[0]))).toUri().toURL();\n");
             }
 
             src.append("return ret;\n");
@@ -320,14 +321,26 @@ class PackageJar
         return null;
     }
 
+    private static String createModdedJarName(String filename)
+    {
+        // Split into base and extension
+        String[] tokens = filename.split("\\.(?=[^\\.]+$)");
+        if (tokens.length < 2) {
+            return filename;
+        }
+
+        return tokens[0] + "-modded." + tokens[1];
+    }
+
     private static String createClassPath()
     {
         StringBuilder sb = new StringBuilder();
 
         for (ModInfo info : Loader.MODINFOS) {
             try {
+                String filename = Paths.get(info.jarURL.toURI()).getFileName().toString();
                 sb.append("package/")
-                    .append(Paths.get(info.jarURL.toURI()).getFileName())
+                    .append(createModdedJarName(filename))
                     .append(" ");
             } catch (URISyntaxException ignored) {}
         }
@@ -452,7 +465,7 @@ class PackageJar
             new File("package").mkdirs();
             for (ModInfo modInfo : Loader.MODINFOS) {
                 String filename = Paths.get(modInfo.jarURL.toURI()).getFileName().toString();
-                outJar = new JarOutputStream(new FileOutputStream(Paths.get("package", filename).toFile()));
+                outJar = new JarOutputStream(new FileOutputStream(Paths.get("package", createModdedJarName(filename)).toFile()));
                 System.out.println("  Copying " + modInfo.ID + "...");
                 // Copy mod out-jar
                 System.out.println("    Copying mod out-jar entries...");
@@ -522,6 +535,12 @@ class PackageJar
         private static void callInitializers()
         {
             throw new NotImplementedException("This shouldn't exist");
+        }
+
+        @SuppressWarnings("unused")
+        private static String createModdedJarName(Path filename)
+        {
+            return PackageJar.createModdedJarName(filename.toString());
         }
     }
 }
