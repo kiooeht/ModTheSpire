@@ -15,7 +15,6 @@ import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Function;
@@ -287,8 +286,6 @@ class PackageJar
                 .create();
 
             src.append("URL baseURL = ").append(PrepackagedLauncher.class.getName()).append(".class.getProtectionDomain().getCodeSource().getLocation();\n");
-            src.append("URL oldURL = null;\n");
-            src.append("int index = -1;\n");
             for (int i=0; i<Loader.MODINFOS.length; ++i) {
                 URL oldURL = Loader.MODINFOS[i].jarURL;
                 try {
@@ -301,11 +298,7 @@ class PackageJar
                 Loader.MODINFOS[i].jarURL = oldURL;
                 src.append("ret[").append(i).append("] = gson.fromJson(").append("\"").append(json.replaceAll("\"", "\\\\\"")).append("\", ")
                     .append(ModInfo.class.getName()).append(".class);\n");
-                src.append("oldURL = ret[").append(i).append("].jarURL;\n");
-                //src.append("System.out.println(oldURL);\n");
-                src.append("index = oldURL.toString().lastIndexOf('/') + 1;\n");
-                //src.append("System.out.println(oldURL.toString().substring(index, oldURL.toString().length()));\n");
-                src.append("ret[").append(i).append("].jarURL = Paths.get(\"package\", new String[0]).resolve(createModdedJarName(Paths.get(oldURL.toString().substring(index, oldURL.toString().length()), new String[0]))).toUri().toURL();\n");
+                src.append("adjustJarURL(ret[").append(i).append("]);\n");
             }
 
             src.append("return ret;\n");
@@ -538,9 +531,14 @@ class PackageJar
         }
 
         @SuppressWarnings("unused")
-        private static String createModdedJarName(Path filename)
+        private static void adjustJarURL(ModInfo modInfo) throws MalformedURLException
         {
-            return PackageJar.createModdedJarName(filename.toString());
+            URL oldURL = modInfo.jarURL;
+            int index = oldURL.toString().lastIndexOf('/') + 1;
+            String filename = oldURL.toString().substring(index);
+            modInfo.jarURL = Paths.get("package")
+                .resolve(PackageJar.createModdedJarName(filename))
+                .toUri().toURL();
         }
     }
 }
