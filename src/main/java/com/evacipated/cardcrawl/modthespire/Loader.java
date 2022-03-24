@@ -101,9 +101,11 @@ public class Loader
 
     public static void main(String[] args)
     {
+        List<String> argList = Arrays.asList(args);
+
         // Restart MTS if jre1.8.0_51 is detected
         // For those people with old laptops and OpenGL problems
-        if (!Arrays.asList(args).contains("--jre51") && new File(JRE_51_DIR).exists()) {
+        if (!argList.contains("--jre51") && new File(JRE_51_DIR).exists()) {
             System.out.println("JRE 51 exists, restarting using it...");
             try {
                 String path = Loader.class.getProtectionDomain().getCodeSource().getLocation().getPath();
@@ -127,7 +129,7 @@ public class Loader
                 e.printStackTrace();
                 System.exit(3);
             }
-        } else if (Arrays.asList(args).contains("--jre51")) {
+        } else if (argList.contains("--jre51")) {
             System.out.println("Launched using JRE 51");
         }
 
@@ -144,26 +146,25 @@ public class Loader
         DEBUG = MTS_CONFIG.getBool("debug");
         OUT_JAR = MTS_CONFIG.getBool("out-jar");
 
-        if (Arrays.asList(args).contains("--debug")) {
+        if (argList.contains("--debug")) {
             DEBUG = true;
         }
         
-        if (Arrays.asList(args).contains("--out-jar")) {
+        if (argList.contains("--out-jar")) {
             OUT_JAR = true;
         }
-        if (Arrays.asList(args).contains("--package")) {
+        if (argList.contains("--package")) {
             PACKAGE = true;
         }
 
         allowBeta = true;
-        if (Arrays.asList(args).contains("--allow-beta")) {
+        if (argList.contains("--allow-beta")) {
             allowBeta = true;
         }
 
-        boolean skipLauncher = Arrays.asList(args).contains("--skip-launcher");
-        SKIP_INTRO = Arrays.asList(args).contains("--skip-intro");
+        boolean skipLauncher = argList.contains("--skip-launcher");
+        SKIP_INTRO = argList.contains("--skip-intro");
 
-        List<String> argList = Arrays.asList(args);
         int profileArgIndex = argList.indexOf("--profile");
         if (profileArgIndex >= 0 && argList.size() > profileArgIndex + 1) {
             profileArg = argList.get(profileArgIndex+1);
