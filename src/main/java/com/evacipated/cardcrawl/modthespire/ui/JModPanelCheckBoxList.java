@@ -94,14 +94,18 @@ public class JModPanelCheckBoxList extends JList<ModPanel> {
     public void toggleAllMods()
     {
         int on = 0;
+        int visibleMods = 0;
         for (int i=0; i<getModel().getSize(); ++i) {
             ModPanel modPanel = getModel().getElementAt(i);
-            if (modPanel.isSelected() && !modPanel.isFilteredOut()) {
-                ++on;
+            if (!modPanel.isFilteredOut()) {
+                ++visibleMods;
+                if (modPanel.isSelected()) {
+                    ++on;
+                }
             }
         }
 
-        if (on >= getModel().getSize() / 2) {
+        if (on > visibleMods / 2) {
             // Toggle off
             for (int i=0; i<getModel().getSize(); ++i) {
                 ModPanel modPanel = getModel().getElementAt(i);
