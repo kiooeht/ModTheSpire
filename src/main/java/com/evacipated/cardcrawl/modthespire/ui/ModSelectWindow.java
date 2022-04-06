@@ -330,12 +330,16 @@ public class ModSelectWindow extends JFrame
         JButton addProfile = new JButton("+");
         JButton delProfile = new JButton("-");
 
+        TextFieldWithPlaceholder filter = new TextFieldWithPlaceholder();
+        filter.setPlaceholder("Filter...");
+
         profilesList.addActionListener((ActionEvent event) -> {
             String profileName = (String) profilesList.getSelectedItem();
             delProfile.setEnabled(!ModList.DEFAULT_LIST.equals(profileName));
             ModList newList = new ModList(profileName);
             DefaultListModel<ModPanel> newModel = (DefaultListModel<ModPanel>) modList.getModel();
             newList.loadModsInOrder(newModel, info, modList);
+            filter.setText("");
 
             Thread tCfg = new Thread(() -> {
                 // Save new load order cfg
@@ -393,8 +397,6 @@ public class ModSelectWindow extends JFrame
         });
         profilesPanel.add(delProfile, c);
 
-        TextFieldWithPlaceholder filter = new TextFieldWithPlaceholder();
-        filter.setPlaceholder("Filter...");
         Runnable filterModList = () -> {
             String filterText = filter.getText().trim().toLowerCase();
             String[] filterKeys = filterText.length() == 0 ? null : filterText.split("\\s+");
