@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+* Show list of mods in stacktrace on crash (Chaofan)
+* Add textbox to filter mods (Chaofan)
 
 #### v3.25.2 ####
 * Make workshop support still work on older versions of Slay the Spire
