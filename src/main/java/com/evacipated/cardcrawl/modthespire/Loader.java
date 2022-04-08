@@ -33,6 +33,7 @@ public class Loader
 {
     public static boolean DEBUG = false;
     public static boolean OUT_JAR = false;
+    public static boolean PACKAGE = false;
 
     public static Semver MTS_VERSION;
     public static String MOD_DIR = "mods/";
@@ -41,7 +42,7 @@ public class Loader
     private static String MAC_STS_JAR = "SlayTheSpire.app/Contents/Resources/" + STS_JAR;
     private static String STS_JAR2 = "SlayTheSpire.jar";
     public static String COREPATCHES_JAR = "/corepatches.jar";
-    private static String KOTLIN_JAR = "/kotlin.jar";
+    static String KOTLIN_JAR = "/kotlin.jar";
     public static String STS_PATCHED_JAR = "desktop-1.0-patched.jar";
     public static String JRE_51_DIR = "jre1.8.0_51";
     public static ModInfo[] MODINFOS;
@@ -100,9 +101,11 @@ public class Loader
 
     public static void main(String[] args)
     {
+        List<String> argList = Arrays.asList(args);
+
         // Restart MTS if jre1.8.0_51 is detected
         // For those people with old laptops and OpenGL problems
-        if (!Arrays.asList(args).contains("--jre51") && new File(JRE_51_DIR).exists()) {
+        if (!argList.contains("--jre51") && new File(JRE_51_DIR).exists()) {
             System.out.println("JRE 51 exists, restarting using it...");
             try {
                 String path = Loader.class.getProtectionDomain().getCodeSource().getLocation().getPath();
@@ -126,7 +129,7 @@ public class Loader
                 e.printStackTrace();
                 System.exit(3);
             }
-        } else if (Arrays.asList(args).contains("--jre51")) {
+        } else if (argList.contains("--jre51")) {
             System.out.println("Launched using JRE 51");
         }
 
@@ -143,23 +146,25 @@ public class Loader
         DEBUG = MTS_CONFIG.getBool("debug");
         OUT_JAR = MTS_CONFIG.getBool("out-jar");
 
-        if (Arrays.asList(args).contains("--debug")) {
+        if (argList.contains("--debug")) {
             DEBUG = true;
         }
         
-        if (Arrays.asList(args).contains("--out-jar")) {
+        if (argList.contains("--out-jar")) {
             OUT_JAR = true;
+        }
+        if (argList.contains("--package")) {
+            PACKAGE = true;
         }
 
         allowBeta = true;
-        if (Arrays.asList(args).contains("--allow-beta")) {
+        if (argList.contains("--allow-beta")) {
             allowBeta = true;
         }
 
-        boolean skipLauncher = Arrays.asList(args).contains("--skip-launcher");
-        SKIP_INTRO = Arrays.asList(args).contains("--skip-intro");
+        boolean skipLauncher = argList.contains("--skip-launcher");
+        SKIP_INTRO = argList.contains("--skip-intro");
 
-        List<String> argList = Arrays.asList(args);
         int profileArgIndex = argList.indexOf("--profile");
         if (profileArgIndex >= 0 && argList.size() > profileArgIndex + 1) {
             profileArg = argList.get(profileArgIndex+1);
@@ -173,14 +178,7 @@ public class Loader
             skipLauncher = true;
         }
 
-        try {
-            Properties properties = new Properties();
-            properties.load(Loader.class.getResourceAsStream("/META-INF/version.prop"));
-            MTS_VERSION = ModInfo.safeVersion(properties.getProperty("version"));
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(-1);
-        }
+        loadMTSVersion();
 
         // Check if we are desktop-1.0.jar
         try {
@@ -420,6 +418,13 @@ public class Loader
                 System.out.println("Done.");
                 System.out.println();
 
+                // Create pre-modded JAR
+                if (Loader.PACKAGE) {
+                    System.out.println("Creating prepackaged JAR...");
+                    PackageJar.packageJar(pool, "desktop-1.0-modded.jar");
+                    System.out.println("Done.");
+                    return;
+                }
                 // Output JAR if requested
                 if (Loader.OUT_JAR) {
                     System.out.printf("Dumping JAR...");
@@ -486,6 +491,28 @@ public class Loader
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    static void loadMTSVersion()
+    {
+        loadMTSVersion(null);
+    }
+
+    static void loadMTSVersion(String suffix)
+    {
+        try {
+            Properties properties = new Properties();
+            properties.load(Loader.class.getResourceAsStream("/META-INF/version.prop"));
+            String version = properties.getProperty("version");
+            if (suffix != null) {
+                version += "+" + suffix;
+            }
+            MTS_VERSION = ModInfo.safeVersion(version);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+
     }
 
     public static void setGameVersion(String versionString)

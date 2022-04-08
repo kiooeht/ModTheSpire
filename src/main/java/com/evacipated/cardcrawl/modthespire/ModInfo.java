@@ -5,7 +5,6 @@ import com.google.gson.annotations.SerializedName;
 import com.vdurmont.semver4j.Semver;
 import com.vdurmont.semver4j.SemverException;
 
-import javax.swing.*;
 import java.io.*;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
@@ -146,7 +145,7 @@ public class ModInfo implements Serializable
         return info;
     }
 
-    private static class VersionDeserializer implements JsonDeserializer<Semver>
+    static class VersionDeserializer implements JsonDeserializer<Semver>
     {
         @Override
         public Semver deserialize(JsonElement jsonElement, Type type, JsonDeserializationContext jsonDeserializationContext) throws JsonParseException

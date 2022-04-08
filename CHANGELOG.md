@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Add ability to create pre-patched version of the game
 * Show list of mods in stacktrace on crash (Chaofan)
 * Add textbox to filter mods (Chaofan)
 

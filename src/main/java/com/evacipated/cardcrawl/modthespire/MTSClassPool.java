@@ -68,7 +68,7 @@ public class MTSClassPool extends ClassPool
                 ret.add(cls);
             }
         }
-        if (Loader.OUT_JAR) {
+        if (Loader.OUT_JAR || Loader.PACKAGE) {
             outJar = ret;
         }
         return ret;
