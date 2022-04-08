@@ -2,6 +2,7 @@ package com.evacipated.cardcrawl.modthespire.ui;
 
 import com.evacipated.cardcrawl.modthespire.Loader;
 import com.evacipated.cardcrawl.modthespire.ModInfo;
+import com.evacipated.cardcrawl.modthespire.steam.SteamSearch;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -21,6 +22,7 @@ public class ModPanel extends JPanel
     public JCheckBox checkBox;
     private InfoPanel infoPanel;
     private JLabel update = new JLabel();
+    private boolean isFilteredOut = false;
     
     private static boolean dependenciesChecked(ModInfo info, JModPanelCheckBoxList parent) {
         String[] dependencies = info.Dependencies;
@@ -172,7 +174,43 @@ public class ModPanel extends JPanel
                 update.setIcon(ModSelectWindow.ICON_WORKSHOP);
         }
     }
-    
+
+    public void filter(String[] filterKeys) {
+        if (filterKeys == null) {
+            isFilteredOut = false;
+            return;
+        }
+
+        String workshopInfoKey = "";
+
+        try {
+            if (info.isWorkshop) {
+                // WorkshopId is in hex while workshop mod folder name is in dec.
+                String workshopId = Long.toString(Long.parseLong(this.modFile.getParentFile().getName()), 16);
+                SteamSearch.WorkshopInfo workshopInfo = Loader.getWorkshopInfos().stream().filter(i -> i.getID().equals(workshopId)).findFirst().orElse(null);
+                if (workshopInfo != null) {
+                    workshopInfoKey = String.format("%s %s", workshopInfo.getTitle(), String.join(" ", workshopInfo.getTags()));
+                }
+            }
+        } catch (Exception ex) {
+            System.out.println("ModPanel.filter failed to get workshop info of " + info.ID + ": " + ex);
+        }
+
+        String modInfoKey = String.format("%s %s %s %s", info.ID, info.Name, String.join(" ", info.Authors), workshopInfoKey).toLowerCase();
+        boolean isFilteredOut = false;
+        for (String filterKey : filterKeys) {
+            if (!modInfoKey.contains(filterKey)) {
+                isFilteredOut = true;
+                break;
+            }
+        }
+        this.isFilteredOut = isFilteredOut;
+    }
+
+    public boolean isFilteredOut() {
+        return isFilteredOut;
+    }
+
     public class InfoPanel extends JPanel
     {
         JLabel name = new JLabel();

@@ -1,11 +1,14 @@
 package com.evacipated.cardcrawl.modthespire.ui;
 
 import com.evacipated.cardcrawl.modthespire.*;
+import com.evacipated.cardcrawl.modthespire.steam.SteamSearch;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
@@ -13,6 +16,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
@@ -326,12 +330,16 @@ public class ModSelectWindow extends JFrame
         JButton addProfile = new JButton("+");
         JButton delProfile = new JButton("-");
 
+        TextFieldWithPlaceholder filter = new TextFieldWithPlaceholder();
+        filter.setPlaceholder("Filter...");
+
         profilesList.addActionListener((ActionEvent event) -> {
             String profileName = (String) profilesList.getSelectedItem();
             delProfile.setEnabled(!ModList.DEFAULT_LIST.equals(profileName));
             ModList newList = new ModList(profileName);
             DefaultListModel<ModPanel> newModel = (DefaultListModel<ModPanel>) modList.getModel();
             newList.loadModsInOrder(newModel, info, modList);
+            filter.setText("");
 
             Thread tCfg = new Thread(() -> {
                 // Save new load order cfg
@@ -389,9 +397,36 @@ public class ModSelectWindow extends JFrame
         });
         profilesPanel.add(delProfile, c);
 
+        Runnable filterModList = () -> {
+            String filterText = filter.getText().trim().toLowerCase();
+            String[] filterKeys = filterText.length() == 0 ? null : filterText.split("\\s+");
+            for (int i = 0; i < model.size(); i++) {
+                ModPanel modPanel = model.getElementAt(i);
+                modPanel.filter(filterKeys);
+            }
+            modList.updateUI();
+        };
+        filter.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                filterModList.run();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                filterModList.run();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                filterModList.run();
+            }
+        });
+
         JPanel topPanel = new JPanel(new GridLayout(0, 1));
         topPanel.add(btnPanel);
         topPanel.add(profilesPanel);
+        topPanel.add(filter);
         panel.add(topPanel, BorderLayout.NORTH);
 
         return panel;

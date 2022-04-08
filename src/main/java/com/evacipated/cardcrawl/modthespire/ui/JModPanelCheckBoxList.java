@@ -94,21 +94,32 @@ public class JModPanelCheckBoxList extends JList<ModPanel> {
     public void toggleAllMods()
     {
         int on = 0;
+        int visibleMods = 0;
         for (int i=0; i<getModel().getSize(); ++i) {
-            if (getModel().getElementAt(i).isSelected()) {
-                ++on;
+            ModPanel modPanel = getModel().getElementAt(i);
+            if (!modPanel.isFilteredOut()) {
+                ++visibleMods;
+                if (modPanel.isSelected()) {
+                    ++on;
+                }
             }
         }
 
-        if (on >= getModel().getSize() / 2) {
+        if (on > visibleMods / 2) {
             // Toggle off
             for (int i=0; i<getModel().getSize(); ++i) {
-                getModel().getElementAt(i).setSelected(false);
+                ModPanel modPanel = getModel().getElementAt(i);
+                if (!modPanel.isFilteredOut()) {
+                    modPanel.setSelected(false);
+                }
             }
         } else {
             // Toggle on
             for (int i=0; i<getModel().getSize(); ++i) {
-                getModel().getElementAt(i).setSelected(true);
+                ModPanel modPanel = getModel().getElementAt(i);
+                if (!modPanel.isFilteredOut()) {
+                    modPanel.setSelected(true);
+                }
             }
         }
 
@@ -127,6 +138,12 @@ public class JModPanelCheckBoxList extends JList<ModPanel> {
     }
 
     protected class CellRenderer implements ListCellRenderer<ModPanel> {
+        private final JPanel hiddenItem = new JPanel();
+
+        public CellRenderer() {
+            hiddenItem.setPreferredSize(new Dimension(0, 0));
+        }
+
         public Component getListCellRendererComponent(JList<? extends ModPanel> list, ModPanel value, int index,
                 boolean isSelected, boolean cellHasFocus) {
             JCheckBox checkbox = value.checkBox;
@@ -138,7 +155,12 @@ public class JModPanelCheckBoxList extends JList<ModPanel> {
             checkbox.setFont(getFont());
             checkbox.setFocusPainted(false);
             checkbox.setBorderPainted(false);
-            return value;
+
+            if (value.isFilteredOut()) {
+                return hiddenItem;
+            } else {
+                return value;
+            }
         }
     }
 }
