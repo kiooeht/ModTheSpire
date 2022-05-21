@@ -283,6 +283,9 @@ public class ModSelectWindow extends JFrame
                 }
 
                 Loader.runMods(selectedMods);
+                if (Loader.CLOSE_WHEN_FINISHED) {
+                    Loader.closeWindow();
+                }
             });
             t.start();
         });

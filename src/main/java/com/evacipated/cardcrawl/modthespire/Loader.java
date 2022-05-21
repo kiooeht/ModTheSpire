@@ -34,6 +34,7 @@ public class Loader
     public static boolean DEBUG = false;
     public static boolean OUT_JAR = false;
     public static boolean PACKAGE = false;
+    public static boolean CLOSE_WHEN_FINISHED = false;
 
     public static Semver MTS_VERSION;
     public static String MOD_DIR = "mods/";
@@ -155,6 +156,9 @@ public class Loader
         }
         if (argList.contains("--package")) {
             PACKAGE = true;
+        }
+        if (argList.contains("--close-when-finished")) {
+            CLOSE_WHEN_FINISHED = true;
         }
 
         allowBeta = true;

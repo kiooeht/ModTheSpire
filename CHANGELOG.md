@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+* Add flag for closing MTS when done
+  * For automating out-jar/package
 
 #### v3.26.0 ####
 * Add ability to create pre-patched version of the game
