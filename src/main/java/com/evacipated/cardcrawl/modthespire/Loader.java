@@ -141,7 +141,7 @@ public class Loader
             defaults.setProperty("out-jar", Boolean.toString(false));
             defaults.setProperty("package", Boolean.toString(false));
             defaults.setProperty("close-when-finished", Boolean.toString(false));
-            defaults.setProperty("allow-beta", Boolean.toString(false));
+            defaults.setProperty("allow-beta", Boolean.toString(true));
             defaults.setProperty("skip-launcher", Boolean.toString(false));
             defaults.setProperty("skip-intro", Boolean.toString(false));
             defaults.setProperty("profile", ModList.getDefaultList());
@@ -175,7 +175,6 @@ public class Loader
             CLOSE_WHEN_FINISHED = true;
         }
 
-        allowBeta = true;
         if (argList.contains("--allow-beta")) {
             allowBeta = true;
         }
