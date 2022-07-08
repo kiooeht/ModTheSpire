@@ -139,6 +139,13 @@ public class Loader
             Properties defaults = new Properties();
             defaults.setProperty("debug", Boolean.toString(false));
             defaults.setProperty("out-jar", Boolean.toString(false));
+            defaults.setProperty("package", Boolean.toString(false));
+            defaults.setProperty("close-when-finished", Boolean.toString(false));
+            defaults.setProperty("allow-beta", Boolean.toString(false));
+            defaults.setProperty("skip-launcher", Boolean.toString(false));
+            defaults.setProperty("skip-intro", Boolean.toString(false));
+            defaults.setProperty("profile", ModList.getDefaultList());
+            defaults.setProperty("mods", "");
             defaults.putAll(ModSelectWindow.getDefaults());
             MTS_CONFIG = new SpireConfig(null, "ModTheSpire", defaults);
         } catch (IOException e) {
