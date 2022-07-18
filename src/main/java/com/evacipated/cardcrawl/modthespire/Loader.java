@@ -139,6 +139,13 @@ public class Loader
             Properties defaults = new Properties();
             defaults.setProperty("debug", Boolean.toString(false));
             defaults.setProperty("out-jar", Boolean.toString(false));
+            defaults.setProperty("package", Boolean.toString(false));
+            defaults.setProperty("close-when-finished", Boolean.toString(false));
+            defaults.setProperty("allow-beta", Boolean.toString(true));
+            defaults.setProperty("skip-launcher", Boolean.toString(false));
+            defaults.setProperty("skip-intro", Boolean.toString(false));
+            defaults.setProperty("profile", ModList.getDefaultList());
+            defaults.setProperty("mods", "");
             defaults.putAll(ModSelectWindow.getDefaults());
             MTS_CONFIG = new SpireConfig(null, "ModTheSpire", defaults);
         } catch (IOException e) {
@@ -146,6 +153,13 @@ public class Loader
         }
         DEBUG = MTS_CONFIG.getBool("debug");
         OUT_JAR = MTS_CONFIG.getBool("out-jar");
+        PACKAGE = MTS_CONFIG.getBool("package");
+        CLOSE_WHEN_FINISHED = MTS_CONFIG.getBool("close-when-finished");
+        allowBeta = MTS_CONFIG.getBool("allow-beta");
+        boolean skipLauncher = MTS_CONFIG.getBool("skip-launcher");
+        SKIP_INTRO = MTS_CONFIG.getBool("skip-intro");
+        profileArg = MTS_CONFIG.getString("profile");
+        String modIds = MTS_CONFIG.getString("mods");
 
         if (argList.contains("--debug")) {
             DEBUG = true;
@@ -161,13 +175,16 @@ public class Loader
             CLOSE_WHEN_FINISHED = true;
         }
 
-        allowBeta = true;
         if (argList.contains("--allow-beta")) {
             allowBeta = true;
         }
 
-        boolean skipLauncher = argList.contains("--skip-launcher");
-        SKIP_INTRO = argList.contains("--skip-intro");
+        if (argList.contains("--skip-launcher")) {
+            skipLauncher = true;
+        }
+        if (argList.contains("--skip-intro")) {
+            SKIP_INTRO = true;
+        }
 
         int profileArgIndex = argList.indexOf("--profile");
         if (profileArgIndex >= 0 && argList.size() > profileArgIndex + 1) {
@@ -176,7 +193,9 @@ public class Loader
 
         int modIdsIndex = argList.indexOf("--mods");
         if (modIdsIndex >= 0 && argList.size() > modIdsIndex + 1) {
-            String modIds = argList.get(modIdsIndex+1);
+            modIds = argList.get(modIdsIndex+1);
+        }
+        if (!modIds.isEmpty()) {
             manualModIds = Arrays.asList(modIds.split(","));
             profileArg = null;
             skipLauncher = true;
