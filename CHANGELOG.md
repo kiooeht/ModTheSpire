@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+* Bump gson from 2.8.2 to 2.8.9
+* Add properties for all flags (mechinn)
 
 #### v3.27.0 ####
 * Add flag for closing MTS when done
