@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.28.0 ####
 * Bump gson from 2.8.2 to 2.8.9
 * Add properties for all flags (mechinn)
 
