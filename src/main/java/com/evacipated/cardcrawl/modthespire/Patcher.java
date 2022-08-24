@@ -561,6 +561,9 @@ public class Patcher {
                         if (!Modifier.isPublic(m.getModifiers())) {
                             m.setModifiers(Modifier.setPublic(m.getModifiers()));
                         }
+                        if (!Modifier.isStatic(m.getModifiers())) {
+                            throw new NonStaticPatchMethodException(m);
+                        }
 
                         patchInfos.add(p);
                     }
