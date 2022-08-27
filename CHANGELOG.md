@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.29.0 ####
 * Add clear error if patch method is non-static
 * Fix last profile used not being selected properly
 
