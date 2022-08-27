@@ -1,6 +1,7 @@
 ## Changelog ##
 #### dev ####
 * Add clear error if patch method is non-static
+* Fix last profile used not being selected properly
 
 #### v3.28.0 ####
 * Bump gson from 2.8.2 to 2.8.9

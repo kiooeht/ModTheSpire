@@ -144,7 +144,6 @@ public class Loader
             defaults.setProperty("allow-beta", Boolean.toString(true));
             defaults.setProperty("skip-launcher", Boolean.toString(false));
             defaults.setProperty("skip-intro", Boolean.toString(false));
-            defaults.setProperty("profile", ModList.getDefaultList());
             defaults.setProperty("mods", "");
             defaults.putAll(ModSelectWindow.getDefaults());
             MTS_CONFIG = new SpireConfig(null, "ModTheSpire", defaults);
