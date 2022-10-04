@@ -58,7 +58,7 @@ public class Loader
     public static String profileArg = null;
     public static List<String> manualModIds = null;
 
-    static String[] ARGS;
+    public static String[] ARGS;
     public static boolean SKIP_INTRO = false;
     private static ModSelectWindow ex;
 

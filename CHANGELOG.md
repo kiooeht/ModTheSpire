@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Make `Loader.ARGS` public so mods can check program arguments
 
 #### v3.29.0 ####
 * Add clear error if patch method is non-static
