@@ -46,7 +46,7 @@ public class HandleCrash
             try {
                 Class<?> cls = Class.forName(className);
                 urls.add(cls.getProtectionDomain().getCodeSource().getLocation());
-            } catch (ClassNotFoundException ignore) {
+            } catch (ClassNotFoundException | NoClassDefFoundError ignore) {
                 // ignore
             }
         }
