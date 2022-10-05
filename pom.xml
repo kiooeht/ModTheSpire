@@ -15,6 +15,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <kotlin.version>1.4.10</kotlin.version>
+        <gdx.version>1.9.5</gdx.version>
+        <lwjgl.version>3.3.1</lwjgl.version>
     </properties>
 
     <dependencies>
@@ -82,6 +84,114 @@
             <artifactId>kotlin-reflect</artifactId>
             <version>${kotlin.version}</version>
         </dependency>
+
+        <!-- START lwjgl3 -->
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl</artifactId>
+            <version>${lwjgl.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-glfw</artifactId>
+            <version>${lwjgl.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-opengl</artifactId>
+            <version>${lwjgl.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-openal</artifactId>
+            <version>${lwjgl.version}</version>
+        </dependency>
+        <!-- lwjgl3 natives -->
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl</artifactId>
+            <version>${lwjgl.version}</version>
+            <classifier>natives-windows</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl</artifactId>
+            <version>${lwjgl.version}</version>
+            <classifier>natives-linux</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl</artifactId>
+            <version>${lwjgl.version}</version>
+            <classifier>natives-macos</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-glfw</artifactId>
+            <version>${lwjgl.version}</version>
+            <classifier>natives-windows</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-glfw</artifactId>
+            <version>${lwjgl.version}</version>
+            <classifier>natives-linux</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-glfw</artifactId>
+            <version>${lwjgl.version}</version>
+            <classifier>natives-macos</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-opengl</artifactId>
+            <version>${lwjgl.version}</version>
+            <classifier>natives-windows</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-opengl</artifactId>
+            <version>${lwjgl.version}</version>
+            <classifier>natives-linux</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-opengl</artifactId>
+            <version>${lwjgl.version}</version>
+            <classifier>natives-macos</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-openal</artifactId>
+            <version>${lwjgl.version}</version>
+            <classifier>natives-windows</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-openal</artifactId>
+            <version>${lwjgl.version}</version>
+            <classifier>natives-linux</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-openal</artifactId>
+            <version>${lwjgl.version}</version>
+            <classifier>natives-macos</classifier>
+        </dependency>
+
+        <dependency>
+            <groupId>com.badlogicgames.gdx</groupId>
+            <artifactId>gdx-backend-lwjgl3</artifactId>
+            <version>${gdx.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- END lwjgl3 -->
     </dependencies>
 
     <build>
@@ -123,7 +233,31 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>ModTheSpire-corepatches</id>
+                        <id>ModTheSpire-lwjgl3</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <outputFile>target/${project.artifactId}-lwjgl3.jar</outputFile>
+                            <artifactSet>
+                                <includes>
+                                    <include>org.lwjgl:*</include>
+                                    <include>com.badlogicgames.gdx:gdx-backend-lwjgl3</include>
+                                </includes>
+                            </artifactSet>
+                            <filters>
+                                <filter>
+                                    <artifact>com.evacipated.cardcrawl:ModTheSpire</artifact>
+                                    <excludes>
+                                        <exlude>**</exlude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>ModTheSpire-corepatches-lwjgl2</id>
                         <phase>package</phase>
                         <goals>
                             <goal>shade</goal>
@@ -148,6 +282,42 @@
                                     <includes>
                                         <include>com/evacipated/cardcrawl/modthespire/patches/**</include>
                                     </includes>
+                                    <excludes>
+                                        <exclude>com/evacipated/cardcrawl/modthespire/patches/lwjgl3/**</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>ModTheSpire-corepatches-lwjgl3</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <outputFile>target/${project.artifactId}-corepatches-lwjgl3.jar</outputFile>
+                            <artifactSet>
+                                <includes>
+                                    <include>com.evacipated.cardcrawl:ModTheSpire:jar</include>
+                                </includes>
+                            </artifactSet>
+                            <transformers>
+                                <transformer
+                                    implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+                                    <resource>images/ui/icon.png</resource>
+                                    <file>src/main/resources/assets/icon.png</file>
+                                </transformer>
+                            </transformers>
+                            <filters>
+                                <filter>
+                                    <artifact>com.evacipated.cardcrawl:ModTheSpire</artifact>
+                                    <includes>
+                                        <include>com/evacipated/cardcrawl/modthespire/patches/**</include>
+                                    </includes>
+                                    <excludes>
+                                        <exclude>com/evacipated/cardcrawl/modthespire/patches/lwjgl2/**</exclude>
+                                    </excludes>
                                 </filter>
                             </filters>
                         </configuration>
@@ -172,14 +342,24 @@
                                     <mainClass>com.evacipated.cardcrawl.modthespire.Loader</mainClass>
                                 </transformer>
                                 <transformer
-                                        implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+                                    implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
                                     <resource>corepatches.jar</resource>
                                     <file>target/${project.artifactId}-corepatches.jar</file>
+                                </transformer>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+                                    <resource>corepatches-lwjgl3.jar</resource>
+                                    <file>target/${project.artifactId}-corepatches-lwjgl3.jar</file>
                                 </transformer>
                                 <transformer
                                     implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
                                     <resource>kotlin.jar</resource>
                                     <file>target/${project.artifactId}-kotlin.jar</file>
+                                </transformer>
+                                <transformer
+                                    implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+                                    <resource>lwjgl3.jar</resource>
+                                    <file>target/${project.artifactId}-lwjgl3.jar</file>
                                 </transformer>
                             </transformers>
                             <filters>
@@ -209,6 +389,18 @@
                                 </filter>
                                 <filter>
                                     <artifact>org.jetbrains:annotations</artifact>
+                                    <excludes>
+                                        <exclude>**</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>org.lwjgl:*</artifact>
+                                    <excludes>
+                                        <exclude>**</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>com.badlogicgames.gdx:gdx-backend-lwjgl3</artifact>
                                     <excludes>
                                         <exclude>**</exclude>
                                     </excludes>

@@ -43,7 +43,9 @@ public class Loader
     private static String MAC_STS_JAR = "SlayTheSpire.app/Contents/Resources/" + STS_JAR;
     private static String STS_JAR2 = "SlayTheSpire.jar";
     public static String COREPATCHES_JAR = "/corepatches.jar";
+    private static final String COREPATCHES_LWJGL3_JAR = "/corepatches-lwjgl3.jar";
     static String KOTLIN_JAR = "/kotlin.jar";
+    static String LWJGL3_JAR = "/lwjgl3.jar";
     public static String STS_PATCHED_JAR = "desktop-1.0-patched.jar";
     public static String JRE_51_DIR = "jre1.8.0_51";
     public static ModInfo[] MODINFOS;
@@ -60,9 +62,10 @@ public class Loader
 
     public static String[] ARGS;
     public static boolean SKIP_INTRO = false;
+    public static boolean LWJGL3_ENABLED = false;
     private static ModSelectWindow ex;
 
-    private static List<URL> kotlinJars = new ArrayList<>();
+    private static final List<URL> extraJars = new ArrayList<>();
 
     public static boolean isModLoaded(String modID)
     {
@@ -183,6 +186,9 @@ public class Loader
         }
         if (argList.contains("--skip-intro")) {
             SKIP_INTRO = true;
+        }
+        if (argList.contains("--imgui")) {
+            LWJGL3_ENABLED = true;
         }
 
         int profileArgIndex = argList.indexOf("--profile");
@@ -393,7 +399,11 @@ public class Loader
 
             printMTSInfo(System.out);
 
-            unpackKotlin();
+            unpackJar(KOTLIN_JAR);
+            if (LWJGL3_ENABLED) {
+                COREPATCHES_JAR = COREPATCHES_LWJGL3_JAR;
+                unpackJar(LWJGL3_JAR);
+            }
 
             MTSClassLoader loader = new MTSClassLoader(Loader.class.getResourceAsStream(COREPATCHES_JAR), buildUrlArray(MODINFOS), Loader.class.getClassLoader());
 
@@ -565,7 +575,7 @@ public class Loader
         }
     }
 
-    private static void unpackKotlin()
+    private static void unpackJar(String name)
     {
         try {
             Path tmpDir = Paths.get(System.getProperty("java.io.tmpdir"), "ModTheSpire");
@@ -576,9 +586,10 @@ public class Loader
                 }
             }
 
-            Path tmpFile = tmpDir.resolve("kotlin.jar");
+            String filename = Paths.get(name).getFileName().toString();
+            Path tmpFile = tmpDir.resolve(filename);
 
-            InputStream input = Loader.class.getResourceAsStream(KOTLIN_JAR);
+            InputStream input = Loader.class.getResourceAsStream(name);
             OutputStream output = new FileOutputStream(tmpFile.toFile());
 
             byte[] buf = new byte[8192];
@@ -590,9 +601,9 @@ public class Loader
             output.close();
             input.close();
 
-            kotlinJars.add(tmpFile.toUri().toURL());
+            extraJars.add(tmpFile.toUri().toURL());
         } catch (Exception e) {
-            System.out.println("Failed to unpack Kotlin");
+            System.out.println("Failed to unpack " + name);
             e.printStackTrace();
         }
     }
@@ -602,8 +613,8 @@ public class Loader
     {
         List<URL> urls = new ArrayList<>(modInfos.length + 1);
 
-        // Kotlin
-        urls.addAll(kotlinJars);
+        // Kotlin + maybe Lwjgl3
+        urls.addAll(extraJars);
 
         // Mods
         for (ModInfo modInfo : modInfos) {
