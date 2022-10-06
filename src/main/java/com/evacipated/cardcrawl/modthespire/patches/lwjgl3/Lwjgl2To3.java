@@ -143,11 +143,11 @@ public class Lwjgl2To3
     }
     public static int getForegroundFPS(Object obj)
     {
-        return 60;
+        return FramerateLimiter.fps;
     }
     public static void setForegroundFPS(Object obj, int param)
     {
-        // TODO
+        FramerateLimiter.fps = param;
     }
     public static void setBackgroundFPS(Object obj, int param)
     {
@@ -178,7 +178,7 @@ public class Lwjgl2To3
     {
         ((Lwjgl3ApplicationConfiguration) obj).useVsync(param);
         // TODO lwjgl3 has no fps limiter
-        ((Lwjgl3ApplicationConfiguration) obj).useVsync(true);
+        //((Lwjgl3ApplicationConfiguration) obj).useVsync(true);
     }
     public static String getPreferencesDirectory(Object obj)
     {
