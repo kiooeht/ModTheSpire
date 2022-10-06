@@ -1,6 +1,7 @@
 package com.evacipated.cardcrawl.modthespire.patches.lwjgl3;
 
 import com.badlogic.gdx.Files;
+import com.badlogic.gdx.Graphics;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl.LwjglGraphics;
@@ -38,8 +39,10 @@ public class Lwjgl2To3
 
         f = configClass.getDeclaredField("width");
         codeConverter.replaceFieldWrite(f, pool.get(Lwjgl2To3.class.getName()), "setWidth");
+        codeConverter.replaceFieldRead(f, pool.get(Lwjgl2To3.class.getName()), "getWidth");
         f = configClass.getDeclaredField("height");
         codeConverter.replaceFieldWrite(f, pool.get(Lwjgl2To3.class.getName()), "setHeight");
+        codeConverter.replaceFieldRead(f, pool.get(Lwjgl2To3.class.getName()), "getHeight");
         f = configClass.getDeclaredField("foregroundFPS");
         codeConverter.replaceFieldWrite(f, pool.get(Lwjgl2To3.class.getName()), "setForegroundFPS");
         codeConverter.replaceFieldRead(f, pool.get(Lwjgl2To3.class.getName()), "getForegroundFPS");
@@ -72,28 +75,71 @@ public class Lwjgl2To3
         replaceMethod(main, ctClass, classMap);
 
         CtMethod loadSettings = ctClass.getDeclaredMethod("loadSettings");
-        replaceMethod(loadSettings, ctClass, classMap);
+        loadSettings = replaceMethod(loadSettings, ctClass, classMap);
+
+        loadSettings.instrument(new ExprEditor() {
+            @Override
+            public void edit(MethodCall m) throws CannotCompileException {
+                if (m.getClassName().equals(System.class.getName()) && m.getMethodName().equals("setProperty")) {
+                    m.replace("$_ = " + Lwjgl2To3.class.getName() + ".setProperty(config, $$);");
+                } else if (m.getClassName().equals(Lwjgl3ApplicationConfiguration.class.getName()) && m.getMethodName().equals("getDesktopDisplayMode")) {
+                    m.replace("$_ = $0.getDisplayMode($$);");
+                }
+            }
+        });
+        loadSettings.insertAfter(Lwjgl2To3.class.getName() + ".FinishConfig(config);");
     }
 
-    private static void replaceMethod(CtMethod oldMethod, CtClass declaring, ClassMap classMap) throws CannotCompileException, NotFoundException
+    private static CtMethod replaceMethod(CtMethod oldMethod, CtClass declaring, ClassMap classMap) throws CannotCompileException, NotFoundException
     {
         CtMethod newMethod = CtNewMethod.copy(oldMethod, declaring, classMap);
         declaring.removeMethod(oldMethod);
         declaring.addMethod(newMethod);
+        return newMethod;
     }
 
-    public static void no(Object obj, LwjglGraphics.SetDisplayModeCallback param) {}
+    public static void FinishConfig(Lwjgl3ApplicationConfiguration config)
+    {
+        if (fullscreen) {
+            Graphics.DisplayMode activeDisplayMode = Lwjgl3ApplicationConfiguration.getDisplayMode();
+            Graphics.DisplayMode bestMode = null;
+            for (Graphics.DisplayMode mode : Lwjgl3ApplicationConfiguration.getDisplayModes()) {
+                if (mode.width == width && mode.height == height &&
+                    (bestMode == null || bestMode.refreshRate < activeDisplayMode.refreshRate)) {
+                    bestMode = mode;
+                }
+            }
+            if (bestMode == null) {
+                bestMode = activeDisplayMode;
+            }
+            config.setFullscreenMode(bestMode);
+        } else {
+            config.setDecorated(!borderless);
+            config.setWindowedMode(width, height);
+        }
+    }
+
     private static int width = 1910;
     private static int height = 1080;
+    private static boolean fullscreen = false;
+    private static boolean borderless = false;
+
+    public static void no(Object obj, LwjglGraphics.SetDisplayModeCallback param) {}
+    public static int getWidth(Object obj)
+    {
+        return width;
+    }
     public static void setWidth(Object obj, int param)
     {
         width = param;
-        ((Lwjgl3WindowConfiguration) obj).setWindowedMode(width, height);
+    }
+    public static int getHeight(Object obj)
+    {
+        return height;
     }
     public static void setHeight(Object obj, int param)
     {
         height = param;
-        ((Lwjgl3WindowConfiguration) obj).setWindowedMode(width, height);
     }
     public static int getForegroundFPS(Object obj)
     {
@@ -120,11 +166,13 @@ public class Lwjgl2To3
     {
         ((Lwjgl3WindowConfiguration) obj).setTitle(param);
     }
-    // TODO fullscreen stuff
-    public static void setFullscreen(Object obj, boolean param) {}
+    public static void setFullscreen(Object obj, boolean param)
+    {
+        fullscreen = param;
+    }
     public static boolean getFullscreen(Object obj)
     {
-        return false;
+        return fullscreen;
     }
     public static void setVSync(Object obj, boolean param)
     {
@@ -142,5 +190,13 @@ public class Lwjgl2To3
             e.printStackTrace();
         }
         return null;
+    }
+    public static String setProperty(Lwjgl3ApplicationConfiguration config, String key, String value)
+    {
+        if ("org.lwjgl.opengl.Window.undecorated".equals(key)) {
+            borderless = Boolean.parseBoolean(value);
+            return null;
+        }
+        return System.setProperty(key, value);
     }
 }
