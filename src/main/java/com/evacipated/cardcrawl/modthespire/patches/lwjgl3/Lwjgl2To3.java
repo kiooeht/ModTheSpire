@@ -1,12 +1,14 @@
 package com.evacipated.cardcrawl.modthespire.patches.lwjgl3;
 
 import com.badlogic.gdx.Files;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Graphics;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl.LwjglGraphics;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
+import com.badlogic.gdx.backends.lwjgl3.Lwjgl3WindowAdapter;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3WindowConfiguration;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
 import com.megacrit.cardcrawl.desktop.DesktopLauncher;
@@ -117,6 +119,24 @@ public class Lwjgl2To3
             config.setDecorated(!borderless);
             config.setWindowedMode(width, height);
         }
+
+        config.setWindowListener(new Lwjgl3WindowAdapter() {
+            @Override
+            public void focusLost()
+            {
+                if (Gdx.app != null && Gdx.app.getApplicationListener() != null) {
+                    Gdx.app.getApplicationListener().pause();
+                }
+            }
+
+            @Override
+            public void focusGained()
+            {
+                if (Gdx.app != null && Gdx.app.getApplicationListener() != null) {
+                    Gdx.app.getApplicationListener().resume();
+                }
+            }
+        });
     }
 
     private static int width = 1910;
