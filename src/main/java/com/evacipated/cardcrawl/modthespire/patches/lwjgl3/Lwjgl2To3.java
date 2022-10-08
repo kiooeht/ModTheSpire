@@ -11,6 +11,7 @@ import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3WindowAdapter;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3WindowConfiguration;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
+import com.megacrit.cardcrawl.core.DisplayConfig;
 import com.megacrit.cardcrawl.desktop.DesktopLauncher;
 import javassist.*;
 import javassist.expr.ExprEditor;
@@ -79,6 +80,7 @@ public class Lwjgl2To3
         CtMethod loadSettings = ctClass.getDeclaredMethod("loadSettings");
         loadSettings = replaceMethod(loadSettings, ctClass, classMap);
 
+        final int[] insertLine = {-1};
         loadSettings.instrument(new ExprEditor() {
             @Override
             public void edit(MethodCall m) throws CannotCompileException {
@@ -86,9 +88,14 @@ public class Lwjgl2To3
                     m.replace("$_ = " + Lwjgl2To3.class.getName() + ".setProperty(config, $$);");
                 } else if (m.getClassName().equals(Lwjgl3ApplicationConfiguration.class.getName()) && m.getMethodName().equals("getDesktopDisplayMode")) {
                     m.replace("$_ = $0.getDisplayMode($$);");
+                } else if (m.getMethodName().equals("setVSync")) {
+                    insertLine[0] = m.getLineNumber();
                 }
             }
         });
+        if (insertLine[0] >= 0) {
+            loadSettings.insertAt(insertLine[0], Lwjgl2To3.class.getName() + ".ReadXY(displayConf);");
+        }
         loadSettings.insertAfter(Lwjgl2To3.class.getName() + ".FinishConfig(config);");
     }
 
@@ -98,6 +105,12 @@ public class Lwjgl2To3
         declaring.removeMethod(oldMethod);
         declaring.addMethod(newMethod);
         return newMethod;
+    }
+
+    public static void ReadXY(DisplayConfig displayConfig)
+    {
+        x = SaveWindowPosition.DisplayConfigFields.x.get(displayConfig);
+        y = SaveWindowPosition.DisplayConfigFields.y.get(displayConfig);
     }
 
     public static void FinishConfig(Lwjgl3ApplicationConfiguration config)
@@ -118,6 +131,7 @@ public class Lwjgl2To3
         } else {
             config.setDecorated(!borderless);
             config.setWindowedMode(width, height);
+            config.setWindowPosition(x, y);
         }
 
         config.setWindowListener(new Lwjgl3WindowAdapter() {
@@ -139,6 +153,8 @@ public class Lwjgl2To3
         });
     }
 
+    private static int x = -1;
+    private static int y = -1;
     private static int width = 1910;
     private static int height = 1080;
     private static boolean fullscreen = false;
@@ -197,8 +213,6 @@ public class Lwjgl2To3
     public static void setVSync(Object obj, boolean param)
     {
         ((Lwjgl3ApplicationConfiguration) obj).useVsync(param);
-        // TODO lwjgl3 has no fps limiter
-        //((Lwjgl3ApplicationConfiguration) obj).useVsync(true);
     }
     public static String getPreferencesDirectory(Object obj)
     {
