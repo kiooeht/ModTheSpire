@@ -1,11 +1,6 @@
 package com.evacipated.cardcrawl.modthespire.patches;
 
-import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.evacipated.cardcrawl.modthespire.Loader;
-import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
-import javassist.CannotCompileException;
-import javassist.expr.ExprEditor;
-import javassist.expr.FieldAccess;
 
 import java.net.URL;
 import java.util.Arrays;
@@ -13,11 +8,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@SpirePatch(
-    clz=LwjglApplication.class,
-    method="mainLoop"
-)
-public class DisableGdxForceExit
+public class HandleCrash
 {
     public static Throwable crash = null;
 
@@ -38,22 +29,6 @@ public class DisableGdxForceExit
         }
     }
 
-    public static ExprEditor Instrument()
-    {
-        return new ExprEditor() {
-            @Override
-            public void edit(FieldAccess f) throws CannotCompileException
-            {
-                if (f.isReader() && f.getFieldName().equals("forceExit")) {
-                    f.replace(
-                            DisableGdxForceExit.class.getName() + ".maybeExit();" +
-                            "$_ = false;"
-                    );
-                }
-            }
-        };
-    }
-
     private static void tryPrintModsInStacktrace(Throwable exception) {
         try {
             printModsInStacktrace(exception);
@@ -71,7 +46,7 @@ public class DisableGdxForceExit
             try {
                 Class<?> cls = Class.forName(className);
                 urls.add(cls.getProtectionDomain().getCodeSource().getLocation());
-            } catch (ClassNotFoundException ignore) {
+            } catch (ClassNotFoundException | NoClassDefFoundError ignore) {
                 // ignore
             }
         }
