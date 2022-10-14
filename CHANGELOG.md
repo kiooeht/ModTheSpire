@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.30.0 ####
 * Make `Loader.ARGS` public so mods can check program arguments
 * Optionally include LWJGL3 for Dear ImGui usage
 
