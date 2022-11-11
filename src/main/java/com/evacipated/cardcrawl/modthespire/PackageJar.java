@@ -247,6 +247,10 @@ class PackageJar
                     Set<String> initializers = Patcher.annotationDBMap.get(info.jarURL).getAnnotationIndex().get(SpireInitializer.class.getName());
                     if (initializers != null) {
                         for (String initializer : initializers) {
+                            if (initializer.endsWith("$")) {
+                                // Skip scala singleton class for object
+                                continue;
+                            }
                             src.append(initializer).append(".");
                             if (info.ID.startsWith("__sideload_")) {
                                 try {

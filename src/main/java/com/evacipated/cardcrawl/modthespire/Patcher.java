@@ -36,6 +36,10 @@ public class Patcher {
                 if (initializers != null) {
                     System.out.println(" - " + info.Name);
                     for (String initializer : initializers) {
+                        if (initializer.endsWith("$")) {
+                            // Skip scala singleton class for object
+                            continue;
+                        }
                         System.out.println("   - " + initializer);
                         try {
                             long startTime = System.nanoTime();
