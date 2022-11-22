@@ -2,6 +2,7 @@ package com.evacipated.cardcrawl.modthespire.patcher;
 
 import com.evacipated.cardcrawl.modthespire.Loader;
 import com.evacipated.cardcrawl.modthespire.lib.SpireField;
+import com.evacipated.cardcrawl.modthespire.lib.SpireMethod;
 import com.evacipated.cardcrawl.modthespire.lib.StaticSpireField;
 import javassist.*;
 import javassist.bytecode.*;
@@ -12,6 +13,9 @@ import javassist.expr.MethodCall;
 import javassist.expr.NewExpr;
 
 import java.lang.reflect.Proxy;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -20,6 +24,8 @@ public class ClassPatchInfo extends PatchInfo
 {
     private CtClass ctPatchClass;
     private CtClass ctClassToPatch;
+
+    private static final Map<String, CtMethod> methodCache = new HashMap<>();
 
     public ClassPatchInfo(CtClass ctClassToPatch, CtClass ctPatchClass)
     {
@@ -208,10 +214,48 @@ public class ClassPatchInfo extends PatchInfo
                     }
                 }
             }
+            for (CtMethod m : ctPatchClass.getDeclaredMethods()) {
+                if (m.hasAnnotation(SpireMethod.class)) {
+                    CtClass[] params = m.getParameterTypes();
+                    SpireMethod anno = (SpireMethod) m.getAnnotation(SpireMethod.class);
+                    StringBuilder sb = new StringBuilder();
+                    for (int i=1;i<params.length;i++) {
+                        sb.append(",$").append(i);
+                    }
+                    if (Loader.DEBUG) {
+                        System.out.println(" - Adding Method: " + ctClassToPatch.getName() + "." + m.getName() + " " + m.getSignature());
+                        System.out.print("   Params: ");
+                        for (CtClass param : params) {
+                            System.out.print(param.getSimpleName() + ", ");
+                        }
+                        System.out.println();
+                    }
+                    CtMethod ctMethod = new CtMethod(m.getReturnType(), m.getName(), Arrays.copyOfRange(params, 1, params.length), ctClassToPatch);
+                    ctMethod.setBody(ctPatchClass.getName() + "." + m.getName() + "($0" + sb + ");");
+                    try {
+                        ctClassToPatch.addMethod(ctMethod);
+                        methodCache.put(Descriptor.ofMethod(ctMethod.getReturnType(), ctMethod.getParameterTypes()), ctMethod);
+                        System.out.println(Descriptor.ofMethod(ctMethod.getReturnType(), ctMethod.getParameterTypes()));
+
+                        ctClassToPatch.setModifiers(Modifier.PUBLIC);
+                        if ((ctClassToPatch.getModifiers() & Modifier.ABSTRACT) > 0) {
+                            ctClassToPatch.setModifiers(ctClassToPatch.getModifiers() - Modifier.ABSTRACT);
+                        }
+                    } catch (DuplicateMemberException duplicateMemberException) {
+                        ctMethod = methodCache.get(Descriptor.ofMethod(m.getReturnType(), Arrays.copyOfRange(params, 1, params.length)));
+                        System.out.println(Descriptor.ofMethod(m.getReturnType(), Arrays.copyOfRange(params, 1, params.length)));
+                        if (SpireMethod.POSTFIX.equals(anno.onConflict())) {
+                            ctMethod.insertAfter(ctPatchClass.getName() + "." + m.getName() + "($0" + sb + ");");
+                        } else {
+                            ctMethod.insertBefore(ctPatchClass.getName() + "." + m.getName() + "($0" + sb + ");");
+                        }
+                    }
+                }
+            }
             if (Loader.DEBUG) {
                 System.out.println();
             }
-        } catch (CannotCompileException | NotFoundException e) {
+        } catch (CannotCompileException | NotFoundException | ClassNotFoundException e) {
             throw new PatchingException(e);
         }
     }
