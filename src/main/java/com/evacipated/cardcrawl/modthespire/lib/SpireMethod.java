@@ -10,6 +10,8 @@ import java.lang.annotation.Target;
 public @interface SpireMethod {
     String onConflict() default "Postfix";
 
+    Class<?> returnType();
+
     String POSTFIX = "Postfix";
 
     String PREFIX = "Prefix";

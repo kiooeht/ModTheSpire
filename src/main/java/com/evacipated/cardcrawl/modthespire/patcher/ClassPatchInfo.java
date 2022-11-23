@@ -1,6 +1,7 @@
 package com.evacipated.cardcrawl.modthespire.patcher;
 
 import com.evacipated.cardcrawl.modthespire.Loader;
+import com.evacipated.cardcrawl.modthespire.lib.LineFinder;
 import com.evacipated.cardcrawl.modthespire.lib.SpireField;
 import com.evacipated.cardcrawl.modthespire.lib.SpireMethod;
 import com.evacipated.cardcrawl.modthespire.lib.StaticSpireField;
@@ -13,10 +14,7 @@ import javassist.expr.MethodCall;
 import javassist.expr.NewExpr;
 
 import java.lang.reflect.Proxy;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -218,9 +216,13 @@ public class ClassPatchInfo extends PatchInfo
                 if (m.hasAnnotation(SpireMethod.class)) {
                     CtClass[] params = m.getParameterTypes();
                     SpireMethod anno = (SpireMethod) m.getAnnotation(SpireMethod.class);
+                    boolean hasReturnValue = !anno.returnType().equals(void.class);
                     StringBuilder sb = new StringBuilder();
                     for (int i=1;i<params.length;i++) {
                         sb.append(",$").append(i);
+                        if (hasReturnValue && i == params.length - 2) {
+                            break;
+                        }
                     }
                     if (Loader.DEBUG) {
                         System.out.println(" - Adding Method: " + ctClassToPatch.getName() + "." + m.getName() + " " + m.getSignature());
@@ -230,24 +232,68 @@ public class ClassPatchInfo extends PatchInfo
                         }
                         System.out.println();
                     }
-                    CtMethod ctMethod = new CtMethod(m.getReturnType(), m.getName(), Arrays.copyOfRange(params, 1, params.length), ctClassToPatch);
-                    ctMethod.setBody(ctPatchClass.getName() + "." + m.getName() + "($0" + sb + ");");
+                    CtClass returnType;
+                    if (anno.returnType().isPrimitive()) {
+                        switch (anno.returnType().getName()) {
+                            case "int":
+                                returnType = CtPrimitiveType.intType;
+                                break;
+                            case "float":
+                                returnType = CtPrimitiveType.floatType;
+                                break;
+                            case "double":
+                                returnType = CtPrimitiveType.doubleType;
+                                break;
+                            case "long":
+                                returnType = CtPrimitiveType.longType;
+                                break;
+                            case "char":
+                                returnType = CtPrimitiveType.charType;
+                                break;
+                            case "byte":
+                                returnType = CtPrimitiveType.byteType;
+                                break;
+                            case "short":
+                                returnType = CtPrimitiveType.shortType;
+                                break;
+                            case "boolean":
+                                returnType = CtPrimitiveType.booleanType;
+                                break;
+                            case "void":
+                                returnType = CtPrimitiveType.voidType;
+                                break;
+                            default:
+                                throw new CannotCompileException("Unknown primitive type: " + anno.returnType().getName());
+                        }
+                    } else {
+                        returnType = ctClassToPatch.getClassPool().getCtClass(anno.returnType().getName());
+                    }
+                    CtMethod newMethod = new CtMethod(returnType, m.getName(), Arrays.copyOfRange(params, hasReturnValue ? 2 : 1, params.length), ctClassToPatch);
+                    String methodBody = "{" + ctPatchClass.getName() + "." + m.getName() + "($0%s" + sb + ");}\n";
+                    if (hasReturnValue) {
+                        methodBody = String.format(methodBody, ",retVal");
+                    } else {
+                        methodBody = String.format(methodBody, "");
+                    }
                     try {
-                        ctClassToPatch.addMethod(ctMethod);
-                        methodCache.put(Descriptor.ofMethod(ctMethod.getReturnType(), ctMethod.getParameterTypes()), ctMethod);
-                        System.out.println(Descriptor.ofMethod(ctMethod.getReturnType(), ctMethod.getParameterTypes()));
+                        ctClassToPatch.addMethod(newMethod);
+                        newMethod.setBody(methodBody);
+                        newMethod.insertBefore("java.lang.Object[] retVal = new java.lang.Object[1];\n");
+                        newMethod.insertAfter(String.format("return%s", hasReturnValue ? " (" + returnType.getName() + ") retVal[0];" : ";"));
+                        methodCache.put(Descriptor.ofMethod(newMethod.getReturnType(), newMethod.getParameterTypes()), newMethod);
 
                         ctClassToPatch.setModifiers(Modifier.PUBLIC);
                         if ((ctClassToPatch.getModifiers() & Modifier.ABSTRACT) > 0) {
                             ctClassToPatch.setModifiers(ctClassToPatch.getModifiers() - Modifier.ABSTRACT);
                         }
                     } catch (DuplicateMemberException duplicateMemberException) {
-                        ctMethod = methodCache.get(Descriptor.ofMethod(m.getReturnType(), Arrays.copyOfRange(params, 1, params.length)));
-                        System.out.println(Descriptor.ofMethod(m.getReturnType(), Arrays.copyOfRange(params, 1, params.length)));
+                        newMethod = methodCache.get(Descriptor.ofMethod(m.getReturnType(), Arrays.copyOfRange(params, hasReturnValue ? 2 : 1, params.length)));
                         if (SpireMethod.POSTFIX.equals(anno.onConflict())) {
-                            ctMethod.insertAfter(ctPatchClass.getName() + "." + m.getName() + "($0" + sb + ");");
+                            com.evacipated.cardcrawl.modthespire.lib.Matcher matcher = new com.evacipated.cardcrawl.modthespire.lib.Matcher.TypeCastMatcher(returnType.getName());
+                            int[] lineNum = LineFinder.findInOrder(newMethod, new ArrayList<>(), matcher);
+                            newMethod.insertAt(lineNum[0], methodBody);
                         } else {
-                            ctMethod.insertBefore(ctPatchClass.getName() + "." + m.getName() + "($0" + sb + ");");
+                            newMethod.insertAt(1, methodBody);
                         }
                     }
                 }
