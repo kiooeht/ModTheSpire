@@ -1,7 +1,6 @@
 package com.evacipated.cardcrawl.modthespire.patcher;
 
 import com.evacipated.cardcrawl.modthespire.Loader;
-import com.evacipated.cardcrawl.modthespire.lib.LineFinder;
 import com.evacipated.cardcrawl.modthespire.lib.SpireField;
 import com.evacipated.cardcrawl.modthespire.lib.SpireMethod;
 import com.evacipated.cardcrawl.modthespire.lib.StaticSpireField;
@@ -9,9 +8,7 @@ import javassist.*;
 import javassist.bytecode.*;
 import javassist.bytecode.annotation.Annotation;
 import javassist.bytecode.annotation.AnnotationImpl;
-import javassist.expr.ExprEditor;
-import javassist.expr.MethodCall;
-import javassist.expr.NewExpr;
+import javassist.expr.*;
 
 import java.lang.reflect.Proxy;
 import java.util.*;
@@ -24,6 +21,7 @@ public class ClassPatchInfo extends PatchInfo
     private CtClass ctClassToPatch;
 
     private static final Map<String, CtMethod> methodCache = new HashMap<>();
+    private static final Map<String, List<String>> methodBodyCache = new HashMap<>();
 
     public ClassPatchInfo(CtClass ctClassToPatch, CtClass ctPatchClass)
     {
@@ -217,13 +215,6 @@ public class ClassPatchInfo extends PatchInfo
                     CtClass[] params = m.getParameterTypes();
                     SpireMethod anno = (SpireMethod) m.getAnnotation(SpireMethod.class);
                     boolean hasReturnValue = !anno.returnType().equals(void.class);
-                    StringBuilder sb = new StringBuilder();
-                    for (int i=1;i<params.length;i++) {
-                        sb.append(",$").append(i);
-                        if (hasReturnValue && i == params.length - 2) {
-                            break;
-                        }
-                    }
                     if (Loader.DEBUG) {
                         System.out.println(" - Adding Method: " + ctClassToPatch.getName() + "." + m.getName() + " " + m.getSignature());
                         System.out.print("   Params: ");
@@ -269,32 +260,47 @@ public class ClassPatchInfo extends PatchInfo
                         returnType = ctClassToPatch.getClassPool().getCtClass(anno.returnType().getName());
                     }
                     CtMethod newMethod = new CtMethod(returnType, m.getName(), Arrays.copyOfRange(params, hasReturnValue ? 2 : 1, params.length), ctClassToPatch);
-                    String methodBody = "{" + ctPatchClass.getName() + "." + m.getName() + "($0%s" + sb + ");}\n";
+                    String methodBody = ctPatchClass.getName() + "." + m.getName() + "($0%s" + "$$);";
                     if (hasReturnValue) {
-                        methodBody = String.format(methodBody, ",retVal");
+                        methodBody = String.format(methodBody, ",retVal,");
                     } else {
-                        methodBody = String.format(methodBody, "");
+                        methodBody = String.format(methodBody, ",");
                     }
                     try {
                         ctClassToPatch.addMethod(newMethod);
-                        newMethod.setBody(methodBody);
-                        newMethod.insertBefore("java.lang.Object[] retVal = new java.lang.Object[1];\n");
-                        newMethod.insertAfter(String.format("return%s", hasReturnValue ? " (" + returnType.getName() + ") retVal[0];" : ";"));
+                        List<String> src = new ArrayList<>();
+                        src.add("java.lang.Object[] retVal = new java.lang.Object[1];");
+                        src.add(methodBody);
+                        src.add(String.format("return%s", hasReturnValue ? " ($r) retVal[0];" : ";"));
+                        methodBodyCache.put(Descriptor.ofMethod(newMethod.getReturnType(), newMethod.getParameterTypes()), src);
                         methodCache.put(Descriptor.ofMethod(newMethod.getReturnType(), newMethod.getParameterTypes()), newMethod);
+                        StringBuilder tmp = new StringBuilder();
+                        tmp.append("{");
+                        for (String s : src) {
+                            tmp.append(s).append("\n");
+                        }
+                        tmp.append("}");
+                        newMethod.setBody(tmp.toString());
 
-                        ctClassToPatch.setModifiers(Modifier.PUBLIC);
+                        ctClassToPatch.setModifiers(ctClassToPatch.getModifiers() | Modifier.PUBLIC);
                         if ((ctClassToPatch.getModifiers() & Modifier.ABSTRACT) > 0) {
-                            ctClassToPatch.setModifiers(ctClassToPatch.getModifiers() - Modifier.ABSTRACT);
+                            ctClassToPatch.setModifiers(ctClassToPatch.getModifiers() & ~Modifier.ABSTRACT);
                         }
                     } catch (DuplicateMemberException duplicateMemberException) {
-                        newMethod = methodCache.get(Descriptor.ofMethod(m.getReturnType(), Arrays.copyOfRange(params, hasReturnValue ? 2 : 1, params.length)));
+                        newMethod = methodCache.get(Descriptor.ofMethod(newMethod.getReturnType(), Arrays.copyOfRange(params, hasReturnValue ? 2 : 1, params.length)));
+                        List<String> src = methodBodyCache.get(Descriptor.ofMethod(newMethod.getReturnType(), Arrays.copyOfRange(params, hasReturnValue ? 2 : 1, params.length)));
                         if (SpireMethod.POSTFIX.equals(anno.onConflict())) {
-                            com.evacipated.cardcrawl.modthespire.lib.Matcher matcher = new com.evacipated.cardcrawl.modthespire.lib.Matcher.TypeCastMatcher(returnType.getName());
-                            int[] lineNum = LineFinder.findInOrder(newMethod, new ArrayList<>(), matcher);
-                            newMethod.insertAt(lineNum[0], methodBody);
+                            src.add(src.size() - 1, methodBody);
                         } else {
-                            newMethod.insertAt(1, methodBody);
+                            src.add(1, methodBody);
                         }
+                        StringBuilder tmp = new StringBuilder();
+                        tmp.append("{");
+                        for (String s : src) {
+                            tmp.append(s).append("\n");
+                        }
+                        tmp.append("}");
+                        newMethod.setBody(tmp.toString());
                     }
                 }
             }
