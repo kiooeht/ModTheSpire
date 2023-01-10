@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Add missing property for imgui flag
 
 #### v3.30.0 ####
 * Make `Loader.ARGS` public so mods can check program arguments

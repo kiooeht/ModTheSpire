@@ -162,6 +162,7 @@ public class Loader
         SKIP_INTRO = MTS_CONFIG.getBool("skip-intro");
         profileArg = MTS_CONFIG.getString("profile");
         String modIds = MTS_CONFIG.getString("mods");
+        LWJGL3_ENABLED = MTS_CONFIG.getBool("imgui");
 
         if (argList.contains("--debug")) {
             DEBUG = true;
