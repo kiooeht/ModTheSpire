@@ -31,6 +31,11 @@ public class SteamWorkshop
         }
 
         if (SteamAPI.isSteamRunning(true)) {
+            SteamUtils utils = new SteamUtils(() -> {});
+            boolean onDeck = utils.isSteamRunningOnSteamDeck();
+            System.err.println("deck: " + onDeck);
+            System.out.println(onDeck);
+
             workshop = new SteamUGC(new Callback());
             int items = workshop.getNumSubscribedItems();
 

@@ -162,7 +162,9 @@ public class Loader
         SKIP_INTRO = MTS_CONFIG.getBool("skip-intro");
         profileArg = MTS_CONFIG.getString("profile");
         String modIds = MTS_CONFIG.getString("mods");
-        LWJGL3_ENABLED = MTS_CONFIG.getBool("imgui");
+        if (!LWJGL3_ENABLED) {
+            LWJGL3_ENABLED = MTS_CONFIG.getBool("imgui");
+        }
 
         if (argList.contains("--debug")) {
             DEBUG = true;
@@ -259,6 +261,7 @@ public class Loader
             Process p = pb.start();
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            Boolean steamDeck = null;
             String title = null;
             String id = null;
             String installPath = null;
@@ -266,7 +269,9 @@ public class Loader
             String line = null;
             while ((line = reader.readLine()) != null) {
                 System.out.println(line);
-                if (title == null) {
+                if (steamDeck == null) {
+                    steamDeck = Boolean.parseBoolean(line);
+                } else if (title == null) {
                     title = line;
                 } else if (id == null) {
                     id = line;
@@ -284,6 +289,9 @@ public class Loader
                     installPath = null;
                     timeUpdated = null;
                 }
+            }
+            if (steamDeck != null) {
+                LWJGL3_ENABLED = steamDeck;
             }
             reader.close();
         } catch (IOException e) {
