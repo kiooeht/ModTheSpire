@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.30.1 ####
 * Add missing property for imgui flag
 * Fix crash on Steam Deck by forcing LWJGL3 mode
 
