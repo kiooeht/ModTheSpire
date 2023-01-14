@@ -291,7 +291,7 @@ public class Loader
                 }
             }
             if (steamDeck != null) {
-                LWJGL3_ENABLED = steamDeck;
+                LWJGL3_ENABLED = LWJGL3_ENABLED || steamDeck;
             }
             reader.close();
         } catch (IOException e) {
