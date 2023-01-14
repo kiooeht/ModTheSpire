@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.30.2 ####
 * Fix being unable to enable ImGui when not on Steam Deck
 
 #### v3.30.1 ####
