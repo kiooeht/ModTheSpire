@@ -2,11 +2,17 @@ package com.evacipated.cardcrawl.modthespire;
 
 import javassist.ByteArrayClassPath;
 import javassist.ClassPool;
+import javassist.CtClass;
+import sun.misc.Resource;
+import sun.misc.URLClassPath;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.ProtectionDomain;
@@ -14,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
+import java.util.jar.Manifest;
 
 // Custom ClassLoader
 // When loading STS DesktopLauncher (main entry point), skips searching the parent classloader
@@ -22,16 +29,40 @@ import java.util.jar.JarInputStream;
 // Otherwise acts like URLClassLoader
 public class MTSClassLoader extends URLClassLoader
 {
+    private static final Field packagesField, ucpField;
+    private static final Method definePackageInternal;
+    static {
+        try {
+            packagesField = ClassLoader.class.getDeclaredField("packages");
+            packagesField.setAccessible(true);
+
+            ucpField = URLClassLoader.class.getDeclaredField("ucp");
+            ucpField.setAccessible(true);
+
+            definePackageInternal = URLClassLoader.class.getDeclaredMethod("definePackageInternal", String.class, Manifest.class, URL.class);
+            definePackageInternal.setAccessible(true);
+        } catch (NoSuchFieldException | NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private ClassLoader parent;
     private Map<String, byte[]> classes = new HashMap<>();
     private Map<String, Class<?>> definedClasses = new HashMap<>();
     private Map<String, byte[]> resources = new HashMap<>();
 
-    public MTSClassLoader(InputStream stream, URL[] urls, ClassLoader parent) throws IOException
-    {
+    private final Map<String, Package> packages;
+    private final URLClassPath ucp;
+
+    public MTSClassLoader(InputStream stream, URL[] urls, ClassLoader parent) throws IOException, IllegalAccessException {
         super(urls, null);
 
         this.parent = parent;
+
+        //noinspection unchecked
+        this.packages = (Map<String, Package>) packagesField.get(this);
+        this.ucp = (URLClassPath) ucpField.get(this);
+
         JarInputStream is = new JarInputStream(stream);
         JarEntry entry = is.getNextJarEntry();
         while (entry != null) {
@@ -121,6 +152,25 @@ public class MTSClassLoader extends URLClassLoader
     {
         for (Map.Entry<String, byte[]> entry : classes.entrySet()) {
             pool.insertClassPath(new ByteArrayClassPath(entry.getKey(), entry.getValue()));
+        }
+    }
+
+    public void registerPackage(CtClass cls) {
+        String pkgname = cls.getPackageName();
+        if (pkgname == null || packages.containsKey(pkgname))
+            return;
+
+        String name = cls.getName();
+        String path = name.replace('.', '/').concat(".class");
+        Resource res = ucp.getResource(path, false);
+        if (res != null) {
+            try {
+                URL url = res.getCodeSourceURL();
+                Manifest man = res.getManifest();
+                definePackageInternal.invoke(this, pkgname, man, url);
+            } catch (IOException | IllegalAccessException | InvocationTargetException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }
