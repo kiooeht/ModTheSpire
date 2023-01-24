@@ -1,5 +1,6 @@
 ## Changelog ##
 #### dev ####
+* Fix package information being lost for patched classes (Alchyr)
 
 #### v3.30.2 ####
 * Fix being unable to enable ImGui when not on Steam Deck

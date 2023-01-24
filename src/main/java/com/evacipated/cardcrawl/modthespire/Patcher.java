@@ -331,7 +331,7 @@ public class Patcher {
         System.out.println("Done.");
     }
 
-    public static ClassPath compilePatches(ClassLoader loader, MTSClassPool pool) throws CannotCompileException
+    public static ClassPath compilePatches(MTSClassLoader loader, MTSClassPool pool) throws CannotCompileException
     {
         System.out.printf("Compiling patched classes...");
         if (Loader.DEBUG) {
@@ -349,6 +349,7 @@ public class Patcher {
                 System.out.println("  " + cls.getValue().getName());
             }
             cls.getValue().toClass(loader, null);
+            loader.registerPackage(cls.getValue()); //register missing package information
             cp.addClass(cls.getValue());
             cls.getValue().detach();
         }
