@@ -1,5 +1,7 @@
 ## Changelog ##
 #### dev ####
+
+#### v3.30.3 ####
 * Fix package information being lost for patched classes (Alchyr)
 
 #### v3.30.2 ####
