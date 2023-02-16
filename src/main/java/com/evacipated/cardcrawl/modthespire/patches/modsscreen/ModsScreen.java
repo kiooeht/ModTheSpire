@@ -9,6 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ScissorStack;
 import com.evacipated.cardcrawl.modthespire.Loader;
 import com.evacipated.cardcrawl.modthespire.ModInfo;
 import com.evacipated.cardcrawl.modthespire.lib.SpireEnum;
+import com.evacipated.cardcrawl.modthespire.patches.MTSLocalization;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.core.Settings;
 import com.megacrit.cardcrawl.helpers.*;
@@ -213,7 +214,7 @@ public class ModsScreen
 
     public void render(SpriteBatch sb)
     {
-        FontHelper.renderFontCentered(sb, FontHelper.SCP_cardTitleFont_small, "Mod List",
+        FontHelper.renderFontCentered(sb, FontHelper.SCP_cardTitleFont_small, MTSLocalization.getString("ModList"),
             Settings.WIDTH / 2.0f,
             Settings.HEIGHT - 70.0f * Settings.scale,
             Settings.GOLD_COLOR);
@@ -369,7 +370,7 @@ public class ModsScreen
                         c = Settings.GOLD_COLOR;
                     }
                     FontHelper.renderFontCentered(sb, FontHelper.buttonLabelFont,
-                        "Config",
+                        MTSLocalization.getString("ModConfig"),
                         configHb.cX, configHb.cY,
                         c);
                 }

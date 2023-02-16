@@ -1,7 +1,9 @@
 package com.evacipated.cardcrawl.modthespire.patches.modsscreen;
 
+import com.evacipated.cardcrawl.modthespire.patches.MTSLocalization;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
 import com.evacipated.cardcrawl.modthespire.lib.SpireEnum;
+import com.megacrit.cardcrawl.core.Settings;
 import com.megacrit.cardcrawl.screens.mainMenu.MenuButton;
 
 import java.lang.reflect.Field;
@@ -25,7 +27,7 @@ public class ModMenuButton
                 if (__instance.result == MODS) {
                     Field f_label = MenuButton.class.getDeclaredField("label");
                     f_label.setAccessible(true);
-                    f_label.set(__instance, "Mods");
+                    f_label.set(__instance, MTSLocalization.getString("ModMenuButton"));
                 }
             } catch (Exception e) {
                 e.printStackTrace();
