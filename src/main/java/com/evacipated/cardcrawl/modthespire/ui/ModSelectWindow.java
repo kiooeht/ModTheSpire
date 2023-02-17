@@ -9,6 +9,7 @@ import javax.swing.border.MatteBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.plaf.basic.BasicSplitPaneUI;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
@@ -81,6 +82,7 @@ public class ModSelectWindow extends JFrame
         properties.setProperty("y", "center");
         properties.setProperty("width", Integer.toString(DEFAULT_WIDTH));
         properties.setProperty("height", Integer.toString(DEFAULT_HEIGHT));
+        properties.setProperty("split_location", Float.toString(0.275f));
         properties.setProperty("maximize", Boolean.toString(false));
         return properties;
     }
@@ -203,11 +205,17 @@ public class ModSelectWindow extends JFrame
         setLayout(new BorderLayout());
         getContentPane().setPreferredSize(new Dimension(location.width, location.height));
 
-        getContentPane().add(makeModListPanel(), BorderLayout.WEST);
-        getContentPane().add(makeInfoPanel(), BorderLayout.CENTER);
+        JSplitPane splitPane = makeMainPanel();
+        getContentPane().add(splitPane, BorderLayout.CENTER);
         getContentPane().add(makeTopPanel(), BorderLayout.NORTH);
 
         pack();
+
+        float loc = Loader.MTS_CONFIG.getFloat("split_location");
+        if (loc > 0.05f && loc < 0.95f) {
+            splitPane.setDividerLocation(loc);
+        }
+
         if (isCentered) {
             setLocationRelativeTo(null);
         } else {
@@ -224,11 +232,34 @@ public class ModSelectWindow extends JFrame
         }
     }
 
-    private JPanel makeModListPanel()
-    {
+    private JSplitPane makeMainPanel() {
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        splitPane.setLeftComponent(makeModListPanel());
+        splitPane.setRightComponent(makeInfoPanel());
+
+        BasicSplitPaneUI spui = (BasicSplitPaneUI)splitPane.getUI();
+        spui.getDivider().addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                float percent = splitPane.getDividerLocation() / (float)(splitPane.getWidth() - splitPane.getDividerSize());
+                Loader.MTS_CONFIG.setFloat("split_location", percent);
+                try {
+                    Loader.MTS_CONFIG.save();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+
+
+        return splitPane;
+    }
+
+    private JPanel makeModListPanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
         panel.setPreferredSize(new Dimension(220, 300));
+        panel.setMinimumSize(new Dimension(50, 300));
 
         // Mod List
         DefaultListModel<ModPanel> model = new DefaultListModel<>();
@@ -442,6 +473,7 @@ public class ModSelectWindow extends JFrame
     {
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
+        panel.setMinimumSize(new Dimension(400, 300));
 
         // Top mod banner panel
         panel.add(makeModBannerPanel(), BorderLayout.NORTH);
