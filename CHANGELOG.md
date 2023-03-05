@@ -1,6 +1,7 @@
 ## Changelog ##
 #### dev ####
 * Add localization support for MTS strings
+* Track workshop mod playtimes
 
 #### v3.30.3 ####
 * Fix package information being lost for patched classes (Alchyr)
