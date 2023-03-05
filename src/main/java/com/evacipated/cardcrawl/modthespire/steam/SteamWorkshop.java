@@ -109,6 +109,7 @@ public class SteamWorkshop
             if (resultsReceived >= totalMatchingResults) {
                 kill = true;
             }
+            workshop.releaseQueryUserUGCRequest(query);
         }
 
         @Override
