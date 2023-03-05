@@ -2,7 +2,6 @@ package com.evacipated.cardcrawl.modthespire.ui;
 
 import com.evacipated.cardcrawl.modthespire.Loader;
 import com.evacipated.cardcrawl.modthespire.ModInfo;
-import com.evacipated.cardcrawl.modthespire.steam.SteamSearch;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -183,17 +182,8 @@ public class ModPanel extends JPanel
 
         String workshopInfoKey = "";
 
-        try {
-            if (info.isWorkshop) {
-                // WorkshopId is in hex while workshop mod folder name is in dec.
-                String workshopId = Long.toString(Long.parseLong(this.modFile.getParentFile().getName()), 16);
-                SteamSearch.WorkshopInfo workshopInfo = Loader.getWorkshopInfos().stream().filter(i -> i.getID().equals(workshopId)).findFirst().orElse(null);
-                if (workshopInfo != null) {
-                    workshopInfoKey = String.format("%s %s", workshopInfo.getTitle(), String.join(" ", workshopInfo.getTags()));
-                }
-            }
-        } catch (Exception ex) {
-            System.out.println("ModPanel.filter failed to get workshop info of " + info.ID + ": " + ex);
+        if (info.workshopInfo != null) {
+            workshopInfoKey = String.format("%s %s", info.workshopInfo.getTitle(), String.join(" ", info.workshopInfo.getTags()));
         }
 
         String modInfoKey = String.format("%s %s %s %s", info.ID, info.Name, String.join(" ", info.Authors), workshopInfoKey).toLowerCase();

@@ -2,6 +2,9 @@ package com.evacipated.cardcrawl.modthespire.ui;
 
 import com.evacipated.cardcrawl.modthespire.ModInfo;
 
+import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
@@ -11,11 +14,9 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
-
-import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.border.EmptyBorder;
 
 // From https://stackoverflow.com/a/24777687
 @SuppressWarnings("serial")
@@ -86,6 +87,16 @@ public class JModPanelCheckBoxList extends JList<ModPanel> {
             if (getModel().getElementAt(i).isSelected()) {
                 ret[j] = getModel().getElementAt(i).modFile;
                 ++j;
+            }
+        }
+        return ret;
+    }
+
+    public List<String> getCheckedModIDs() {
+        List<String> ret = new ArrayList<>();
+        for (int i = 0; i < getModel().getSize(); ++i) {
+            if (getModel().getElementAt(i).isSelected()) {
+                ret.add(getModel().getElementAt(i).info.ID);
             }
         }
         return ret;

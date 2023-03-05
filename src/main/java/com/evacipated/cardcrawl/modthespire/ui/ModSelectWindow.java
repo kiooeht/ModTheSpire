@@ -274,15 +274,7 @@ public class ModSelectWindow extends JFrame
             tCfg.start();
 
             Thread t = new Thread(() -> {
-                // Build array of selected mods
-                File[] selectedMods;
-                if (Loader.manualModIds != null) {
-                    selectedMods = modList.getAllMods();
-                } else {
-                    selectedMods = modList.getCheckedMods();
-                }
-
-                Loader.runMods(selectedMods);
+                Loader.runMods(modList.getCheckedModIDs());
                 if (Loader.CLOSE_WHEN_FINISHED) {
                     Loader.closeWindow();
                 }

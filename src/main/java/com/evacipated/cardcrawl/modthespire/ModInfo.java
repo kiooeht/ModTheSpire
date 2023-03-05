@@ -1,5 +1,6 @@
 package com.evacipated.cardcrawl.modthespire;
 
+import com.evacipated.cardcrawl.modthespire.steam.SteamSearch;
 import com.google.gson.*;
 import com.google.gson.annotations.SerializedName;
 import com.vdurmont.semver4j.Semver;
@@ -23,6 +24,7 @@ public class ModInfo implements Serializable
     public transient URL jarURL;
     public transient String statusMsg = " ";
     public transient boolean isWorkshop = false;
+    public transient SteamSearch.WorkshopInfo workshopInfo;
     @SerializedName("modid")
     public String ID;
     @SerializedName("name")

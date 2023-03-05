@@ -209,7 +209,7 @@ public class SteamSearch
     public static class WorkshopInfo
     {
         private final String title;
-        private final String id;
+        private final long id;
         private final String installPath;
         private final int timeUpdated;
         private List<String> tags;
@@ -217,7 +217,7 @@ public class SteamSearch
         public WorkshopInfo(String title, String id, String installPath, String timeUpdated, String tagsString)
         {
             this.title = title;
-            this.id = id;
+            this.id = Long.parseLong(id, 16);
             this.installPath = Paths.get(installPath).toAbsolutePath().toString();
             int tmpTime = 0;
             try {
@@ -237,7 +237,7 @@ public class SteamSearch
             return title;
         }
 
-        public String getID()
+        public long getID()
         {
             return id;
         }

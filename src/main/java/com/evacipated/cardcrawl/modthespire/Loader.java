@@ -392,7 +392,7 @@ public class Loader
     }
 
     // runMods - sets up the ClassLoader, sets the isModded flag and launches the game
-    public static void runMods(File[] modJars)
+    public static void runMods(List<String> modIds)
     {
         if (Loader.DEBUG) {
             System.out.println("Running with debug mode turned ON...");
@@ -400,7 +400,10 @@ public class Loader
         }
         try {
             {
-                ModInfo[] modInfos = buildInfoArray(modJars, manualModIds);
+                if (manualModIds != null) {
+                    modIds = manualModIds;
+                }
+                ModInfo[] modInfos = buildInfoArray(modIds);
                 checkDependencies(modInfos);
                 modInfos = orderDependencies(modInfos);
                 MODINFOS = modInfos;
@@ -416,7 +419,7 @@ public class Loader
 
             MTSClassLoader loader = new MTSClassLoader(Loader.class.getResourceAsStream(COREPATCHES_JAR), buildUrlArray(MODINFOS), Loader.class.getClassLoader());
 
-            if (modJars.length > 0) {
+            if (modIds.size() > 0) {
                 MTSClassLoader tmpPatchingLoader = new MTSClassLoader(Loader.class.getResourceAsStream(COREPATCHES_JAR), buildUrlArray(MODINFOS), Loader.class.getClassLoader());
                 
                 System.out.println("Begin patching...");
@@ -636,33 +639,22 @@ public class Loader
         return urls.toArray(new URL[0]);
     }
 
-    private static ModInfo[] buildInfoArray(File[] modJars, List<String> modIds) throws MissingModIDException
+    private static ModInfo[] buildInfoArray(List<String> modIds) throws MissingModIDException
     {
         ModInfo[] infos;
-        if (modIds != null) {
-            // if using --mods
-            Map<String, ModInfo> infoMap = new HashMap<>();
-            for (File modJar : modJars) {
-                ModInfo info = ModInfo.ReadModInfo(modJar);
-                if (info != null && info.ID != null && !info.ID.isEmpty()) {
-                    infoMap.put(info.ID, info);
+        infos = new ModInfo[modIds.size()];
+        for (int i = 0; i < modIds.size(); ++i) {
+            ModInfo info = null;
+            for (ModInfo allInfo : ALLMODINFOS) {
+                if (Objects.equals(modIds.get(i), allInfo.ID)) {
+                    info = allInfo;
+                    break;
                 }
             }
-
-            infos = new ModInfo[modIds.size()];
-            for (int i = 0; i < modIds.size(); ++i) {
-                ModInfo info = infoMap.get(modIds.get(i));
-                if (info == null) {
-                    throw new MissingModIDException(modIds.get(i));
-                }
-                infos[i] = info;
+            if (info == null) {
+                throw new MissingModIDException(modIds.get(i));
             }
-        } else {
-            // Normal
-            infos = new ModInfo[modJars.length];
-            for (int i = 0; i < modJars.length; ++i) {
-                infos[i] = ModInfo.ReadModInfo(modJars[i]);
-            }
+            infos[i] = info;
         }
         return infos;
     }
@@ -713,12 +705,13 @@ public class Loader
             }
         }
 
-        BiConsumer<File, Boolean> lambda = (f, beta) -> {
+        TriConsumer<File, SteamSearch.WorkshopInfo, Boolean> lambda = (f, workshopInfo, beta) -> {
             ModInfo info = ModInfo.ReadModInfo(f);
             if (info != null) {
                 // Disable the update json url for workshop content
                 info.UpdateJSON = null;
                 info.isWorkshop = true;
+                info.workshopInfo = workshopInfo;
 
                 // If the workshop item is a newer version, use it instead of the local mod
                 boolean doAdd = true;
@@ -733,6 +726,7 @@ public class Loader
                         if (info.ModVersion.isGreaterThan(modInfo.ModVersion)) {
                             it.remove();
                         } else {
+                            modInfo.workshopInfo = info.workshopInfo;
                             doAdd = false;
                             break;
                         }
@@ -747,12 +741,12 @@ public class Loader
         for (SteamSearch.WorkshopInfo workshopInfo : workshopInfos) {
             // Normal
             for (File f : getAllModFiles(workshopInfo.getInstallPath())) {
-                lambda.accept(f, false);
+                lambda.accept(f, workshopInfo, false);
             }
             // Beta
             if (STS_BETA) {
                 for (File f : getAllModFiles(Paths.get(workshopInfo.getInstallPath(), BETA_SUBDIR).toString())) {
-                    lambda.accept(f, true);
+                    lambda.accept(f, workshopInfo, true);
                 }
             }
         }
