@@ -1,7 +1,6 @@
 package com.evacipated.cardcrawl.modthespire.ui;
 
 import com.evacipated.cardcrawl.modthespire.*;
-import com.evacipated.cardcrawl.modthespire.steam.SteamSearch;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -16,7 +15,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
@@ -99,7 +97,7 @@ public class ModSelectWindow extends JFrame
         readWindowPosSize();
         setupDetectMaximize();
         initUI(skipLauncher);
-        if (Loader.MTS_CONFIG.getBool("maximize")) {
+        if (ModTheSpire.MTS_CONFIG.getBool("maximize")) {
             isMaximized = true;
             this.setExtendedState(this.getExtendedState() | JFrame.MAXIMIZED_BOTH);
         }
@@ -108,30 +106,30 @@ public class ModSelectWindow extends JFrame
     private void readWindowPosSize()
     {
         // Sanity check values
-        if (Loader.MTS_CONFIG.getInt("width") < DEFAULT_WIDTH) {
-            Loader.MTS_CONFIG.setInt("width", DEFAULT_WIDTH);
+        if (ModTheSpire.MTS_CONFIG.getInt("width") < DEFAULT_WIDTH) {
+            ModTheSpire.MTS_CONFIG.setInt("width", DEFAULT_WIDTH);
         }
-        if (Loader.MTS_CONFIG.getInt("height") < DEFAULT_HEIGHT) {
-            Loader.MTS_CONFIG.setInt("height", DEFAULT_HEIGHT);
+        if (ModTheSpire.MTS_CONFIG.getInt("height") < DEFAULT_HEIGHT) {
+            ModTheSpire.MTS_CONFIG.setInt("height", DEFAULT_HEIGHT);
         }
         location = new Rectangle();
-        location.width = Loader.MTS_CONFIG.getInt("width");
-        location.height = Loader.MTS_CONFIG.getInt("height");
-        if (Loader.MTS_CONFIG.getString("x").equals("center") || Loader.MTS_CONFIG.getString("y").equals("center")) {
+        location.width = ModTheSpire.MTS_CONFIG.getInt("width");
+        location.height = ModTheSpire.MTS_CONFIG.getInt("height");
+        if (ModTheSpire.MTS_CONFIG.getString("x").equals("center") || ModTheSpire.MTS_CONFIG.getString("y").equals("center")) {
             isCentered = true;
         } else {
             isCentered = false;
-            location.x = Loader.MTS_CONFIG.getInt("x");
-            location.y = Loader.MTS_CONFIG.getInt("y");
+            location.x = ModTheSpire.MTS_CONFIG.getInt("x");
+            location.y = ModTheSpire.MTS_CONFIG.getInt("y");
             if (!isInScreenBounds(location)) {
-                Loader.MTS_CONFIG.setString("x", "center");
-                Loader.MTS_CONFIG.setString("y", "center");
+                ModTheSpire.MTS_CONFIG.setString("x", "center");
+                ModTheSpire.MTS_CONFIG.setString("y", "center");
                 isCentered = true;
             }
         }
 
         try {
-            Loader.MTS_CONFIG.save();
+            ModTheSpire.MTS_CONFIG.save();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -194,7 +192,7 @@ public class ModSelectWindow extends JFrame
 
     private void initUI(boolean skipLauncher)
     {
-        setTitle("ModTheSpire " + Loader.MTS_VERSION);
+        setTitle("ModTheSpire " + ModTheSpire.MTS_VERSION);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setResizable(true);
 
@@ -242,8 +240,8 @@ public class ModSelectWindow extends JFrame
 
         // Play button
         playBtn = new JButton(
-            Loader.PACKAGE ? PACKAGE_OPTION :
-                Loader.OUT_JAR ? JAR_DUMP_OPTION :
+            ModTheSpire.PACKAGE ? PACKAGE_OPTION :
+                ModTheSpire.OUT_JAR ? JAR_DUMP_OPTION :
                 PLAY_OPTION
         );
         playBtn.addActionListener((ActionEvent event) -> {
@@ -274,14 +272,14 @@ public class ModSelectWindow extends JFrame
             tCfg.start();
 
             Thread t = new Thread(() -> {
-                Loader.runMods(modList.getCheckedModIDs());
-                if (Loader.CLOSE_WHEN_FINISHED) {
-                    Loader.closeWindow();
+                ModTheSpire.runMods(modList.getCheckedModIDs());
+                if (ModTheSpire.CLOSE_WHEN_FINISHED) {
+                    ModTheSpire.closeWindow();
                 }
             });
             t.start();
         });
-        if (Loader.STS_BETA && !Loader.allowBeta) {
+        if (ModTheSpire.STS_BETA && !ModTheSpire.allowBeta) {
             playBtn.setEnabled(false);
         }
         panel.add(playBtn, BorderLayout.SOUTH);
@@ -291,7 +289,7 @@ public class ModSelectWindow extends JFrame
         openFolderBtn.setToolTipText("Open Mods Directory");
         openFolderBtn.addActionListener((ActionEvent event) -> {
             try {
-                File file = new File(Loader.MOD_DIR);
+                File file = new File(ModTheSpire.MOD_DIR);
                 if (!file.exists()) {
                     file.mkdir();
                 }
@@ -345,8 +343,8 @@ public class ModSelectWindow extends JFrame
             });
             tCfg.start();
         });
-        if (Loader.profileArg != null) {
-            profilesList.setSelectedItem(Loader.profileArg);
+        if (ModTheSpire.profileArg != null) {
+            profilesList.setSelectedItem(ModTheSpire.profileArg);
         } else {
             profilesList.setSelectedItem(ModList.getDefaultList());
         }
@@ -555,8 +553,8 @@ public class ModSelectWindow extends JFrame
         panel.setBorder(new MatteBorder(1, 0, 0, 0, Color.darkGray));
 
         // StS version
-        JLabel sts_version = new JLabel("Slay the Spire version: " + Loader.STS_VERSION);
-        if (Loader.STS_BETA) {
+        JLabel sts_version = new JLabel("Slay the Spire version: " + ModTheSpire.STS_VERSION);
+        if (ModTheSpire.STS_BETA) {
             sts_version.setText(sts_version.getText() + " BETA");
         }
         sts_version.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -564,14 +562,14 @@ public class ModSelectWindow extends JFrame
 
         // Debug checkbox
         JCheckBox debugCheck = new JCheckBox(DEBUG_OPTION);
-        if (Loader.DEBUG) {
+        if (ModTheSpire.DEBUG) {
             debugCheck.setSelected(true);
         }
         debugCheck.addActionListener((ActionEvent event) -> {
-            Loader.DEBUG = debugCheck.isSelected();
-            Loader.MTS_CONFIG.setBool("debug", Loader.DEBUG);
+            ModTheSpire.DEBUG = debugCheck.isSelected();
+            ModTheSpire.MTS_CONFIG.setBool("debug", ModTheSpire.DEBUG);
             try {
-                Loader.MTS_CONFIG.save();
+                ModTheSpire.MTS_CONFIG.save();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -586,7 +584,7 @@ public class ModSelectWindow extends JFrame
         bannerNoticePanel = new JPanel();
         bannerNoticePanel.setLayout(new GridLayout(0, 1));
 
-        if (Loader.STS_BETA) {
+        if (ModTheSpire.STS_BETA) {
             betaWarningBanner = new JLabel();
             betaWarningBanner.setIcon(ICON_ERROR);
             betaWarningBanner.setText("<html>" +
@@ -639,10 +637,10 @@ public class ModSelectWindow extends JFrame
 
     void saveWindowDimensions(Dimension d)
     {
-        Loader.MTS_CONFIG.setInt("width", d.width);
-        Loader.MTS_CONFIG.setInt("height", d.height);
+        ModTheSpire.MTS_CONFIG.setInt("width", d.width);
+        ModTheSpire.MTS_CONFIG.setInt("height", d.height);
         try {
-            Loader.MTS_CONFIG.save();
+            ModTheSpire.MTS_CONFIG.save();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -650,9 +648,9 @@ public class ModSelectWindow extends JFrame
 
     void saveWindowMaximize()
     {
-        Loader.MTS_CONFIG.setBool("maximize", isMaximized);
+        ModTheSpire.MTS_CONFIG.setBool("maximize", isMaximized);
         try {
-            Loader.MTS_CONFIG.save();
+            ModTheSpire.MTS_CONFIG.save();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -661,10 +659,10 @@ public class ModSelectWindow extends JFrame
     void saveWindowLocation()
     {
         Point loc = getLocationOnScreen();
-        Loader.MTS_CONFIG.setInt("x", loc.x);
-        Loader.MTS_CONFIG.setInt("y", loc.y);
+        ModTheSpire.MTS_CONFIG.setInt("x", loc.x);
+        ModTheSpire.MTS_CONFIG.setInt("y", loc.y);
         try {
-            Loader.MTS_CONFIG.save();
+            ModTheSpire.MTS_CONFIG.save();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -749,7 +747,7 @@ public class ModSelectWindow extends JFrame
             try {
                 // Check for ModTheSpire updates
                 UpdateChecker updateChecker = new GithubUpdateChecker("kiooeht", "ModTheSpire");
-                if (updateChecker.isNewerVersionAvailable(Loader.MTS_VERSION)) {
+                if (updateChecker.isNewerVersionAvailable(ModTheSpire.MTS_VERSION)) {
                     URL latestReleaseURL = updateChecker.getLatestReleaseURL();
                     setMTSUpdateAvailable(latestReleaseURL);
                     return;

@@ -1,12 +1,9 @@
 package com.evacipated.cardcrawl.modthespire.patcher;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.evacipated.cardcrawl.modthespire.Loader;
 import com.evacipated.cardcrawl.modthespire.lib.SpireInsertPatch;
-import com.evacipated.cardcrawl.modthespire.lib.SpireReturn;
 import javassist.*;
 
 public class InsertPatchInfo extends ParameterPatchInfo

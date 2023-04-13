@@ -111,6 +111,10 @@ public class MTSClassLoader extends URLClassLoader
         if (name.equals("org.apache.logging.log4j.core.lookup.JndiLookup")) {
             throw new ClassNotFoundException();
         }
+        // Disallow the old main class name, the agent should take care of redirecting to the new one
+        if (name.equals("com.evacipated.cardcrawl.modthespire.Loader")) {
+            throw new ClassNotFoundException("Loader class has been renamed to ModTheSpire");
+        }
         if (name.startsWith("com.codedisaster.steamworks") || name.startsWith("com.google.gson") || name.equals("com.megacrit.cardcrawl.desktop.DesktopLauncher")) {
             Class<?> c = findLoadedClass(name);
             if (c == null) {

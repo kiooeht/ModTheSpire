@@ -300,7 +300,7 @@ public class EnumBusterReflect {
         Collection<Field> result = new ArrayList<Field>();
 
         ClassFinder finder = new ClassFinder();
-        finder.add(new File(Loader.STS_JAR));
+        finder.add(new File(ModTheSpire.STS_JAR));
 
         ClassFilter filter =
             new AndClassFilter(
@@ -311,7 +311,7 @@ public class EnumBusterReflect {
         Collection<ClassInfo> foundClasses = new ArrayList<>();
         finder.findClasses(foundClasses, filter);
 
-        if (Loader.DEBUG) {
+        if (ModTheSpire.DEBUG) {
             System.out.println();
             System.out.println(clazz.getName());
         }
@@ -321,14 +321,14 @@ public class EnumBusterReflect {
                 String switchMapName = "$SwitchMap$" + clazz.getName().replace('.', '$');
                 if (field.getName().equals(switchMapName)) {
                     count++;
-                    if (Loader.DEBUG) System.out.println("  " + classInfo.getClassName());
+                    if (ModTheSpire.DEBUG) System.out.println("  " + classInfo.getClassName());
                     Field realField = loader.loadClass(classInfo.getClassName()).getDeclaredField(field.getName());
                     realField.setAccessible(true);
                     result.add(realField);
                 }
             }
         }
-        if (Loader.DEBUG) System.out.println(count + " switch statement(s)");
+        if (ModTheSpire.DEBUG) System.out.println(count + " switch statement(s)");
 
         return  result;
     }

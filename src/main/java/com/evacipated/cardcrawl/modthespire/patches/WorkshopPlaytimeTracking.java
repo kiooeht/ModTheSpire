@@ -1,7 +1,7 @@
 package com.evacipated.cardcrawl.modthespire.patches;
 
 import com.codedisaster.steamworks.*;
-import com.evacipated.cardcrawl.modthespire.Loader;
+import com.evacipated.cardcrawl.modthespire.ModTheSpire;
 import com.evacipated.cardcrawl.modthespire.lib.*;
 import com.evacipated.cardcrawl.modthespire.patcher.PatchingException;
 import com.megacrit.cardcrawl.integrations.steam.SteamIntegration;
@@ -30,7 +30,7 @@ public class WorkshopPlaytimeTracking
 
         SteamPublishedFileID[] ids = Stream.concat(
             Stream.of(1605060445L), // ModTheSpire's ID
-            Arrays.stream(Loader.MODINFOS)
+            Arrays.stream(ModTheSpire.MODINFOS)
                 .filter(x -> x.workshopInfo != null)
                 .map(x -> x.workshopInfo.getID())
         )
@@ -38,12 +38,12 @@ public class WorkshopPlaytimeTracking
             .toArray(SteamPublishedFileID[]::new);
         ___logger.info("Tracking mod playtime");
         if (ids.length <= MAX_TRACK_PER_CALL) {
-            workshop.startPlaytimeTracking(ids);
+            //workshop.startPlaytimeTracking(ids);
             ___logger.info(Arrays.toString(ids));
         } else {
             for (int i = 0; i < ids.length; i += MAX_TRACK_PER_CALL) {
                 SteamPublishedFileID[] range = Arrays.copyOfRange(ids, i, Math.min(i + MAX_TRACK_PER_CALL, ids.length));
-                workshop.startPlaytimeTracking(range);
+                //workshop.startPlaytimeTracking(range);
                 ___logger.info(Arrays.toString(range));
             }
         }

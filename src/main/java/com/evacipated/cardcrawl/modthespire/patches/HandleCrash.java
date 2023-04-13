@@ -1,6 +1,6 @@
 package com.evacipated.cardcrawl.modthespire.patches;
 
-import com.evacipated.cardcrawl.modthespire.Loader;
+import com.evacipated.cardcrawl.modthespire.ModTheSpire;
 
 import java.net.URL;
 import java.util.Arrays;
@@ -16,15 +16,15 @@ public class HandleCrash
     {
         if (crash != null) {
             System.err.println("Game crashed.");
-            Loader.printMTSInfo(System.err);
+            ModTheSpire.printMTSInfo(System.err);
             tryPrintModsInStacktrace(crash);
             System.err.println("Cause:");
             crash.printStackTrace();
-            Loader.restoreWindowOnCrash();
+            ModTheSpire.restoreWindowOnCrash();
         } else {
             System.out.println("Game closed.");
-            if (!Loader.DEBUG) {
-                Loader.closeWindow();
+            if (!ModTheSpire.DEBUG) {
+                ModTheSpire.closeWindow();
             }
         }
     }
@@ -57,7 +57,7 @@ public class HandleCrash
                 continue;
             }
 
-            Arrays.stream(Loader.MODINFOS).filter(m -> m.jarURL.equals(url)).findFirst().ifPresent(modInfo -> {
+            Arrays.stream(ModTheSpire.MODINFOS).filter(m -> m.jarURL.equals(url)).findFirst().ifPresent(modInfo -> {
                 if (!modInfo.ID.equals("basemod")) {
                     modInfoLines.add(String.format("%s (%s)", modInfo.ID, modInfo.ModVersion));
                 }

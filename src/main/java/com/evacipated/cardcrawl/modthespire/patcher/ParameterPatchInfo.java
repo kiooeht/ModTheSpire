@@ -1,6 +1,6 @@
 package com.evacipated.cardcrawl.modthespire.patcher;
 
-import com.evacipated.cardcrawl.modthespire.Loader;
+import com.evacipated.cardcrawl.modthespire.ModTheSpire;
 import com.evacipated.cardcrawl.modthespire.lib.ByRef;
 import com.evacipated.cardcrawl.modthespire.lib.SpireReturn;
 import javassist.*;
@@ -127,7 +127,7 @@ abstract class ParameterPatchInfo extends PatchInfo
             src += "}";
             src2 += "}";
 
-            if (Loader.DEBUG) {
+            if (ModTheSpire.DEBUG) {
                 System.out.println(src);
             }
             try {

@@ -1,6 +1,6 @@
 package com.evacipated.cardcrawl.modthespire.patches;
 
-import com.evacipated.cardcrawl.modthespire.Loader;
+import com.evacipated.cardcrawl.modthespire.ModTheSpire;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.megacrit.cardcrawl.core.Settings;
@@ -19,7 +19,7 @@ public class MTSLocalization
         Gson gson = new Gson();
         Type type = new TypeToken<Map<Settings.GameLanguage, Map<String, String>>>(){}.getType();
 
-        InputStream is = Loader.class.getResourceAsStream("/mtsLocalization.json");
+        InputStream is = ModTheSpire.class.getResourceAsStream("/mtsLocalization.json");
         if (is != null) {
             strings = gson.fromJson(new InputStreamReader(is), type);
         } else {

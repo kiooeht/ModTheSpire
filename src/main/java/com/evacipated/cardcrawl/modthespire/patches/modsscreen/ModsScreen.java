@@ -6,7 +6,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.utils.ScissorStack;
-import com.evacipated.cardcrawl.modthespire.Loader;
+import com.evacipated.cardcrawl.modthespire.ModTheSpire;
 import com.evacipated.cardcrawl.modthespire.ModInfo;
 import com.evacipated.cardcrawl.modthespire.lib.SpireEnum;
 import com.evacipated.cardcrawl.modthespire.patches.MTSLocalization;
@@ -89,7 +89,7 @@ public class ModsScreen
 
     public ModsScreen()
     {
-        for (int i=0; i<Loader.MODINFOS.length; ++i) {
+        for (int i = 0; i< ModTheSpire.MODINFOS.length; ++i) {
             hitboxes.add(new Hitbox(430.0f * Settings.scale, 40.0f * Settings.scale));
         }
 
@@ -105,7 +105,7 @@ public class ModsScreen
 
         selectedMod = -1;
 
-        scrollUpperBound = targetY + Math.max(0, Loader.MODINFOS.length - 15) * 45.0f * Settings.scale;
+        scrollUpperBound = targetY + Math.max(0, ModTheSpire.MODINFOS.length - 15) * 45.0f * Settings.scale;
         scrollLowerBound = targetY;
     }
 
@@ -168,10 +168,10 @@ public class ModsScreen
                 }
             }
 
-            if (baseModBadges != null && selectedMod >= 0 && baseModBadges.get(Loader.MODINFOS[selectedMod].jarURL) != null) {
+            if (baseModBadges != null && selectedMod >= 0 && baseModBadges.get(ModTheSpire.MODINFOS[selectedMod].jarURL) != null) {
                 configHb.update();
                 if (configHb.hovered && InputHelper.justClickedLeft) {
-                    modBadge_onClick(baseModBadges.get(Loader.MODINFOS[selectedMod].jarURL));
+                    modBadge_onClick(baseModBadges.get(ModTheSpire.MODINFOS[selectedMod].jarURL));
                 }
             }
         }
@@ -273,7 +273,7 @@ public class ModsScreen
         sb.setColor(Color.WHITE);
 
         float tmpY = 0;
-        for (int i=0; i<Loader.MODINFOS.length; ++i) {
+        for (int i = 0; i< ModTheSpire.MODINFOS.length; ++i) {
             if (hitboxes.get(i).hovered) {
                 Color c = sb.getColor();
                 sb.setColor(1, 1, 1, (hitboxes.get(i).clickStarted ? 0.8f : 0.4f));
@@ -281,8 +281,8 @@ public class ModsScreen
                 sb.setColor(c);
             }
 
-            final URL modURL = Loader.MODINFOS[i].jarURL;
-            FontHelper.renderFontLeftTopAligned(sb, FontHelper.buttonLabelFont, Loader.MODINFOS[i].Name,
+            final URL modURL = ModTheSpire.MODINFOS[i].jarURL;
+            FontHelper.renderFontLeftTopAligned(sb, FontHelper.buttonLabelFont, ModTheSpire.MODINFOS[i].Name,
                 95.0f * Settings.scale,
                 tmpY + scrollY,
                 Settings.CREAM_COLOR);
@@ -342,7 +342,7 @@ public class ModsScreen
 
         float padding = 20 * Settings.scale;
         if (selectedMod >= 0) {
-            ModInfo info = Loader.MODINFOS[selectedMod];
+            ModInfo info = ModTheSpire.MODINFOS[selectedMod];
             String text = info.Name;
             text += " NL ModVersion: " + (info.ModVersion != null ? info.ModVersion : "<MISSING>");
             text += " NL Mod ID: " + (info.ID != null ? info.ID : "<MISSING>");
@@ -362,7 +362,7 @@ public class ModsScreen
             if (baseModBadges != null) {
                 configHb.move(x - padding - 50 * Settings.scale, button.hb.y + (button.hb.height / 2.0f));
 
-                if (baseModBadges.get(Loader.MODINFOS[selectedMod].jarURL) != null) {
+                if (baseModBadges.get(ModTheSpire.MODINFOS[selectedMod].jarURL) != null) {
                     configHb.render(sb);
 
                     Color c = Settings.CREAM_COLOR;

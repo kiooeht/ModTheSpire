@@ -2,7 +2,7 @@ package com.evacipated.cardcrawl.modthespire.patches;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.evacipated.cardcrawl.modthespire.Loader;
+import com.evacipated.cardcrawl.modthespire.ModTheSpire;
 import com.evacipated.cardcrawl.modthespire.lib.*;
 import com.megacrit.cardcrawl.core.Settings;
 import com.megacrit.cardcrawl.helpers.FontHelper;
@@ -41,16 +41,16 @@ public class TopPanelModList
             hb.update();
             if (hb.hovered) {
                 String header = "Mod";
-                if (Loader.MODINFOS.length > 1) {
+                if (ModTheSpire.MODINFOS.length > 1) {
                     header += "s";
                 }
                 header += ":";
                 String mods = "";
-                for (int i = 0; i < Loader.MODINFOS.length; ++i) {
+                for (int i = 0; i < ModTheSpire.MODINFOS.length; ++i) {
                     if (i > 0) {
                         mods += " NL ";
                     }
-                    mods += Loader.MODINFOS[i].Name;
+                    mods += ModTheSpire.MODINFOS[i].Name;
                 }
                 TipHelper.renderGenericTip(MOD_LIST_TIP_X, MOD_LIST_TIP_Y, header, mods);
             }
@@ -109,7 +109,7 @@ public class TopPanelModList
             FontHelper.renderFontRightTopAligned(
                 sb,
                 FontHelper.cardDescFont_N,
-                MainMenuModList.makeMTSVersionModCount("ModTheSpire " + Loader.MTS_VERSION),
+                MainMenuModList.makeMTSVersionModCount("ModTheSpire " + ModTheSpire.MTS_VERSION),
                 Settings.WIDTH - 16 * Settings.scale,
                 Settings.HEIGHT - 104 * Settings.scale,
                 new Color(1, 1, 1, 0.3f)

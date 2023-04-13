@@ -1,6 +1,6 @@
 package com.evacipated.cardcrawl.modthespire.patcher;
 
-import com.evacipated.cardcrawl.modthespire.Loader;
+import com.evacipated.cardcrawl.modthespire.ModTheSpire;
 import com.evacipated.cardcrawl.modthespire.lib.SpireField;
 import com.evacipated.cardcrawl.modthespire.lib.StaticSpireField;
 import javassist.*;
@@ -89,7 +89,7 @@ public class ClassPatchInfo extends PatchInfo
                             Pattern pattern = Pattern.compile("Lcom/evacipated/cardcrawl/modthespire/lib/(?:Static)?SpireField<(\\[?)L(.+);>;");
                             Matcher matcher = pattern.matcher(fieldType);
                             if (!matcher.find()) {
-                                if (Loader.DEBUG) {
+                                if (ModTheSpire.DEBUG) {
                                     System.out.println(fieldType);
                                 }
                             }
@@ -106,7 +106,7 @@ public class ClassPatchInfo extends PatchInfo
                         String str = String.format("public%s %s %s;",
                             (isStatic ? " static" : ""),
                             fieldType, fieldName);
-                        if (Loader.DEBUG) {
+                        if (ModTheSpire.DEBUG) {
                             System.out.println(" - Adding Field: " + str);
                         }
                         CtField new_f = CtField.make(str, ctClassToPatch);
@@ -116,7 +116,7 @@ public class ClassPatchInfo extends PatchInfo
                         AnnotationsAttribute attr = new AnnotationsAttribute(constPool, AnnotationsAttribute.visibleTag);
                         for (Object a : f.getAvailableAnnotations()) {
                             if (Proxy.getInvocationHandler(a) instanceof AnnotationImpl) {
-                                if (Loader.DEBUG) {
+                                if (ModTheSpire.DEBUG) {
                                     System.out.println("   - Copying annotation: " + a);
                                 }
                                 AnnotationImpl impl = (AnnotationImpl) Proxy.getInvocationHandler(a);
@@ -199,7 +199,7 @@ public class ClassPatchInfo extends PatchInfo
                                 "}",
                             f.getName(), ctAccessor.getName(), f.getName(),
                             f.getName(), ctClassToPatch.getName() + ".class", fieldName);
-                        if (Loader.DEBUG) {
+                        if (ModTheSpire.DEBUG) {
                             System.out.println(src);
                         }
                         staticinit.insertAfter(src);
@@ -208,7 +208,7 @@ public class ClassPatchInfo extends PatchInfo
                     }
                 }
             }
-            if (Loader.DEBUG) {
+            if (ModTheSpire.DEBUG) {
                 System.out.println();
             }
         } catch (CannotCompileException | NotFoundException e) {
