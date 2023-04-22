@@ -2,7 +2,9 @@ package com.evacipated.cardcrawl.modthespire.patcher;
 
 import com.evacipated.cardcrawl.modthespire.Loader;
 import com.evacipated.cardcrawl.modthespire.lib.SpireField;
+import com.evacipated.cardcrawl.modthespire.lib.SpireMethod;
 import com.evacipated.cardcrawl.modthespire.lib.StaticSpireField;
+import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import javassist.*;
 import javassist.bytecode.*;
 import javassist.bytecode.annotation.Annotation;
@@ -12,6 +14,7 @@ import javassist.expr.MethodCall;
 import javassist.expr.NewExpr;
 
 import java.lang.reflect.Proxy;
+import java.util.Arrays;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -57,162 +60,222 @@ public class ClassPatchInfo extends PatchInfo
     public void doPatch() throws PatchingException
     {
         try {
-            for (CtField f : ctPatchClass.getDeclaredFields()) {
-                boolean isStatic = f.getType().getName().equals(StaticSpireField.class.getCanonicalName());
-                boolean isSpireField = isStatic || f.getType().getName().equals(SpireField.class.getCanonicalName());
-                if (isSpireField) {
-                    int tries = 100;
-                    while (tries > 0) {
-                        --tries;
-                        // Make the field
-                        String fieldName = String.format("%s_%d", f.getName(), new Random().nextInt(1000));
-                        String fieldType;
+            patchSpireFields();
+            patchSpireMethods();
+        } catch (CannotCompileException | NotFoundException | ClassNotFoundException e) {
+            throw new PatchingException(e);
+        }
+    }
 
-                        try {
-                            // Determine field type using javassist signature descriptors
-                            SignatureAttribute.ObjectType fieldSig = SignatureAttribute.toFieldSignature(f.getGenericSignature());
-                            if (fieldSig instanceof SignatureAttribute.ClassType) {
-                                SignatureAttribute.TypeArgument[] typeArguments = ((SignatureAttribute.ClassType) fieldSig).getTypeArguments();
-                                if (typeArguments == null || typeArguments.length != 1) {
-                                    throw new BadBytecode("fake");
-                                }
-                                String descriptor = typeArguments[0].getType().encode();
-                                descriptor = descriptor.replaceAll("<.+>", "");
-                                fieldType = Descriptor.toClassName(descriptor);
-                            } else {
+    private void patchSpireFields() throws CannotCompileException, NotFoundException
+    {
+        for (CtField f : ctPatchClass.getDeclaredFields()) {
+            boolean isStatic = f.getType().getName().equals(StaticSpireField.class.getCanonicalName());
+            boolean isSpireField = isStatic || f.getType().getName().equals(SpireField.class.getCanonicalName());
+            if (isSpireField) {
+                int tries = 100;
+                while (tries > 0) {
+                    --tries;
+                    // Make the field
+                    String fieldName = String.format("%s_%d", f.getName(), new Random().nextInt(1000));
+                    String fieldType;
+
+                    try {
+                        // Determine field type using javassist signature descriptors
+                        SignatureAttribute.ObjectType fieldSig = SignatureAttribute.toFieldSignature(f.getGenericSignature());
+                        if (fieldSig instanceof SignatureAttribute.ClassType) {
+                            SignatureAttribute.TypeArgument[] typeArguments = ((SignatureAttribute.ClassType) fieldSig).getTypeArguments();
+                            if (typeArguments == null || typeArguments.length != 1) {
                                 throw new BadBytecode("fake");
                             }
-                        } catch (BadBytecode e) {
-                            // Fallback to the old method of determining the field type
-                            // Regex and string manip the type descriptor
-                            fieldType = f.getGenericSignature();
-                            Pattern pattern = Pattern.compile("Lcom/evacipated/cardcrawl/modthespire/lib/(?:Static)?SpireField<(\\[?)L(.+);>;");
-                            Matcher matcher = pattern.matcher(fieldType);
-                            if (!matcher.find()) {
-                                if (Loader.DEBUG) {
-                                    System.out.println(fieldType);
-                                }
-                            }
-                            boolean isArrayType = !matcher.group(1).isEmpty();
-                            fieldType = matcher.group(2).replace('/', '.');
-                            if (fieldType.contains("<")) {
-                                fieldType = fieldType.substring(0, fieldType.indexOf('<'));
-                            }
-                            if (isArrayType) {
-                                fieldType += "[]";
+                            String descriptor = typeArguments[0].getType().encode();
+                            descriptor = descriptor.replaceAll("<.+>", "");
+                            fieldType = Descriptor.toClassName(descriptor);
+                        } else {
+                            throw new BadBytecode("fake");
+                        }
+                    } catch (BadBytecode e) {
+                        // Fallback to the old method of determining the field type
+                        // Regex and string manip the type descriptor
+                        fieldType = f.getGenericSignature();
+                        Pattern pattern = Pattern.compile("Lcom/evacipated/cardcrawl/modthespire/lib/(?:Static)?SpireField<(\\[?)L(.+);>;");
+                        Matcher matcher = pattern.matcher(fieldType);
+                        if (!matcher.find()) {
+                            if (Loader.DEBUG) {
+                                System.out.println(fieldType);
                             }
                         }
-
-                        String str = String.format("public%s %s %s;",
-                            (isStatic ? " static" : ""),
-                            fieldType, fieldName);
-                        if (Loader.DEBUG) {
-                            System.out.println(" - Adding Field: " + str);
+                        boolean isArrayType = !matcher.group(1).isEmpty();
+                        fieldType = matcher.group(2).replace('/', '.');
+                        if (fieldType.contains("<")) {
+                            fieldType = fieldType.substring(0, fieldType.indexOf('<'));
                         }
-                        CtField new_f = CtField.make(str, ctClassToPatch);
-
-                        // Copy annotations
-                        ConstPool constPool = ctClassToPatch.getClassFile().getConstPool();
-                        AnnotationsAttribute attr = new AnnotationsAttribute(constPool, AnnotationsAttribute.visibleTag);
-                        for (Object a : f.getAvailableAnnotations()) {
-                            if (Proxy.getInvocationHandler(a) instanceof AnnotationImpl) {
-                                if (Loader.DEBUG) {
-                                    System.out.println("   - Copying annotation: " + a);
-                                }
-                                AnnotationImpl impl = (AnnotationImpl) Proxy.getInvocationHandler(a);
-                                Annotation annotation = new Annotation(impl.getTypeName(), constPool);
-                                if (impl.getAnnotation().getMemberNames() != null) {
-                                    for (Object memberName : impl.getAnnotation().getMemberNames()) {
-                                        annotation.addMemberValue((String) memberName, impl.getAnnotation().getMemberValue((String) memberName));
-                                    }
-                                }
-                                attr.addAnnotation(annotation);
-                            }
+                        if (isArrayType) {
+                            fieldType += "[]";
                         }
-                        new_f.getFieldInfo().addAttribute(attr);
-
-                        String expr = String.format("(%s) %s.%s.getDefaultValue()", fieldType, ctPatchClass.getName(), f.getName());
-                        try {
-                            ctClassToPatch.addField(new_f, CtField.Initializer.byExpr(expr));
-                        } catch (DuplicateMemberException e) {
-                            if (tries == 0) {
-                                throw e;
-                            }
-                            continue;
-                        }
-
-                        CtConstructor staticinit = ctPatchClass.getClassInitializer();
-                        if (staticinit == null) {
-                            staticinit = ctPatchClass.makeClassInitializer();
-                        }
-
-                        // Create field accessor to avoid reflection at runtime
-                        CtClass ctAccessor = ctPatchClass.makeNestedClass(fieldName + "_Accessor", true);
-                        ctAccessor.setSuperclass(f.getType());
-                        // Check for any pre-existing initializers for SpireFields
-                        FindSpireFieldInitializers found = new FindSpireFieldInitializers(ctPatchClass.getClassPool(), ctAccessor);
-                        ctPatchClass.instrument(found);
-
-                        // Finish creating field accessor
-                        CtClass ctSpireField = f.getType().getClassPool().get(SpireField.class.getName());
-                        ctAccessor.addConstructor(CtNewConstructor.make(
-                            new CtClass[]{ctSpireField},
-                            null,
-                            CtNewConstructor.PASS_PARAMS,
-                            null,
-                            null,
-                            ctAccessor
-                        ));
-                        // Getter
-                        String getStr = "";
-                        if (found.madeGet) {
-                            getStr = "super_get(__instance);";
-                        }
-                        ctAccessor.addMethod(CtNewMethod.make(
-                            String.format("public Object get(Object __instance) {" +
-                                    getStr +
-                                    "return ((%s) __instance).%s;" +
-                                    "}",
-                                ctClassToPatch.getName(), fieldName
-                            ),
-                            ctAccessor
-                        ));
-                        // Setter
-                        String setStr = "";
-                        if (found.madeSet && fieldType.equals(found.setType.getName())) {
-                            setStr = String.format("super_set(__instance, (%s) value);", found.setType.getName());
-                        }
-                        ctAccessor.addMethod(CtNewMethod.make(
-                            String.format("public void set(Object __instance, Object value) {" +
-                                    "((%s) __instance).%s = (%s) value;" +
-                                    setStr +
-                                    "}",
-                                ctClassToPatch.getName(), fieldName, fieldType
-                            ),
-                            ctAccessor
-                        ));
-
-                        // Make and initialize SpireField object
-                        String src = String.format("{\n" +
-                                "%s = new %s(%s);" +
-                                "%s.initialize(%s, \"%s\");\n" +
-                                "}",
-                            f.getName(), ctAccessor.getName(), f.getName(),
-                            f.getName(), ctClassToPatch.getName() + ".class", fieldName);
-                        if (Loader.DEBUG) {
-                            System.out.println(src);
-                        }
-                        staticinit.insertAfter(src);
-
-                        break;
                     }
+
+                    String str = String.format("public%s %s %s;",
+                        (isStatic ? " static" : ""),
+                        fieldType, fieldName);
+                    if (Loader.DEBUG) {
+                        System.out.println(" - Adding Field: " + str);
+                    }
+                    CtField new_f = CtField.make(str, ctClassToPatch);
+
+                    // Copy annotations
+                    ConstPool constPool = ctClassToPatch.getClassFile().getConstPool();
+                    AnnotationsAttribute attr = new AnnotationsAttribute(constPool, AnnotationsAttribute.visibleTag);
+                    for (Object a : f.getAvailableAnnotations()) {
+                        if (Proxy.getInvocationHandler(a) instanceof AnnotationImpl) {
+                            if (Loader.DEBUG) {
+                                System.out.println("   - Copying annotation: " + a);
+                            }
+                            AnnotationImpl impl = (AnnotationImpl) Proxy.getInvocationHandler(a);
+                            Annotation annotation = new Annotation(impl.getTypeName(), constPool);
+                            if (impl.getAnnotation().getMemberNames() != null) {
+                                for (Object memberName : impl.getAnnotation().getMemberNames()) {
+                                    annotation.addMemberValue((String) memberName, impl.getAnnotation().getMemberValue((String) memberName));
+                                }
+                            }
+                            attr.addAnnotation(annotation);
+                        }
+                    }
+                    new_f.getFieldInfo().addAttribute(attr);
+
+                    String expr = String.format("(%s) %s.%s.getDefaultValue()", fieldType, ctPatchClass.getName(), f.getName());
+                    try {
+                        ctClassToPatch.addField(new_f, CtField.Initializer.byExpr(expr));
+                    } catch (DuplicateMemberException e) {
+                        if (tries == 0) {
+                            throw e;
+                        }
+                        continue;
+                    }
+
+                    CtConstructor staticinit = ctPatchClass.getClassInitializer();
+                    if (staticinit == null) {
+                        staticinit = ctPatchClass.makeClassInitializer();
+                    }
+
+                    // Create field accessor to avoid reflection at runtime
+                    CtClass ctAccessor = ctPatchClass.makeNestedClass(fieldName + "_Accessor", true);
+                    ctAccessor.setSuperclass(f.getType());
+                    // Check for any pre-existing initializers for SpireFields
+                    FindSpireFieldInitializers found = new FindSpireFieldInitializers(ctPatchClass.getClassPool(), ctAccessor);
+                    ctPatchClass.instrument(found);
+
+                    // Finish creating field accessor
+                    CtClass ctSpireField = f.getType().getClassPool().get(SpireField.class.getName());
+                    ctAccessor.addConstructor(CtNewConstructor.make(
+                        new CtClass[]{ctSpireField},
+                        null,
+                        CtNewConstructor.PASS_PARAMS,
+                        null,
+                        null,
+                        ctAccessor
+                    ));
+                    // Getter
+                    String getStr = "";
+                    if (found.madeGet) {
+                        getStr = "super_get(__instance);";
+                    }
+                    ctAccessor.addMethod(CtNewMethod.make(
+                        String.format("public Object get(Object __instance) {" +
+                                getStr +
+                                "return ((%s) __instance).%s;" +
+                                "}",
+                            ctClassToPatch.getName(), fieldName
+                        ),
+                        ctAccessor
+                    ));
+                    // Setter
+                    String setStr = "";
+                    if (found.madeSet && fieldType.equals(found.setType.getName())) {
+                        setStr = String.format("super_set(__instance, (%s) value);", found.setType.getName());
+                    }
+                    ctAccessor.addMethod(CtNewMethod.make(
+                        String.format("public void set(Object __instance, Object value) {" +
+                                "((%s) __instance).%s = (%s) value;" +
+                                setStr +
+                                "}",
+                            ctClassToPatch.getName(), fieldName, fieldType
+                        ),
+                        ctAccessor
+                    ));
+
+                    // Make and initialize SpireField object
+                    String src = String.format("{\n" +
+                            "%s = new %s(%s);" +
+                            "%s.initialize(%s, \"%s\");\n" +
+                            "}",
+                        f.getName(), ctAccessor.getName(), f.getName(),
+                        f.getName(), ctClassToPatch.getName() + ".class", fieldName);
+                    if (Loader.DEBUG) {
+                        System.out.println(src);
+                    }
+                    staticinit.insertAfter(src);
+
+                    break;
                 }
             }
-            if (Loader.DEBUG) {
-                System.out.println();
+        }
+        if (Loader.DEBUG) {
+            System.out.println();
+        }
+    }
+
+    private void patchSpireMethods() throws NotFoundException, ClassNotFoundException, SpireMethodException, CannotCompileException
+    {
+        for (CtMethod m : ctPatchClass.getDeclaredMethods()) {
+            if (!m.hasAnnotation(SpireMethod.class)) {
+                continue;
             }
-        } catch (CannotCompileException | NotFoundException e) {
-            throw new PatchingException(e);
+
+            SpireMethod spireMethod = (SpireMethod) m.getAnnotation(SpireMethod.class);
+            String methodName = m.getName();
+            CtClass[] paramTypes = m.getParameterTypes();
+            CtClass ctFromClass = ctPatchClass.getClassPool().get(spireMethod.from().getName());
+
+            if (!ctClassToPatch.subclassOf(ctFromClass)) {
+                if (ctFromClass.isInterface()) {
+                    // Add interface to class
+                    ctClassToPatch.addInterface(ctFromClass);
+                } else {
+                    throw new SpireMethodException("from: %s does not extend %s", ctClassToPatch.getName(), ctFromClass.getName());
+                }
+            }
+
+            CtMethod superMethod;
+            try {
+                superMethod = ctFromClass.getDeclaredMethod(methodName, Arrays.copyOfRange(paramTypes, 1, paramTypes.length));
+            } catch (NotFoundException e) {
+                StringBuilder params = new StringBuilder("(");
+                for (int i = 1; i < paramTypes.length; ++i) {
+                    params.append(paramTypes[i].getName()).append(", ");
+                }
+                if (paramTypes.length > 1) {
+                    params.setLength(params.length() - 2);
+                }
+                params.append(')');
+                throw new SpireMethodException("from: %s does not contain method %s%s", ctFromClass.getName(), methodName, params);
+            }
+
+            System.out.println(superMethod.getLongName());
+            CtMethod newMethod;
+            newMethod = CtNewMethod.delegator(superMethod, ctClassToPatch);
+            if (Modifier.isAbstract(superMethod.getModifiers())) {
+                newMethod.setModifiers(newMethod.getModifiers() & ~Modifier.ABSTRACT);
+                newMethod.setBody(null);
+            }
+            ctClassToPatch.addMethod(newMethod);
+            System.out.println(newMethod.getLongName());
+            System.out.println(Modifier.isAbstract(newMethod.getModifiers()));
+
+            System.out.println();
+        }
+        if (Loader.DEBUG) {
+            System.out.println();
         }
     }
 
