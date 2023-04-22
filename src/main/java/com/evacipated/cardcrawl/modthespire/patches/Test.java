@@ -13,9 +13,9 @@ class Test
     static class Patch1
     {
         @SpireMethod(from = TestInterface.class)
-        static int testMethod(RunicDome __instance)
+        static int testMethod(int __result, RunicDome __instance)
         {
-            System.out.println("Patch1");
+            System.out.println("Patch1: " + __result);
             return 3;
         }
     }
@@ -27,9 +27,9 @@ class Test
     static class Patch2
     {
         @SpireMethod(from = TestInterface.class)
-        static int testMethod(RunicDome __instance)
+        static int testMethod(int __result, RunicDome __instance)
         {
-            System.out.println("Patch2");
+            System.out.println("Patch2: " + __result);
             return 7;
         }
     }

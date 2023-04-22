@@ -4,7 +4,6 @@ import com.evacipated.cardcrawl.modthespire.Loader;
 import com.evacipated.cardcrawl.modthespire.lib.SpireField;
 import com.evacipated.cardcrawl.modthespire.lib.SpireMethod;
 import com.evacipated.cardcrawl.modthespire.lib.StaticSpireField;
-import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import javassist.*;
 import javassist.bytecode.*;
 import javassist.bytecode.annotation.Annotation;
@@ -236,7 +235,9 @@ public class ClassPatchInfo extends PatchInfo
 
             SpireMethod spireMethod = (SpireMethod) m.getAnnotation(SpireMethod.class);
             String methodName = m.getName();
-            CtClass[] paramTypes = m.getParameterTypes();
+            CtClass[] patchParamTypes = m.getParameterTypes();
+            boolean hasReturnType = !m.getReturnType().equals(CtClass.voidType);
+            CtClass[] realParamTypes = Arrays.copyOfRange(patchParamTypes, (hasReturnType ? 2 : 1), patchParamTypes.length);
             CtClass ctFromClass = ctPatchClass.getClassPool().get(spireMethod.from().getName());
 
             if (!ctClassToPatch.subtypeOf(ctFromClass)) {
@@ -250,13 +251,13 @@ public class ClassPatchInfo extends PatchInfo
 
             CtMethod superMethod;
             try {
-                superMethod = ctFromClass.getDeclaredMethod(methodName, Arrays.copyOfRange(paramTypes, 1, paramTypes.length));
+                superMethod = ctFromClass.getDeclaredMethod(methodName, realParamTypes);
             } catch (NotFoundException e) {
                 StringBuilder params = new StringBuilder("(");
-                for (int i = 1; i < paramTypes.length; ++i) {
-                    params.append(paramTypes[i].getName()).append(", ");
+                for (CtClass paramType : realParamTypes) {
+                    params.append(paramType.getName()).append(", ");
                 }
-                if (paramTypes.length > 1) {
+                if (patchParamTypes.length > 1) {
                     params.setLength(params.length() - 2);
                 }
                 params.append(')');
@@ -268,7 +269,7 @@ public class ClassPatchInfo extends PatchInfo
 
             CtMethod newMethod;
             try {
-                newMethod = ctClassToPatch.getDeclaredMethod(methodName, Arrays.copyOfRange(paramTypes, 1, paramTypes.length));
+                newMethod = ctClassToPatch.getDeclaredMethod(methodName, realParamTypes);
             } catch (NotFoundException ignored) {
                 newMethod = CtNewMethod.delegator(superMethod, ctClassToPatch);
                 if (Modifier.isAbstract(superMethod.getModifiers())) {
@@ -279,10 +280,16 @@ public class ClassPatchInfo extends PatchInfo
             }
 
             StringBuilder src = new StringBuilder();
-            src.append("$_ = ");
+            if (hasReturnType) {
+                src.append("$_ = ");
+            }
             src.append(ctPatchClass.getName());
             src.append('.').append(m.getName());
-            src.append("($0, $$);");
+            src.append('(');
+            if (hasReturnType) {
+                src.append("$_, ");
+            }
+            src.append("$0, $$);");
             if (Loader.DEBUG) {
                 System.out.println(src);
             }
