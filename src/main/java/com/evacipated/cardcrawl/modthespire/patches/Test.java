@@ -15,7 +15,22 @@ class Test
         @SpireMethod(from = TestInterface.class)
         static int testMethod(RunicDome __instance)
         {
+            System.out.println("Patch1");
             return 3;
+        }
+    }
+
+    @SpirePatch(
+        clz = RunicDome.class,
+        method = SpirePatch.CLASS
+    )
+    static class Patch2
+    {
+        @SpireMethod(from = TestInterface.class)
+        static int testMethod(RunicDome __instance)
+        {
+            System.out.println("Patch2");
+            return 7;
         }
     }
 
@@ -23,11 +38,12 @@ class Test
         clz = RunicDome.class,
         method = "onEquip"
     )
-    static class Patch2
+    static class Patch3
     {
         static void Postfix(RunicDome __instance)
         {
-            ((TestInterface) __instance).testMethod();
+            int i = ((TestInterface) __instance).testMethod();
+            System.out.println(i);
         }
     }
 

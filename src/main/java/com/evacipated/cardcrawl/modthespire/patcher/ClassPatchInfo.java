@@ -266,18 +266,27 @@ public class ClassPatchInfo extends PatchInfo
                 throw new SpireMethodException("Return types do not match: has %s, expects %s", m.getReturnType().getName(), superMethod.getReturnType().getName());
             }
 
-            System.out.println(superMethod.getLongName());
             CtMethod newMethod;
-            newMethod = CtNewMethod.delegator(superMethod, ctClassToPatch);
-            if (Modifier.isAbstract(superMethod.getModifiers())) {
-                newMethod.setModifiers(newMethod.getModifiers() & ~Modifier.ABSTRACT);
-                newMethod.setBody(null);
+            try {
+                newMethod = ctClassToPatch.getDeclaredMethod(methodName, Arrays.copyOfRange(paramTypes, 1, paramTypes.length));
+            } catch (NotFoundException ignored) {
+                newMethod = CtNewMethod.delegator(superMethod, ctClassToPatch);
+                if (Modifier.isAbstract(superMethod.getModifiers())) {
+                    newMethod.setModifiers(newMethod.getModifiers() & ~Modifier.ABSTRACT);
+                    newMethod.setBody(null);
+                }
+                ctClassToPatch.addMethod(newMethod);
             }
-            ctClassToPatch.addMethod(newMethod);
-            System.out.println(newMethod.getLongName());
-            System.out.println(Modifier.isAbstract(newMethod.getModifiers()));
 
-            System.out.println();
+            StringBuilder src = new StringBuilder();
+            src.append("$_ = ");
+            src.append(ctPatchClass.getName());
+            src.append('.').append(m.getName());
+            src.append("($0, $$);");
+            if (Loader.DEBUG) {
+                System.out.println(src);
+            }
+            newMethod.insertAfter(src.toString());
         }
         if (Loader.DEBUG) {
             System.out.println();
