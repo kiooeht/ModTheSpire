@@ -239,7 +239,7 @@ public class ClassPatchInfo extends PatchInfo
             CtClass[] paramTypes = m.getParameterTypes();
             CtClass ctFromClass = ctPatchClass.getClassPool().get(spireMethod.from().getName());
 
-            if (!ctClassToPatch.subclassOf(ctFromClass)) {
+            if (!ctClassToPatch.subtypeOf(ctFromClass)) {
                 if (ctFromClass.isInterface()) {
                     // Add interface to class
                     ctClassToPatch.addInterface(ctFromClass);
