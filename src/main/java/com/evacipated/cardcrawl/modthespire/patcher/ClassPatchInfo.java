@@ -232,6 +232,8 @@ public class ClassPatchInfo extends PatchInfo
                 continue;
             }
 
+            m.setModifiers(Modifier.setPublic(m.getModifiers()));
+
             SpireMethod spireMethod = (SpireMethod) m.getAnnotation(SpireMethod.class);
             String methodName = m.getName();
             CtClass[] paramTypes = m.getParameterTypes();
