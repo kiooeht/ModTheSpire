@@ -260,6 +260,9 @@ public class ClassPatchInfo extends PatchInfo
                 params.append(')');
                 throw new SpireMethodException("from: %s does not contain method %s%s", ctFromClass.getName(), methodName, params);
             }
+            if (!superMethod.getReturnType().equals(m.getReturnType())) {
+                throw new SpireMethodException("Return types do not match: has %s, expects %s", m.getReturnType().getName(), superMethod.getReturnType().getName());
+            }
 
             System.out.println(superMethod.getLongName());
             CtMethod newMethod;

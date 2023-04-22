@@ -13,8 +13,9 @@ class Test
     static class Patch1
     {
         @SpireMethod(from = TestInterface.class)
-        static void testMethod(RunicDome __instance)
+        static int testMethod(RunicDome __instance)
         {
+            return 3;
         }
     }
 
@@ -30,7 +31,7 @@ class Test
         }
     }
 
-    public static interface TestInterface
+    public interface TestInterface
     {
         int testMethod();
     }
