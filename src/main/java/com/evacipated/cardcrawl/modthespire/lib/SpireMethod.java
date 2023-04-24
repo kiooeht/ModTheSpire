@@ -10,4 +10,10 @@ import java.lang.annotation.Target;
 public @interface SpireMethod
 {
     Class<?> from();
+
+    interface Super<R>
+    {
+        R invoke(Object... args);
+        int timesInvoked();
+    }
 }

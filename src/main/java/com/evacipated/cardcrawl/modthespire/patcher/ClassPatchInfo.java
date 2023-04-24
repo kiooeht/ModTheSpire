@@ -6,6 +6,9 @@ import com.evacipated.cardcrawl.modthespire.lib.SpireMethod;
 import com.evacipated.cardcrawl.modthespire.lib.StaticSpireField;
 import javassist.*;
 import javassist.bytecode.*;
+import javassist.bytecode.SignatureAttribute.ClassSignature;
+import javassist.bytecode.SignatureAttribute.ClassType;
+import javassist.bytecode.SignatureAttribute.TypeArgument;
 import javassist.bytecode.annotation.Annotation;
 import javassist.bytecode.annotation.AnnotationImpl;
 import javassist.expr.ExprEditor;
@@ -237,7 +240,7 @@ public class ClassPatchInfo extends PatchInfo
             String methodName = m.getName();
             CtClass[] patchParamTypes = m.getParameterTypes();
             boolean hasReturnType = !m.getReturnType().equals(CtClass.voidType);
-            CtClass[] realParamTypes = Arrays.copyOfRange(patchParamTypes, (hasReturnType ? 2 : 1), patchParamTypes.length);
+            CtClass[] realParamTypes = Arrays.copyOfRange(patchParamTypes, (hasReturnType ? 3 : 2), patchParamTypes.length);
             CtClass ctFromClass = ctPatchClass.getClassPool().get(spireMethod.from().getName());
 
             if (!ctClassToPatch.subtypeOf(ctFromClass)) {
@@ -269,14 +272,94 @@ public class ClassPatchInfo extends PatchInfo
 
             CtMethod newMethod;
             try {
+                // Try to get the method...
                 newMethod = ctClassToPatch.getDeclaredMethod(methodName, realParamTypes);
             } catch (NotFoundException ignored) {
+                // ...if it doesn't exist, create it
                 newMethod = CtNewMethod.delegator(superMethod, ctClassToPatch);
                 if (Modifier.isAbstract(superMethod.getModifiers())) {
                     newMethod.setModifiers(newMethod.getModifiers() & ~Modifier.ABSTRACT);
-                    newMethod.setBody(null);
                 }
                 ctClassToPatch.addMethod(newMethod);
+
+                // Create proxy for calling super method
+                CtMethod proxySuper = CtNewMethod.delegator(superMethod, ctClassToPatch);
+                proxySuper.setModifiers(Modifier.setPackage(proxySuper.getModifiers()));
+                proxySuper.setName("super$" + proxySuper.getName());
+                proxySuper.getMethodInfo().addAttribute(new SyntheticAttribute(proxySuper.getMethodInfo().getConstPool()));
+                ctClassToPatch.addMethod(proxySuper);
+
+                // Create SpireMethod.Super impl class
+                CtClass ctSuperImpl = ctClassToPatch.makeNestedClass(methodName + "_SuperImpl", true);
+                ctSuperImpl.setModifiers(Modifier.setPrivate(ctSuperImpl.getModifiers()));
+                // Add interface to impl class and set its generic signature
+                CtClass ctSpireMethodSuper = ctPatchClass.getClassPool().get(SpireMethod.Super.class.getName());
+                ctSuperImpl.addInterface(ctSpireMethodSuper);
+                CtClass superReturnType = superMethod.getReturnType();
+                String superReturnTypeName = superReturnType.getName();
+                if (superReturnType.isPrimitive()) {
+                    superReturnTypeName = ((CtPrimitiveType) superReturnType).getWrapperName();
+                }
+                ClassSignature cs = new ClassSignature(
+                    null,
+                    null,
+                    new ClassType[]{
+                        new ClassType(
+                            ctSpireMethodSuper.getName(),
+                            new TypeArgument[]{ new TypeArgument(new ClassType(superReturnTypeName)) }
+                        )
+                    }
+                );
+                ctSuperImpl.setGenericSignature(cs.encode());
+                // Create field for instance
+                CtField ctInstanceField = CtField.make("private " + ctClassToPatch.getName() + " _instance;", ctSuperImpl);
+                ctSuperImpl.addField(ctInstanceField);
+                // Create field for timesInvoked tracking
+                CtField ctInvokedField = CtField.make("private int _timesInvoked = 0;", ctSuperImpl);
+                ctSuperImpl.addField(ctInvokedField);
+                // Create constructor
+                ctSuperImpl.addConstructor(CtNewConstructor.make(
+                    new CtClass[]{ ctClassToPatch },
+                    null,
+                    "{ _instance = $1; }",
+                    ctSuperImpl
+                ));
+                // Create timesInvoked method
+                CtMethod ctAlreadyInvoked = CtNewMethod.delegator(ctSpireMethodSuper.getDeclaredMethod("timesInvoked"), ctSuperImpl);
+                ctAlreadyInvoked.setBody("return _timesInvoked;");
+                ctSuperImpl.addMethod(ctAlreadyInvoked);
+                // Create invoke method
+                CtMethod ctInvoke = CtNewMethod.delegator(ctSpireMethodSuper.getDeclaredMethod("invoke"), ctSuperImpl);
+                StringBuilder src = new StringBuilder("{" +
+                    "++_timesInvoked;" +
+                    "return ($w) _instance.super$" + superMethod.getName() + "(");
+                for (int i = 0; i < realParamTypes.length; i++) {
+                    src.append("((");
+                    if (realParamTypes[i].isPrimitive()) {
+                        src.append(((CtPrimitiveType) realParamTypes[i]).getWrapperName());
+                    } else {
+                        src.append(realParamTypes[i].getName());
+                    }
+                    src.append(") $1[").append(i).append("])");
+                    if (realParamTypes[i].isPrimitive()) {
+                        src.append('.').append(((CtPrimitiveType) realParamTypes[i]).getGetMethodName()).append("()");
+                    }
+                    src.append(", ");
+                }
+                if (realParamTypes.length > 0) {
+                    src.setLength(src.length() - 2); // remove trailing ", "
+                }
+                src.append(");}");
+                System.out.println(src);
+                ctInvoke.setBody(src.toString());
+                ctSuperImpl.addMethod(ctInvoke);
+                // Instantiate SuperImpl in method
+                newMethod.setBody(null);
+                // TODO stop this required local var from making luyten fail to decompile
+                newMethod.addLocalVariable("superImpl", ctSuperImpl);
+                newMethod.insertBefore(
+                    ctSuperImpl.getName() + " superImpl = new " + ctSuperImpl.getName() + "(this);"
+                );
             }
 
             StringBuilder src = new StringBuilder();
@@ -289,7 +372,7 @@ public class ClassPatchInfo extends PatchInfo
             if (hasReturnType) {
                 src.append("$_, ");
             }
-            src.append("$0, $$);");
+            src.append("$0, superImpl, $$);");
             if (Loader.DEBUG) {
                 System.out.println(src);
             }

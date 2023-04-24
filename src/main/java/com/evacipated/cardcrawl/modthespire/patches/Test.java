@@ -13,9 +13,12 @@ class Test
     static class Patch1
     {
         @SpireMethod(from = TestInterface.class)
-        static int testMethod(int __result, RunicDome __instance)
+        static int testMethod(int __result, RunicDome __instance, SpireMethod.Super<Integer> __super, boolean b, String s)
         {
             System.out.println("Patch1: " + __result);
+            if (__super.timesInvoked() == 0) {
+                return __super.invoke(b, s);
+            }
             return 3;
         }
     }
@@ -27,9 +30,12 @@ class Test
     static class Patch2
     {
         @SpireMethod(from = TestInterface.class)
-        static int testMethod(int __result, RunicDome __instance)
+        static int testMethod(int __result, RunicDome __instance, SpireMethod.Super<Integer> __super, boolean b, String s)
         {
             System.out.println("Patch2: " + __result);
+            if (__super.timesInvoked() == 0) {
+                return __super.invoke(b, s);
+            }
             return 7;
         }
     }
@@ -38,17 +44,22 @@ class Test
         clz = RunicDome.class,
         method = "onEquip"
     )
-    static class Patch3
+    static class PatchTest
     {
         static void Postfix(RunicDome __instance)
         {
-            int i = ((TestInterface) __instance).testMethod();
+            int i = ((TestInterface) __instance).testMethod(true, "asdf");
             System.out.println(i);
         }
     }
 
     public interface TestInterface
     {
-        int testMethod();
+        default int testMethod(boolean b, String s)
+        {
+            System.out.println("default testMethod");
+            System.out.println(b + ", " + s);
+            return 1;
+        }
     }
 }
