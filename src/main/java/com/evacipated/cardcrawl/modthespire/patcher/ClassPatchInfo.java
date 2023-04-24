@@ -257,7 +257,7 @@ public class ClassPatchInfo extends PatchInfo
                 for (CtClass paramType : realParamTypes) {
                     params.append(paramType.getName()).append(", ");
                 }
-                if (patchParamTypes.length > 1) {
+                if (realParamTypes.length > 1) {
                     params.setLength(params.length() - 2);
                 }
                 params.append(')');
