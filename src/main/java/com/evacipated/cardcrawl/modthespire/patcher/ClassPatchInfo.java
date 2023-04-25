@@ -350,7 +350,9 @@ public class ClassPatchInfo extends PatchInfo
                     src.setLength(src.length() - 2); // remove trailing ", "
                 }
                 src.append(");}");
-                System.out.println(src);
+                if (Loader.DEBUG) {
+                    System.out.println(src);
+                }
                 ctInvoke.setBody(src.toString());
                 ctSuperImpl.addMethod(ctInvoke);
                 // Instantiate SuperImpl in method
