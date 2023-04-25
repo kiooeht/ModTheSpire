@@ -357,11 +357,8 @@ public class ClassPatchInfo extends PatchInfo
                 ctSuperImpl.addMethod(ctInvoke);
                 // Instantiate SuperImpl in method
                 newMethod.setBody(null);
-                // TODO stop this required local var from making luyten fail to decompile
                 newMethod.addLocalVariable("superImpl", ctSuperImpl);
-                newMethod.insertBefore(
-                    ctSuperImpl.getName() + " superImpl = new " + ctSuperImpl.getName() + "(this);"
-                );
+                newMethod.insertBefore(ctSuperImpl.getName() + " superImpl = new " + ctSuperImpl.getName() + "(this);");
             }
 
             StringBuilder src = new StringBuilder();
@@ -379,10 +376,29 @@ public class ClassPatchInfo extends PatchInfo
                 System.out.println(src);
             }
             newMethod.insertAfter(src.toString());
+            fixSuperImplLocalVariable(newMethod);
         }
         if (Loader.DEBUG) {
             System.out.println();
         }
+    }
+
+    // This stops luyten from failing to decompile the newly added method
+    private static void fixSuperImplLocalVariable(CtMethod m)
+    {
+        ConstPool cp = m.getMethodInfo().getConstPool();
+        CodeAttribute code = m.getMethodInfo().getCodeAttribute();
+        LocalVariableAttribute oldLocals = (LocalVariableAttribute) code.getAttribute(LocalVariableAttribute.tag);
+        LocalVariableAttribute newLocals = new LocalVariableAttribute(cp);
+        for (int i=0; i<oldLocals.tableLength(); ++i) {
+            int codeLength = oldLocals.codeLength(i);
+            if ("superImpl".equals(oldLocals.variableName(i))) {
+                codeLength = code.getCodeLength();
+            }
+            newLocals.addEntry(oldLocals.startPc(i), codeLength, oldLocals.nameIndex(i), oldLocals.descriptorIndex(i), oldLocals.index(i));
+        }
+        code.getAttributes().removeIf(x -> x instanceof LocalVariableAttribute);
+        code.getAttributes().add(newLocals);
     }
 
     private static class FindSpireFieldInitializers extends ExprEditor
