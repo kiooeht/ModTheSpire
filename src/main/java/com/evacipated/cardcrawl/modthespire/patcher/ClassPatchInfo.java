@@ -238,9 +238,9 @@ public class ClassPatchInfo extends PatchInfo
 
             SpireMethod spireMethod = (SpireMethod) m.getAnnotation(SpireMethod.class);
             String methodName = m.getName();
+            boolean hasReturn = !m.getReturnType().equals(CtClass.voidType);
             CtClass[] patchParamTypes = m.getParameterTypes();
-            boolean hasReturnType = !m.getReturnType().equals(CtClass.voidType);
-            CtClass[] realParamTypes = Arrays.copyOfRange(patchParamTypes, (hasReturnType ? 3 : 2), patchParamTypes.length);
+            CtClass[] realParamTypes = Arrays.copyOfRange(patchParamTypes, 1, patchParamTypes.length);
             CtClass ctFromClass = ctPatchClass.getClassPool().get(spireMethod.from().getName());
 
             if (!ctClassToPatch.subtypeOf(ctFromClass)) {
@@ -289,12 +289,12 @@ public class ClassPatchInfo extends PatchInfo
                 proxySuper.getMethodInfo().addAttribute(new SyntheticAttribute(proxySuper.getMethodInfo().getConstPool()));
                 ctClassToPatch.addMethod(proxySuper);
 
-                // Create SpireMethod.Super impl class
-                CtClass ctSuperImpl = ctClassToPatch.makeNestedClass(methodName + "_SuperImpl", true);
-                ctSuperImpl.setModifiers(Modifier.setPrivate(ctSuperImpl.getModifiers()));
+                // Create SpireMethod.Helper impl class
+                CtClass ctHelperImpl = ctClassToPatch.makeNestedClass(methodName + "_HelperImpl", true);
+                ctHelperImpl.setModifiers(Modifier.setPrivate(ctHelperImpl.getModifiers()));
                 // Add interface to impl class and set its generic signature
-                CtClass ctSpireMethodSuper = ctPatchClass.getClassPool().get(SpireMethod.Super.class.getName());
-                ctSuperImpl.addInterface(ctSpireMethodSuper);
+                CtClass ctSpireMethodHelper = ctPatchClass.getClassPool().get(SpireMethod.Helper.class.getName());
+                ctHelperImpl.addInterface(ctSpireMethodHelper);
                 CtClass superReturnType = superMethod.getReturnType();
                 String superReturnTypeName = superReturnType.getName();
                 if (superReturnType.isPrimitive()) {
@@ -305,33 +305,60 @@ public class ClassPatchInfo extends PatchInfo
                     null,
                     new ClassType[]{
                         new ClassType(
-                            ctSpireMethodSuper.getName(),
-                            new TypeArgument[]{ new TypeArgument(new ClassType(superReturnTypeName)) }
+                            ctSpireMethodHelper.getName(),
+                            new TypeArgument[]{
+                                new TypeArgument(new ClassType(ctClassToPatch.getName())),
+                                new TypeArgument(new ClassType(superReturnTypeName))
+                            }
                         )
                     }
                 );
-                ctSuperImpl.setGenericSignature(cs.encode());
+                ctHelperImpl.setGenericSignature(cs.encode());
                 // Create field for instance
-                CtField ctInstanceField = CtField.make("private " + ctClassToPatch.getName() + " _instance;", ctSuperImpl);
-                ctSuperImpl.addField(ctInstanceField);
-                // Create field for timesInvoked tracking
-                CtField ctInvokedField = CtField.make("private int _timesInvoked = 0;", ctSuperImpl);
-                ctSuperImpl.addField(ctInvokedField);
+                CtField ctInstanceField = CtField.make("private " + ctClassToPatch.getName() + " _instance;", ctHelperImpl);
+                ctHelperImpl.addField(ctInstanceField);
+                // Create field for timesSuperCalled tracking
+                CtField ctSuperCalledField = CtField.make("private int _timesSuperCalled = 0;", ctHelperImpl);
+                ctHelperImpl.addField(ctSuperCalledField);
+                // Create field for hasResult
+                CtField ctHasResultField = CtField.make("private boolean _hasResult = false;", ctHelperImpl);
+                ctHelperImpl.addField(ctHasResultField);
+                // Create field for result
+                CtField ctResultField = CtField.make("private " + superReturnType.getName() + " _result;", ctHelperImpl);
+                ctHelperImpl.addField(ctResultField);
                 // Create constructor
-                ctSuperImpl.addConstructor(CtNewConstructor.make(
+                ctHelperImpl.addConstructor(CtNewConstructor.make(
                     new CtClass[]{ ctClassToPatch },
                     null,
                     "{ _instance = $1; }",
-                    ctSuperImpl
+                    ctHelperImpl
                 ));
-                // Create timesInvoked method
-                CtMethod ctAlreadyInvoked = CtNewMethod.delegator(ctSpireMethodSuper.getDeclaredMethod("timesInvoked"), ctSuperImpl);
-                ctAlreadyInvoked.setBody("return _timesInvoked;");
-                ctSuperImpl.addMethod(ctAlreadyInvoked);
-                // Create invoke method
-                CtMethod ctInvoke = CtNewMethod.delegator(ctSpireMethodSuper.getDeclaredMethod("invoke"), ctSuperImpl);
+                // Create timesSuperCalled method
+                CtMethod ctTimesSuperCalled = CtNewMethod.delegator(ctSpireMethodHelper.getDeclaredMethod("timesSuperCalled"), ctHelperImpl);
+                ctTimesSuperCalled.setBody("return _timesSuperCalled;");
+                ctHelperImpl.addMethod(ctTimesSuperCalled);
+                // Create instance method
+                CtMethod ctInstance = CtNewMethod.delegator(ctSpireMethodHelper.getDeclaredMethod("instance"), ctHelperImpl);
+                ctInstance.setBody("return _instance;");
+                ctHelperImpl.addMethod(ctInstance);
+                // Create hasResult method
+                CtMethod ctHasResult = CtNewMethod.delegator(ctSpireMethodHelper.getDeclaredMethod("hasResult"), ctHelperImpl);
+                ctHasResult.setBody("return _hasResult;");
+                ctHelperImpl.addMethod(ctHasResult);
+                // Create result method
+                CtMethod ctResult = CtNewMethod.delegator(ctSpireMethodHelper.getDeclaredMethod("result"), ctHelperImpl);
+                ctResult.setBody("return ($w) _result;");
+                ctHelperImpl.addMethod(ctResult);
+                // Create storeResult method
+                CtMethod ctStoreResult = CtNewMethod.make("void storeResult(" + superReturnType.getName() + " result) {" +
+                    "_hasResult = true;" +
+                    "_result = result;" +
+                    "}", ctHelperImpl);
+                ctHelperImpl.addMethod(ctStoreResult);
+                // Create callSuper method
+                CtMethod ctCallSuper = CtNewMethod.delegator(ctSpireMethodHelper.getDeclaredMethod("callSuper"), ctHelperImpl);
                 StringBuilder src = new StringBuilder("{" +
-                    "++_timesInvoked;" +
+                    "++_timesSuperCalled;" +
                     "return ($w) _instance.super$" + superMethod.getName() + "(");
                 for (int i = 0; i < realParamTypes.length; i++) {
                     src.append("((");
@@ -353,30 +380,30 @@ public class ClassPatchInfo extends PatchInfo
                 if (Loader.DEBUG) {
                     System.out.println(src);
                 }
-                ctInvoke.setBody(src.toString());
-                ctSuperImpl.addMethod(ctInvoke);
-                // Instantiate SuperImpl in method
+                ctCallSuper.setBody(src.toString());
+                ctHelperImpl.addMethod(ctCallSuper);
+                // Instantiate HelperImpl in method
                 newMethod.setBody(null);
-                newMethod.addLocalVariable("superImpl", ctSuperImpl);
-                newMethod.insertBefore(ctSuperImpl.getName() + " superImpl = new " + ctSuperImpl.getName() + "(this);");
+                newMethod.addLocalVariable("helperImpl", ctHelperImpl);
+                newMethod.insertBefore(ctHelperImpl.getName() + " helperImpl = new " + ctHelperImpl.getName() + "(this);");
             }
 
             StringBuilder src = new StringBuilder();
-            if (hasReturnType) {
+            if (hasReturn) {
                 src.append("$_ = ");
             }
             src.append(ctPatchClass.getName());
             src.append('.').append(m.getName());
             src.append('(');
-            if (hasReturnType) {
-                src.append("$_, ");
+            src.append("helperImpl, $$);");
+            if (hasReturn) {
+                src.append("\nhelperImpl.storeResult($_);");
             }
-            src.append("$0, superImpl, $$);");
-            if (Loader.DEBUG) {
+            if (!Loader.DEBUG) {
                 System.out.println(src);
             }
             newMethod.insertAfter(src.toString());
-            fixSuperImplLocalVariable(newMethod);
+            fixHelperImplLocalVariable(newMethod);
         }
         if (Loader.DEBUG) {
             System.out.println();
@@ -384,7 +411,7 @@ public class ClassPatchInfo extends PatchInfo
     }
 
     // This stops luyten from failing to decompile the newly added method
-    private static void fixSuperImplLocalVariable(CtMethod m)
+    private static void fixHelperImplLocalVariable(CtMethod m)
     {
         ConstPool cp = m.getMethodInfo().getConstPool();
         CodeAttribute code = m.getMethodInfo().getCodeAttribute();
@@ -392,7 +419,7 @@ public class ClassPatchInfo extends PatchInfo
         LocalVariableAttribute newLocals = new LocalVariableAttribute(cp);
         for (int i=0; i<oldLocals.tableLength(); ++i) {
             int codeLength = oldLocals.codeLength(i);
-            if ("superImpl".equals(oldLocals.variableName(i))) {
+            if ("helperImpl".equals(oldLocals.variableName(i))) {
                 codeLength = code.getCodeLength();
             }
             newLocals.addEntry(oldLocals.startPc(i), codeLength, oldLocals.nameIndex(i), oldLocals.descriptorIndex(i), oldLocals.index(i));

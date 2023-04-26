@@ -13,11 +13,12 @@ class Test
     static class Patch1
     {
         @SpireMethod(from = TestInterface.class)
-        static int testMethod(int __result, RunicDome __instance, SpireMethod.Super<Integer> __super, boolean b, String s)
+        static int testMethod(SpireMethod.Helper<RunicDome, Integer> __helper, boolean b, String s)
         {
-            System.out.println("Patch1: " + __result);
-            if (__super.timesInvoked() == 0) {
-                return __super.invoke(b, s);
+            System.out.println("Patch1: " + __helper.hasResult() + ": " + __helper.result());
+            System.out.println(__helper.instance().name);
+            if (__helper.timesSuperCalled() == 0) {
+                return __helper.callSuper(b, s);
             }
             return 3;
         }
@@ -30,11 +31,12 @@ class Test
     static class Patch2
     {
         @SpireMethod(from = TestInterface.class)
-        static int testMethod(int __result, RunicDome __instance, SpireMethod.Super<Integer> __super, boolean b, String s)
+        static int testMethod(SpireMethod.Helper<RunicDome, Integer> __helper, boolean b, String s)
         {
-            System.out.println("Patch2: " + __result);
-            if (__super.timesInvoked() == 0) {
-                return __super.invoke(b, s);
+            System.out.println("Patch2: " + __helper.hasResult() + ": " + __helper.result());
+            System.out.println(__helper.instance().description);
+            if (__helper.timesSuperCalled() == 0) {
+                return __helper.callSuper(b, s);
             }
             return 7;
         }

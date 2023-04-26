@@ -11,9 +11,13 @@ public @interface SpireMethod
 {
     Class<?> from();
 
-    interface Super<R>
+    interface Helper<T, R>
     {
-        R invoke(Object... args);
-        int timesInvoked();
+        R callSuper(Object... args);
+        int timesSuperCalled();
+
+        T instance();
+        boolean hasResult();
+        R result();
     }
 }
