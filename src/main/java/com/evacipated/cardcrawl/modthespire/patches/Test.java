@@ -17,7 +17,7 @@ class Test
         {
             System.out.println("Patch1: " + __helper.hasResult() + ": " + __helper.result());
             System.out.println(__helper.instance().name);
-            if (__helper.timesSuperCalled() == 0) {
+            if (!__helper.wasSuperCalled()) {
                 return __helper.callSuper(b, s);
             }
             return 3;
@@ -35,7 +35,7 @@ class Test
         {
             System.out.println("Patch2: " + __helper.hasResult() + ": " + __helper.result());
             System.out.println(__helper.instance().description);
-            if (__helper.timesSuperCalled() == 0) {
+            if (!__helper.wasSuperCalled()) {
                 return __helper.callSuper(b, s);
             }
             return 7;

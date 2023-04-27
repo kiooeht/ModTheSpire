@@ -15,6 +15,10 @@ public @interface SpireMethod
     {
         R callSuper(Object... args);
         int timesSuperCalled();
+        default boolean wasSuperCalled()
+        {
+            return timesSuperCalled() > 0;
+        }
 
         T instance();
         boolean hasResult();
