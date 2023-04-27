@@ -323,12 +323,14 @@ public class ClassPatchInfo extends PatchInfo
                 // Create field for timesSuperCalled tracking
                 CtField ctSuperCalledField = CtField.make("private int _timesSuperCalled = 0;", ctHelperImpl);
                 ctHelperImpl.addField(ctSuperCalledField);
-                // Create field for hasResult
-                CtField ctHasResultField = CtField.make("private boolean _hasResult = false;", ctHelperImpl);
-                ctHelperImpl.addField(ctHasResultField);
-                // Create field for result
-                CtField ctResultField = CtField.make("private " + superReturnType.getName() + " _result;", ctHelperImpl);
-                ctHelperImpl.addField(ctResultField);
+                if (hasReturn) {
+                    // Create field for hasResult
+                    CtField ctHasResultField = CtField.make("private boolean _hasResult = false;", ctHelperImpl);
+                    ctHelperImpl.addField(ctHasResultField);
+                    // Create field for result
+                    CtField ctResultField = CtField.make("private " + superReturnType.getName() + " _result;", ctHelperImpl);
+                    ctHelperImpl.addField(ctResultField);
+                }
                 // Create constructor
                 ctHelperImpl.addConstructor(CtNewConstructor.make(
                     new CtClass[]{ ctClassToPatch },
@@ -346,23 +348,38 @@ public class ClassPatchInfo extends PatchInfo
                 ctHelperImpl.addMethod(ctInstance);
                 // Create hasResult method
                 CtMethod ctHasResult = CtNewMethod.delegator(ctSpireMethodHelper.getDeclaredMethod("hasResult"), ctHelperImpl);
-                ctHasResult.setBody("return _hasResult;");
+                if (hasReturn) {
+                    ctHasResult.setBody("return _hasResult;");
+                } else {
+                    ctHasResult.setBody("return false;");
+                }
                 ctHelperImpl.addMethod(ctHasResult);
                 // Create result method
                 CtMethod ctResult = CtNewMethod.delegator(ctSpireMethodHelper.getDeclaredMethod("result"), ctHelperImpl);
-                ctResult.setBody("return ($w) _result;");
+                if (hasReturn) {
+                    ctResult.setBody("return ($w) _result;");
+                } else {
+                    ctResult.setBody("return null;");
+                }
                 ctHelperImpl.addMethod(ctResult);
-                // Create storeResult method
-                CtMethod ctStoreResult = CtNewMethod.make("void storeResult(" + superReturnType.getName() + " result) {" +
-                    "_hasResult = true;" +
-                    "_result = result;" +
-                    "}", ctHelperImpl);
-                ctHelperImpl.addMethod(ctStoreResult);
+                if (hasReturn) {
+                    // Create storeResult method
+                    CtMethod ctStoreResult = CtNewMethod.make("void storeResult(" + superReturnType.getName() + " result) {" +
+                        "_hasResult = true;" +
+                        "_result = result;" +
+                        "}", ctHelperImpl);
+                    ctHelperImpl.addMethod(ctStoreResult);
+                }
                 // Create callSuper method
                 CtMethod ctCallSuper = CtNewMethod.delegator(ctSpireMethodHelper.getDeclaredMethod("callSuper"), ctHelperImpl);
                 StringBuilder src = new StringBuilder("{" +
-                    "++_timesSuperCalled;" +
-                    "return ($w) _instance.super$" + superMethod.getName() + "(");
+                    "++_timesSuperCalled;");
+                if (hasReturn) {
+                    src.append("return ($w) ");
+                } else {
+                    src.append("return ");
+                }
+                src.append("_instance.super$").append(superMethod.getName()).append("(");
                 for (int i = 0; i < realParamTypes.length; i++) {
                     src.append("((");
                     if (realParamTypes[i].isPrimitive()) {

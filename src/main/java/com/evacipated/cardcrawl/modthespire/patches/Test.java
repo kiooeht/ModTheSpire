@@ -40,6 +40,12 @@ class Test
             }
             return 7;
         }
+
+        @SpireMethod(from = TestInterface.class)
+        static void voidTest(SpireMethod.Helper<RunicDome, Void> __helper)
+        {
+            System.out.println("void test");
+        }
     }
 
     @SpirePatch(
@@ -52,6 +58,7 @@ class Test
         {
             int i = ((TestInterface) __instance).testMethod(true, "asdf");
             System.out.println(i);
+            ((TestInterface) __instance).voidTest();
         }
     }
 
@@ -63,5 +70,7 @@ class Test
             System.out.println(b + ", " + s);
             return 1;
         }
+
+        void voidTest();
     }
 }
