@@ -237,9 +237,13 @@ public class ClassPatchInfo extends PatchInfo
             m.setModifiers(Modifier.setPublic(m.getModifiers()));
 
             SpireMethod spireMethod = (SpireMethod) m.getAnnotation(SpireMethod.class);
+            CtClass ctSpireMethodHelper = ctPatchClass.getClassPool().get(SpireMethod.Helper.class.getName());
             String methodName = m.getName();
             boolean hasReturn = !m.getReturnType().equals(CtClass.voidType);
             CtClass[] patchParamTypes = m.getParameterTypes();
+            if (patchParamTypes.length < 1 || !patchParamTypes[0].equals(ctSpireMethodHelper)) {
+                throw new SpireMethodException("missing SpireMethod.Helper as first parameter: " + m.getName());
+            }
             CtClass[] realParamTypes = Arrays.copyOfRange(patchParamTypes, 1, patchParamTypes.length);
             CtClass ctFromClass = ctPatchClass.getClassPool().get(spireMethod.from().getName());
 
@@ -293,7 +297,6 @@ public class ClassPatchInfo extends PatchInfo
                 CtClass ctHelperImpl = ctClassToPatch.makeNestedClass(methodName + "_HelperImpl", true);
                 ctHelperImpl.setModifiers(Modifier.setPrivate(ctHelperImpl.getModifiers()));
                 // Add interface to impl class and set its generic signature
-                CtClass ctSpireMethodHelper = ctPatchClass.getClassPool().get(SpireMethod.Helper.class.getName());
                 ctHelperImpl.addInterface(ctSpireMethodHelper);
                 CtClass superReturnType = superMethod.getReturnType();
                 String superReturnTypeName = superReturnType.getName();
