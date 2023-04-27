@@ -286,12 +286,14 @@ public class ClassPatchInfo extends PatchInfo
                 }
                 ctClassToPatch.addMethod(newMethod);
 
-                // Create proxy for calling super method
-                CtMethod proxySuper = CtNewMethod.delegator(superMethod, ctClassToPatch);
-                proxySuper.setModifiers(Modifier.setPackage(proxySuper.getModifiers()));
-                proxySuper.setName("super$" + proxySuper.getName());
-                proxySuper.getMethodInfo().addAttribute(new SyntheticAttribute(proxySuper.getMethodInfo().getConstPool()));
-                ctClassToPatch.addMethod(proxySuper);
+                if (!Modifier.isAbstract(superMethod.getModifiers())) {
+                    // Create proxy for calling super method
+                    CtMethod proxySuper = CtNewMethod.delegator(superMethod, ctClassToPatch);
+                    proxySuper.setModifiers(Modifier.setPackage(proxySuper.getModifiers()));
+                    proxySuper.setName("super$" + proxySuper.getName());
+                    proxySuper.getMethodInfo().addAttribute(new SyntheticAttribute(proxySuper.getMethodInfo().getConstPool()));
+                    ctClassToPatch.addMethod(proxySuper);
+                }
 
                 // Create SpireMethod.Helper impl class
                 CtClass ctHelperImpl = ctClassToPatch.makeNestedClass(methodName + "_HelperImpl", true);
@@ -374,29 +376,34 @@ public class ClassPatchInfo extends PatchInfo
                 CtMethod ctCallSuper = CtNewMethod.delegator(ctSpireMethodHelper.getDeclaredMethod("callSuper"), ctHelperImpl);
                 StringBuilder src = new StringBuilder("{" +
                     "++_timesSuperCalled;");
-                if (hasReturn) {
-                    src.append("return ($w) ");
-                } else {
-                    src.append("return ");
-                }
-                src.append("_instance.super$").append(superMethod.getName()).append("(");
-                for (int i = 0; i < realParamTypes.length; i++) {
-                    src.append("((");
-                    if (realParamTypes[i].isPrimitive()) {
-                        src.append(((CtPrimitiveType) realParamTypes[i]).getWrapperName());
+                if (!Modifier.isAbstract(superMethod.getModifiers())) {
+                    if (hasReturn) {
+                        src.append("return ($w) ");
                     } else {
-                        src.append(realParamTypes[i].getName());
+                        src.append("return ");
                     }
-                    src.append(") $1[").append(i).append("])");
-                    if (realParamTypes[i].isPrimitive()) {
-                        src.append('.').append(((CtPrimitiveType) realParamTypes[i]).getGetMethodName()).append("()");
+                    src.append("_instance.super$").append(superMethod.getName()).append("(");
+                    for (int i = 0; i < realParamTypes.length; i++) {
+                        src.append("((");
+                        if (realParamTypes[i].isPrimitive()) {
+                            src.append(((CtPrimitiveType) realParamTypes[i]).getWrapperName());
+                        } else {
+                            src.append(realParamTypes[i].getName());
+                        }
+                        src.append(") $1[").append(i).append("])");
+                        if (realParamTypes[i].isPrimitive()) {
+                            src.append('.').append(((CtPrimitiveType) realParamTypes[i]).getGetMethodName()).append("()");
+                        }
+                        src.append(", ");
                     }
-                    src.append(", ");
+                    if (realParamTypes.length > 0) {
+                        src.setLength(src.length() - 2); // remove trailing ", "
+                    }
+                    src.append(");");
+                } else {
+                    src.append("return null;");
                 }
-                if (realParamTypes.length > 0) {
-                    src.setLength(src.length() - 2); // remove trailing ", "
-                }
-                src.append(");}");
+                src.append('}');
                 if (Loader.DEBUG) {
                     System.out.println(src);
                 }
