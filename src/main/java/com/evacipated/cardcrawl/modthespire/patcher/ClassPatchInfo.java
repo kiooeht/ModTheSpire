@@ -402,7 +402,7 @@ public class ClassPatchInfo extends PatchInfo
             if (hasReturn) {
                 src.append("\nhelperImpl.storeResult($_);");
             }
-            if (!Loader.DEBUG) {
+            if (Loader.DEBUG) {
                 System.out.println(src);
             }
             newMethod.insertAfter(src.toString());
