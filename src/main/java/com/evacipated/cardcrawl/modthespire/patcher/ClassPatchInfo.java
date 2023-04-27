@@ -379,8 +379,6 @@ public class ClassPatchInfo extends PatchInfo
                 if (!Modifier.isAbstract(superMethod.getModifiers())) {
                     if (hasReturn) {
                         src.append("return ($w) ");
-                    } else {
-                        src.append("return ");
                     }
                     src.append("_instance.super$").append(superMethod.getName()).append("(");
                     for (int i = 0; i < realParamTypes.length; i++) {
@@ -400,7 +398,8 @@ public class ClassPatchInfo extends PatchInfo
                         src.setLength(src.length() - 2); // remove trailing ", "
                     }
                     src.append(");");
-                } else {
+                }
+                if (Modifier.isAbstract(superMethod.getModifiers()) || !hasReturn) {
                     src.append("return null;");
                 }
                 src.append('}');

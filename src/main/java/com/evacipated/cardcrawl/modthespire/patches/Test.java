@@ -2,6 +2,7 @@ package com.evacipated.cardcrawl.modthespire.patches;
 
 import com.evacipated.cardcrawl.modthespire.lib.SpireMethod;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
+import com.megacrit.cardcrawl.relics.AbstractRelic;
 import com.megacrit.cardcrawl.relics.RunicDome;
 
 class Test
@@ -44,7 +45,15 @@ class Test
         @SpireMethod(from = TestInterface.class)
         static void voidTest(SpireMethod.Helper<RunicDome, Void> __helper)
         {
+            __helper.callSuper();
             System.out.println("void test");
+        }
+
+        @SpireMethod(from = AbstractRelic.class)
+        static void atBattleStart(SpireMethod.Helper<RunicDome, Void> __helper)
+        {
+            __helper.callSuper();
+            System.out.println("atBattleStart");
         }
     }
 
