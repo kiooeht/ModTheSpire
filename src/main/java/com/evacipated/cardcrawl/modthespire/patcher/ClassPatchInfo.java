@@ -446,6 +446,21 @@ public class ClassPatchInfo extends PatchInfo
             .findFirst().get();
         CtMethod ctCallSuper = ctHelperImpl.getDeclaredMethod("callSuper");
 
+        // Check if this super type has already been added to callSuper
+        final boolean[] alreadyAdded = {false};
+        ctCallSuper.instrument(new ExprEditor() {
+            @Override
+            public void edit(MethodCall m) throws CannotCompileException
+            {
+                if (m.getMethodName().equals(getSuperProxyName(superMethod))) {
+                    alreadyAdded[0] = true;
+                }
+            }
+        });
+        if (alreadyAdded[0]) {
+            return;
+        }
+
         // Remove the previous incrementTimesSuperCalled()
         ctCallSuper.instrument(new ExprEditor() {
             @Override
