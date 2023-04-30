@@ -385,7 +385,7 @@ public class ClassPatchInfo extends PatchInfo
                     "}", ctHelperImpl));
                 // Create callSuper method
                 CtMethod ctCallSuper = CtNewMethod.delegator(ctSpireMethodHelper.getDeclaredMethod("callSuper"), ctHelperImpl);
-                ctCallSuper.setBody("throw new RuntimeException(\"Unknown _superType\");");
+                ctCallSuper.setBody("throw new RuntimeException(\"Unknown _superType: \" + _superType);");
                 ctHelperImpl.addMethod(ctCallSuper);
                 addToCallSuperBody(superMethod);
                 // Instantiate HelperImpl in method
