@@ -278,6 +278,8 @@ public class ClassPatchInfo extends PatchInfo
             try {
                 // Try to get the method...
                 newMethod = ctClassToPatch.getDeclaredMethod(methodName, realParamTypes);
+                makeSuperProxy(superMethod);
+                addToCallSuperBody(superMethod);
             } catch (NotFoundException ignored) {
                 // ...if it doesn't exist, create it
                 newMethod = CtNewMethod.delegator(superMethod, ctClassToPatch);
@@ -286,14 +288,7 @@ public class ClassPatchInfo extends PatchInfo
                 }
                 ctClassToPatch.addMethod(newMethod);
 
-                if (!Modifier.isAbstract(superMethod.getModifiers())) {
-                    // Create proxy for calling super method
-                    CtMethod proxySuper = CtNewMethod.delegator(superMethod, ctClassToPatch);
-                    proxySuper.setModifiers(Modifier.setPackage(proxySuper.getModifiers()));
-                    proxySuper.setName("super$" + proxySuper.getName());
-                    proxySuper.getMethodInfo().addAttribute(new SyntheticAttribute(proxySuper.getMethodInfo().getConstPool()));
-                    ctClassToPatch.addMethod(proxySuper);
-                }
+                makeSuperProxy(superMethod);
 
                 // Create SpireMethod.Helper impl class
                 CtClass ctHelperImpl = ctClassToPatch.makeNestedClass(methodName + "_HelperImpl", true);
@@ -322,8 +317,12 @@ public class ClassPatchInfo extends PatchInfo
                 // Create field for instance
                 CtField ctInstanceField = CtField.make("private " + ctClassToPatch.getName() + " _instance;", ctHelperImpl);
                 ctHelperImpl.addField(ctInstanceField);
+                // Create field for super type
+                CtField ctSuperType = CtField.make("private Class _superType;", ctHelperImpl);
+                ctHelperImpl.addField(ctSuperType);
                 // Create field for timesSuperCalled tracking
-                CtField ctSuperCalledField = CtField.make("private int _timesSuperCalled = 0;", ctHelperImpl);
+                // Map<Class, Integer>
+                CtField ctSuperCalledField = CtField.make("private java.util.Map _timesSuperCalled =  new java.util.HashMap();", ctHelperImpl);
                 ctHelperImpl.addField(ctSuperCalledField);
                 if (hasReturn) {
                     // Create field for hasResult
@@ -342,7 +341,7 @@ public class ClassPatchInfo extends PatchInfo
                 ));
                 // Create timesSuperCalled method
                 CtMethod ctTimesSuperCalled = CtNewMethod.delegator(ctSpireMethodHelper.getDeclaredMethod("timesSuperCalled"), ctHelperImpl);
-                ctTimesSuperCalled.setBody("return _timesSuperCalled;");
+                ctTimesSuperCalled.setBody("return ((Integer) _timesSuperCalled.get(_superType)).intValue();");
                 ctHelperImpl.addMethod(ctTimesSuperCalled);
                 // Create instance method
                 CtMethod ctInstance = CtNewMethod.delegator(ctSpireMethodHelper.getDeclaredMethod("instance"), ctHelperImpl);
@@ -372,42 +371,23 @@ public class ClassPatchInfo extends PatchInfo
                         "}", ctHelperImpl);
                     ctHelperImpl.addMethod(ctStoreResult);
                 }
+                // Create setSuperType method
+                CtMethod ctSetSuperType = CtNewMethod.make("void setSuperType(Class superType) {" +
+                    "_superType = superType;" +
+                    "_timesSuperCalled.putIfAbsent(_superType, ($w) 0);" +
+                    "}", ctHelperImpl);
+                ctHelperImpl.addMethod(ctSetSuperType);
+                // Create incrementTimeSuperCalled helper method
+                ctHelperImpl.addMethod(CtNewMethod.make("private void incrementTimesSuperCalled() {" +
+                    "Integer i = (Integer) _timesSuperCalled.get(_superType);" +
+                    "i = ($w) (i.intValue() + 1);" +
+                    "_timesSuperCalled.put(_superType, i);" +
+                    "}", ctHelperImpl));
                 // Create callSuper method
                 CtMethod ctCallSuper = CtNewMethod.delegator(ctSpireMethodHelper.getDeclaredMethod("callSuper"), ctHelperImpl);
-                StringBuilder src = new StringBuilder("{" +
-                    "++_timesSuperCalled;");
-                if (!Modifier.isAbstract(superMethod.getModifiers())) {
-                    if (hasReturn) {
-                        src.append("return ($w) ");
-                    }
-                    src.append("_instance.super$").append(superMethod.getName()).append("(");
-                    for (int i = 0; i < realParamTypes.length; i++) {
-                        src.append("((");
-                        if (realParamTypes[i].isPrimitive()) {
-                            src.append(((CtPrimitiveType) realParamTypes[i]).getWrapperName());
-                        } else {
-                            src.append(realParamTypes[i].getName());
-                        }
-                        src.append(") $1[").append(i).append("])");
-                        if (realParamTypes[i].isPrimitive()) {
-                            src.append('.').append(((CtPrimitiveType) realParamTypes[i]).getGetMethodName()).append("()");
-                        }
-                        src.append(", ");
-                    }
-                    if (realParamTypes.length > 0) {
-                        src.setLength(src.length() - 2); // remove trailing ", "
-                    }
-                    src.append(");");
-                }
-                if (Modifier.isAbstract(superMethod.getModifiers()) || !hasReturn) {
-                    src.append("return null;");
-                }
-                src.append('}');
-                if (Loader.DEBUG) {
-                    System.out.println(src);
-                }
-                ctCallSuper.setBody(src.toString());
+                ctCallSuper.setBody("throw new RuntimeException(\"Unknown _superType\");");
                 ctHelperImpl.addMethod(ctCallSuper);
+                addToCallSuperBody(superMethod);
                 // Instantiate HelperImpl in method
                 newMethod.setBody(null);
                 newMethod.addLocalVariable("helperImpl", ctHelperImpl);
@@ -415,6 +395,7 @@ public class ClassPatchInfo extends PatchInfo
             }
 
             StringBuilder src = new StringBuilder();
+            src.append("helperImpl.setSuperType(").append(superMethod.getDeclaringClass().getName()).append(".class);\n");
             if (hasReturn) {
                 src.append("$_ = ");
             }
@@ -434,6 +415,83 @@ public class ClassPatchInfo extends PatchInfo
         if (Loader.DEBUG) {
             System.out.println();
         }
+    }
+
+    private void makeSuperProxy(CtMethod superMethod) throws CannotCompileException
+    {
+        if (!Modifier.isAbstract(superMethod.getModifiers())) {
+            // Create proxy for calling super method
+            CtMethod proxySuper = CtNewMethod.delegator(superMethod, ctClassToPatch);
+            proxySuper.setModifiers(Modifier.setPackage(proxySuper.getModifiers()));
+            proxySuper.setName(getSuperProxyName(superMethod));
+            proxySuper.getMethodInfo().addAttribute(new SyntheticAttribute(proxySuper.getMethodInfo().getConstPool()));
+            try {
+                ctClassToPatch.addMethod(proxySuper);
+            } catch (DuplicateMemberException ignored) {}
+        }
+    }
+
+    private static String getSuperProxyName(CtMethod superMethod)
+    {
+        String superClassName = superMethod.getDeclaringClass().getName().replace('.', '$');
+        return "$super$" + superClassName + "$" + superMethod.getName();
+    }
+
+    private void addToCallSuperBody(CtMethod superMethod) throws NotFoundException, CannotCompileException
+    {
+        boolean hasReturn = !superMethod.getReturnType().equals(CtClass.voidType);
+        CtClass[] realParamTypes = superMethod.getParameterTypes();
+        CtClass ctHelperImpl = Arrays.stream(ctClassToPatch.getNestedClasses())
+            .filter(x -> x.getName().equals(ctClassToPatch.getName() + "$" + superMethod.getName() + "_HelperImpl"))
+            .findFirst().get();
+        CtMethod ctCallSuper = ctHelperImpl.getDeclaredMethod("callSuper");
+
+        // Remove the previous incrementTimesSuperCalled()
+        ctCallSuper.instrument(new ExprEditor() {
+            @Override
+            public void edit(MethodCall m) throws CannotCompileException
+            {
+                if (m.getMethodName().equals("incrementTimesSuperCalled")) {
+                    m.replace("");
+                }
+            }
+        });
+
+        StringBuilder src = new StringBuilder();
+        src.append("incrementTimesSuperCalled();\n");
+        src.append("if (_superType == ").append(superMethod.getDeclaringClass().getName()).append(".class) {\n");
+        if (!Modifier.isAbstract(superMethod.getModifiers())) {
+            if (hasReturn) {
+                src.append("return ($w) ");
+            }
+            src.append("_instance.").append(getSuperProxyName(superMethod)).append('(');
+            for (int i = 0; i < realParamTypes.length; i++) {
+                src.append("((");
+                if (realParamTypes[i].isPrimitive()) {
+                    src.append(((CtPrimitiveType) realParamTypes[i]).getWrapperName());
+                } else {
+                    src.append(realParamTypes[i].getName());
+                }
+                src.append(") $1[").append(i).append("])");
+                if (realParamTypes[i].isPrimitive()) {
+                    src.append('.').append(((CtPrimitiveType) realParamTypes[i]).getGetMethodName()).append("()");
+                }
+                src.append(", ");
+            }
+            if (realParamTypes.length > 0) {
+                src.setLength(src.length() - 2); // remove trailing ", "
+            }
+            src.append(");");
+        }
+        if (Modifier.isAbstract(superMethod.getModifiers()) || !hasReturn) {
+            src.append("return null;");
+        }
+        src.append("\n}");
+        if (Loader.DEBUG) {
+            System.out.println(src);
+        }
+
+        ctCallSuper.insertBefore(src.toString());
     }
 
     // This stops luyten from failing to decompile the newly added method

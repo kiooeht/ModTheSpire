@@ -17,6 +17,7 @@ class Test
         static int testMethod(SpireMethod.Helper<RunicDome, Integer> __helper, boolean b, String s)
         {
             System.out.println("Patch1: " + __helper.hasResult() + ": " + __helper.result());
+            System.out.println("super called: " + __helper.timesSuperCalled());
             System.out.println(__helper.instance().name);
             if (!__helper.wasSuperCalled()) {
                 return __helper.callSuper(b, s);
@@ -35,6 +36,7 @@ class Test
         static int testMethod(SpireMethod.Helper<RunicDome, Integer> __helper, boolean b, String s)
         {
             System.out.println("Patch2: " + __helper.hasResult() + ": " + __helper.result());
+            System.out.println("super called: " + __helper.timesSuperCalled());
             System.out.println(__helper.instance().description);
             if (!__helper.wasSuperCalled()) {
                 return __helper.callSuper(b, s);
@@ -54,6 +56,24 @@ class Test
         {
             __helper.callSuper();
             System.out.println("atBattleStart");
+        }
+    }
+
+    @SpirePatch(
+        clz = RunicDome.class,
+        method = SpirePatch.CLASS
+    )
+    static class Patch3
+    {
+        @SpireMethod(from = DupInterface.class)
+        static int testMethod(SpireMethod.Helper<RunicDome, Integer> __helper, boolean b, String s)
+        {
+            System.out.println("Patch3: " + __helper.hasResult() + ": " + __helper.result());
+            System.out.println("super called: " + __helper.timesSuperCalled());
+            if (!__helper.wasSuperCalled()) {
+                return __helper.callSuper(b, s);
+            }
+            return 9;
         }
     }
 
@@ -81,5 +101,15 @@ class Test
         }
 
         void voidTest();
+    }
+
+    public interface DupInterface
+    {
+        default int testMethod(boolean b, String s)
+        {
+            System.out.println("duplicate testMethod");
+            System.out.println(b + ", " + s);
+            return 2;
+        }
     }
 }
