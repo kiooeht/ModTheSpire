@@ -290,103 +290,17 @@ public class ClassPatchInfo extends PatchInfo
 
                 makeSuperProxy(superMethod);
 
-                // Create SpireMethod.Helper impl class
-                CtClass ctHelperImpl = ctClassToPatch.makeNestedClass(methodName + "_HelperImpl", true);
-                ctHelperImpl.setModifiers(Modifier.setPrivate(ctHelperImpl.getModifiers()));
-                // Add interface to impl class and set its generic signature
-                ctHelperImpl.addInterface(ctSpireMethodHelper);
-                CtClass superReturnType = superMethod.getReturnType();
-                String superReturnTypeName = superReturnType.getName();
-                if (superReturnType.isPrimitive()) {
-                    superReturnTypeName = ((CtPrimitiveType) superReturnType).getWrapperName();
-                }
-                ClassSignature cs = new ClassSignature(
-                    null,
-                    null,
-                    new ClassType[]{
-                        new ClassType(
-                            ctSpireMethodHelper.getName(),
-                            new TypeArgument[]{
-                                new TypeArgument(new ClassType(ctClassToPatch.getName())),
-                                new TypeArgument(new ClassType(superReturnTypeName))
-                            }
-                        )
+                // Get/Create SpireMethod.Helper impl class
+                CtClass ctHelperImpl = null;
+                for (CtClass nested : ctClassToPatch.getNestedClasses()) {
+                    if (nested.getName().equals(ctClassToPatch.getName() + "$" + methodName + "_HelperImpl")) {
+                        ctHelperImpl = nested;
+                        break;
                     }
-                );
-                ctHelperImpl.setGenericSignature(cs.encode());
-                // Create field for instance
-                CtField ctInstanceField = CtField.make("private " + ctClassToPatch.getName() + " _instance;", ctHelperImpl);
-                ctHelperImpl.addField(ctInstanceField);
-                // Create field for super type
-                CtField ctSuperType = CtField.make("private Class _superType;", ctHelperImpl);
-                ctHelperImpl.addField(ctSuperType);
-                // Create field for timesSuperCalled tracking
-                // Map<Class, Integer>
-                CtField ctSuperCalledField = CtField.make("private java.util.Map _timesSuperCalled =  new java.util.HashMap();", ctHelperImpl);
-                ctHelperImpl.addField(ctSuperCalledField);
-                if (hasReturn) {
-                    // Create field for hasResult
-                    CtField ctHasResultField = CtField.make("private boolean _hasResult = false;", ctHelperImpl);
-                    ctHelperImpl.addField(ctHasResultField);
-                    // Create field for result
-                    CtField ctResultField = CtField.make("private " + superReturnType.getName() + " _result;", ctHelperImpl);
-                    ctHelperImpl.addField(ctResultField);
                 }
-                // Create constructor
-                ctHelperImpl.addConstructor(CtNewConstructor.make(
-                    new CtClass[]{ ctClassToPatch },
-                    null,
-                    "{ _instance = $1; }",
-                    ctHelperImpl
-                ));
-                // Create timesSuperCalled method
-                CtMethod ctTimesSuperCalled = CtNewMethod.delegator(ctSpireMethodHelper.getDeclaredMethod("timesSuperCalled"), ctHelperImpl);
-                ctTimesSuperCalled.setBody("return ((Integer) _timesSuperCalled.get(_superType)).intValue();");
-                ctHelperImpl.addMethod(ctTimesSuperCalled);
-                // Create instance method
-                CtMethod ctInstance = CtNewMethod.delegator(ctSpireMethodHelper.getDeclaredMethod("instance"), ctHelperImpl);
-                ctInstance.setBody("return _instance;");
-                ctHelperImpl.addMethod(ctInstance);
-                // Create hasResult method
-                CtMethod ctHasResult = CtNewMethod.delegator(ctSpireMethodHelper.getDeclaredMethod("hasResult"), ctHelperImpl);
-                if (hasReturn) {
-                    ctHasResult.setBody("return _hasResult;");
-                } else {
-                    ctHasResult.setBody("return false;");
+                if (ctHelperImpl == null) {
+                    ctHelperImpl = makeHelperImpl(superMethod);
                 }
-                ctHelperImpl.addMethod(ctHasResult);
-                // Create result method
-                CtMethod ctResult = CtNewMethod.delegator(ctSpireMethodHelper.getDeclaredMethod("result"), ctHelperImpl);
-                if (hasReturn) {
-                    ctResult.setBody("return ($w) _result;");
-                } else {
-                    ctResult.setBody("return null;");
-                }
-                ctHelperImpl.addMethod(ctResult);
-                if (hasReturn) {
-                    // Create storeResult method
-                    CtMethod ctStoreResult = CtNewMethod.make("void storeResult(" + superReturnType.getName() + " result) {" +
-                        "_hasResult = true;" +
-                        "_result = result;" +
-                        "}", ctHelperImpl);
-                    ctHelperImpl.addMethod(ctStoreResult);
-                }
-                // Create setSuperType method
-                CtMethod ctSetSuperType = CtNewMethod.make("void setSuperType(Class superType) {" +
-                    "_superType = superType;" +
-                    "_timesSuperCalled.putIfAbsent(_superType, ($w) 0);" +
-                    "}", ctHelperImpl);
-                ctHelperImpl.addMethod(ctSetSuperType);
-                // Create incrementTimeSuperCalled helper method
-                ctHelperImpl.addMethod(CtNewMethod.make("private void incrementTimesSuperCalled() {" +
-                    "Integer i = (Integer) _timesSuperCalled.get(_superType);" +
-                    "i = ($w) (i.intValue() + 1);" +
-                    "_timesSuperCalled.put(_superType, i);" +
-                    "}", ctHelperImpl));
-                // Create callSuper method
-                CtMethod ctCallSuper = CtNewMethod.delegator(ctSpireMethodHelper.getDeclaredMethod("callSuper"), ctHelperImpl);
-                ctCallSuper.setBody("throw new RuntimeException(\"Unknown _superType: \" + _superType);");
-                ctHelperImpl.addMethod(ctCallSuper);
                 addToCallSuperBody(superMethod);
                 // Instantiate HelperImpl in method
                 newMethod.setBody(null);
@@ -415,6 +329,112 @@ public class ClassPatchInfo extends PatchInfo
         if (Loader.DEBUG) {
             System.out.println();
         }
+    }
+
+    private CtClass makeHelperImpl(CtMethod superMethod) throws NotFoundException, CannotCompileException
+    {
+        CtClass ctSpireMethodHelper = ctPatchClass.getClassPool().get(SpireMethod.Helper.class.getName());
+        boolean hasReturn = !superMethod.getReturnType().equals(CtClass.voidType);
+
+        // Create SpireMethod.Helper impl class
+        CtClass ctHelperImpl = ctClassToPatch.makeNestedClass(superMethod.getName() + "_HelperImpl", true);
+        ctHelperImpl.setModifiers(Modifier.setPrivate(ctHelperImpl.getModifiers()));
+        // Add interface to impl class and set its generic signature
+        ctHelperImpl.addInterface(ctSpireMethodHelper);
+        CtClass superReturnType = superMethod.getReturnType();
+        String superReturnTypeName = superReturnType.getName();
+        if (superReturnType.isPrimitive()) {
+            superReturnTypeName = ((CtPrimitiveType) superReturnType).getWrapperName();
+        }
+        ClassSignature cs = new ClassSignature(
+            null,
+            null,
+            new ClassType[]{
+                new ClassType(
+                    ctSpireMethodHelper.getName(),
+                    new TypeArgument[]{
+                        new TypeArgument(new ClassType(ctClassToPatch.getName())),
+                        new TypeArgument(new ClassType(superReturnTypeName))
+                    }
+                )
+            }
+        );
+        ctHelperImpl.setGenericSignature(cs.encode());
+        // Create field for instance
+        CtField ctInstanceField = CtField.make("private " + ctClassToPatch.getName() + " _instance;", ctHelperImpl);
+        ctHelperImpl.addField(ctInstanceField);
+        // Create field for super type
+        CtField ctSuperType = CtField.make("private Class _superType;", ctHelperImpl);
+        ctHelperImpl.addField(ctSuperType);
+        // Create field for timesSuperCalled tracking
+        // Map<Class, Integer>
+        CtField ctSuperCalledField = CtField.make("private java.util.Map _timesSuperCalled =  new java.util.HashMap();", ctHelperImpl);
+        ctHelperImpl.addField(ctSuperCalledField);
+        if (hasReturn) {
+            // Create field for hasResult
+            CtField ctHasResultField = CtField.make("private boolean _hasResult = false;", ctHelperImpl);
+            ctHelperImpl.addField(ctHasResultField);
+            // Create field for result
+            CtField ctResultField = CtField.make("private " + superReturnType.getName() + " _result;", ctHelperImpl);
+            ctHelperImpl.addField(ctResultField);
+        }
+        // Create constructor
+        ctHelperImpl.addConstructor(CtNewConstructor.make(
+            new CtClass[]{ ctClassToPatch },
+            null,
+            "{ _instance = $1; }",
+            ctHelperImpl
+        ));
+        // Create timesSuperCalled method
+        CtMethod ctTimesSuperCalled = CtNewMethod.delegator(ctSpireMethodHelper.getDeclaredMethod("timesSuperCalled"), ctHelperImpl);
+        ctTimesSuperCalled.setBody("return ((Integer) _timesSuperCalled.get(_superType)).intValue();");
+        ctHelperImpl.addMethod(ctTimesSuperCalled);
+        // Create instance method
+        CtMethod ctInstance = CtNewMethod.delegator(ctSpireMethodHelper.getDeclaredMethod("instance"), ctHelperImpl);
+        ctInstance.setBody("return _instance;");
+        ctHelperImpl.addMethod(ctInstance);
+        // Create hasResult method
+        CtMethod ctHasResult = CtNewMethod.delegator(ctSpireMethodHelper.getDeclaredMethod("hasResult"), ctHelperImpl);
+        if (hasReturn) {
+            ctHasResult.setBody("return _hasResult;");
+        } else {
+            ctHasResult.setBody("return false;");
+        }
+        ctHelperImpl.addMethod(ctHasResult);
+        // Create result method
+        CtMethod ctResult = CtNewMethod.delegator(ctSpireMethodHelper.getDeclaredMethod("result"), ctHelperImpl);
+        if (hasReturn) {
+            ctResult.setBody("return ($w) _result;");
+        } else {
+            ctResult.setBody("return null;");
+        }
+        ctHelperImpl.addMethod(ctResult);
+        if (hasReturn) {
+            // Create storeResult method
+            CtMethod ctStoreResult = CtNewMethod.make("void storeResult(" + superReturnType.getName() + " result) {" +
+                "_hasResult = true;" +
+                "_result = result;" +
+                "}", ctHelperImpl);
+            ctHelperImpl.addMethod(ctStoreResult);
+        }
+        // Create setSuperType method
+        CtMethod ctSetSuperType = CtNewMethod.make("void setSuperType(Class superType) {" +
+            "_superType = superType;" +
+            "_timesSuperCalled.putIfAbsent(_superType, ($w) 0);" +
+            "}", ctHelperImpl);
+        ctHelperImpl.addMethod(ctSetSuperType);
+        // Create incrementTimeSuperCalled helper method
+        ctHelperImpl.addMethod(CtNewMethod.make("private void incrementTimesSuperCalled() {" +
+            "Integer i = (Integer) _timesSuperCalled.get(_superType);" +
+            "i = ($w) (i.intValue() + 1);" +
+            "_timesSuperCalled.put(_superType, i);" +
+            "}", ctHelperImpl));
+        // Create callSuper method
+        CtMethod ctCallSuper = CtNewMethod.delegator(ctSpireMethodHelper.getDeclaredMethod("callSuper"), ctHelperImpl);
+        ctCallSuper.setBody("throw new RuntimeException(\"Unknown _superType: \" + _superType);");
+        ctHelperImpl.addMethod(ctCallSuper);
+
+        return ctHelperImpl;
     }
 
     private void makeSuperProxy(CtMethod superMethod) throws CannotCompileException

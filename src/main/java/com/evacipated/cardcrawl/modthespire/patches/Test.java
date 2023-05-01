@@ -75,6 +75,14 @@ class Test
             }
             return 9;
         }
+
+        @SpireMethod(from = SignatureTestInterface.class)
+        static int testMethod(SpireMethod.Helper<RunicDome, Integer> __helper, float f1, float f2, float f3)
+        {
+            System.out.println("Patch4: " + __helper.hasResult() + ": " + __helper.result());
+            System.out.println("super called: " + __helper.timesSuperCalled());
+            return __helper.callSuper(f1, f2, f3);
+        }
     }
 
     @SpirePatch(
@@ -86,6 +94,8 @@ class Test
         static void Postfix(RunicDome __instance)
         {
             int i = ((TestInterface) __instance).testMethod(true, "asdf");
+            System.out.println(i);
+            i = ((SignatureTestInterface) __instance).testMethod(1.2f, 3.9f, 0.3f);
             System.out.println(i);
             ((TestInterface) __instance).voidTest();
         }
@@ -110,6 +120,16 @@ class Test
             System.out.println("duplicate testMethod");
             System.out.println(b + ", " + s);
             return 2;
+        }
+    }
+
+    public interface SignatureTestInterface
+    {
+        default int testMethod(float f1, float f2, float f3)
+        {
+            System.out.println("signature testMethod");
+            System.out.println(f1 + ", " + f2 + ", " + f3);
+            return -2;
         }
     }
 }
