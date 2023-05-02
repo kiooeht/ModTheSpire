@@ -17,6 +17,7 @@ import javassist.expr.NewExpr;
 
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -365,10 +366,18 @@ public class ClassPatchInfo extends PatchInfo
         ctHelperImpl.addField(ctInstanceField);
         // Create field for super type
         CtField ctSuperType = CtField.make("private Class _superType;", ctHelperImpl);
+        ClassType classType = new ClassType(Class.class.getName(), new TypeArgument[]{new TypeArgument()});
+        ctSuperType.setGenericSignature(classType.encode());
         ctHelperImpl.addField(ctSuperType);
         // Create field for timesSuperCalled tracking
         // Map<Class, Integer>
         CtField ctSuperCalledField = CtField.make("private java.util.Map _timesSuperCalled =  new java.util.HashMap();", ctHelperImpl);
+        ctSuperCalledField.setGenericSignature(
+            new ClassType(Map.class.getName(), new TypeArgument[]{
+                new TypeArgument(classType),
+                new TypeArgument(new ClassType(Integer.class.getName()))
+            }).encode()
+        );
         ctHelperImpl.addField(ctSuperCalledField);
         if (hasReturn) {
             // Create field for hasResult
