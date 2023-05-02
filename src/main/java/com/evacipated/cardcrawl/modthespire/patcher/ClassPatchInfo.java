@@ -260,7 +260,6 @@ public class ClassPatchInfo extends PatchInfo
             CtMethod superMethod;
             try {
                 superMethod = getMatchingMethod(ctFromClass, m, true);
-//                superMethod = ctFromClass.getDeclaredMethod(methodName, realParamTypes);
             } catch (NotFoundException e) {
                 StringBuilder params = new StringBuilder("(");
                 for (CtClass paramType : realParamTypes) {
@@ -270,10 +269,7 @@ public class ClassPatchInfo extends PatchInfo
                     params.setLength(params.length() - 2);
                 }
                 params.append(')');
-                throw new SpireMethodException("from: %s does not contain method %s%s", ctFromClass.getName(), methodName, params);
-            }
-            if (!superMethod.getReturnType().equals(m.getReturnType())) {
-                throw new SpireMethodException("Return types do not match: has %s, expects %s", m.getReturnType().getName(), superMethod.getReturnType().getName());
+                throw new SpireMethodException("from: %s does not contain method '%s %s%s'", ctFromClass.getName(), m.getReturnType().getName(), methodName, params);
             }
 
             CtMethod newMethod;
