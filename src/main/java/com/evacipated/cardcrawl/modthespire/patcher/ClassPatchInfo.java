@@ -259,7 +259,8 @@ public class ClassPatchInfo extends PatchInfo
 
             CtMethod superMethod;
             try {
-                superMethod = ctFromClass.getDeclaredMethod(methodName, realParamTypes);
+                superMethod = getMatchingMethod(ctFromClass, m, true);
+//                superMethod = ctFromClass.getDeclaredMethod(methodName, realParamTypes);
             } catch (NotFoundException e) {
                 StringBuilder params = new StringBuilder("(");
                 for (CtClass paramType : realParamTypes) {
@@ -278,7 +279,8 @@ public class ClassPatchInfo extends PatchInfo
             CtMethod newMethod;
             try {
                 // Try to get the method...
-                newMethod = ctClassToPatch.getDeclaredMethod(methodName, realParamTypes);
+                newMethod = getMatchingMethod(ctClassToPatch, superMethod, false);
+                //newMethod = ctClassToPatch.getDeclaredMethod(methodName, realParamTypes);
                 makeSuperProxy(superMethod);
                 addToCallSuperBody(superMethod);
             } catch (NotFoundException ignored) {
@@ -292,16 +294,7 @@ public class ClassPatchInfo extends PatchInfo
                 makeSuperProxy(superMethod);
 
                 // Get/Create SpireMethod.Helper impl class
-                CtClass ctHelperImpl = null;
-                for (CtClass nested : ctClassToPatch.getNestedClasses()) {
-                    if (nested.getName().equals(ctClassToPatch.getName() + "$" + methodName + "_HelperImpl")) {
-                        ctHelperImpl = nested;
-                        break;
-                    }
-                }
-                if (ctHelperImpl == null) {
-                    ctHelperImpl = makeHelperImpl(superMethod);
-                }
+                CtClass ctHelperImpl = getHelperImpl(superMethod);
                 addToCallSuperBody(superMethod);
                 // Instantiate HelperImpl in method
                 newMethod.setBody(null);
@@ -332,13 +325,42 @@ public class ClassPatchInfo extends PatchInfo
         }
     }
 
-    private CtClass makeHelperImpl(CtMethod superMethod) throws NotFoundException, CannotCompileException
+    private static CtMethod getMatchingMethod(CtClass ctClass, CtMethod m, boolean removeHelperParam) throws NotFoundException
     {
+        CtClass[] paramTypes = m.getParameterTypes();
+        if (removeHelperParam) {
+            paramTypes = Arrays.copyOfRange(paramTypes, 1, paramTypes.length);
+        }
+        for (CtMethod foundMethod : ctClass.getDeclaredMethods(m.getName())) {
+            if (m.getReturnType().equals(foundMethod.getReturnType()) && Arrays.equals(paramTypes, foundMethod.getParameterTypes())) {
+                return foundMethod;
+            }
+        }
+        throw new NotFoundException(ctClass.getName() + "." + m.getName() + m.getSignature());
+    }
+
+    private CtClass getHelperImpl(CtMethod superMethod) throws NotFoundException, CannotCompileException
+    {
+        int newClassNumber = 1;
         CtClass ctSpireMethodHelper = ctPatchClass.getClassPool().get(SpireMethod.Helper.class.getName());
         boolean hasReturn = !superMethod.getReturnType().equals(CtClass.voidType);
 
+        // Try to get existing HelperImpl
+        for (CtClass nested : ctClassToPatch.getNestedClasses()) {
+            if (nested.getName().startsWith(ctClassToPatch.getName() + "$" + superMethod.getName() + "_HelperImpl_")) {
+                try {
+                    if (hasReturn) {
+                        nested.getDeclaredField("_result", Descriptor.of(superMethod.getReturnType()));
+                    }
+                    return nested;
+                } catch (NotFoundException ignore) {
+                    ++newClassNumber;
+                }
+            }
+        }
+
         // Create SpireMethod.Helper impl class
-        CtClass ctHelperImpl = ctClassToPatch.makeNestedClass(superMethod.getName() + "_HelperImpl", true);
+        CtClass ctHelperImpl = ctClassToPatch.makeNestedClass(superMethod.getName() + "_HelperImpl_" + newClassNumber, true);
         ctHelperImpl.setModifiers(Modifier.setPrivate(ctHelperImpl.getModifiers()));
         // Add interface to impl class and set its generic signature
         ctHelperImpl.addInterface(ctSpireMethodHelper);
@@ -470,9 +492,7 @@ public class ClassPatchInfo extends PatchInfo
     {
         boolean hasReturn = !superMethod.getReturnType().equals(CtClass.voidType);
         CtClass[] realParamTypes = superMethod.getParameterTypes();
-        CtClass ctHelperImpl = Arrays.stream(ctClassToPatch.getNestedClasses())
-            .filter(x -> x.getName().equals(ctClassToPatch.getName() + "$" + superMethod.getName() + "_HelperImpl"))
-            .findFirst().get();
+        CtClass ctHelperImpl = getHelperImpl(superMethod);
         CtMethod ctCallSuper = ctHelperImpl.getDeclaredMethod("callSuper");
 
         // Check if this super type has already been added to callSuper

@@ -79,9 +79,24 @@ class Test
         @SpireMethod(from = SignatureTestInterface.class)
         static int testMethod(SpireMethod.Helper<RunicDome, Integer> __helper, float f1, float f2, float f3)
         {
-            System.out.println("Patch4: " + __helper.hasResult() + ": " + __helper.result());
+            System.out.println("Patch3: " + __helper.hasResult() + ": " + __helper.result());
             System.out.println("super called: " + __helper.timesSuperCalled());
             return __helper.callSuper(f1, f2, f3);
+        }
+    }
+
+    @SpirePatch(
+        clz = RunicDome.class,
+        method = SpirePatch.CLASS
+    )
+    static class Patch4
+    {
+        @SpireMethod(from = ReturnTestInterface.class)
+        static float testMethod(SpireMethod.Helper<RunicDome, Integer> __helper, boolean b, String s)
+        {
+            System.out.println("Patch4: " + __helper.hasResult() + ": " + __helper.result());
+            System.out.println("super called: " + __helper.timesSuperCalled());
+            return 19.1f;
         }
     }
 
@@ -98,6 +113,7 @@ class Test
             i = ((SignatureTestInterface) __instance).testMethod(1.2f, 3.9f, 0.3f);
             System.out.println(i);
             ((TestInterface) __instance).voidTest();
+            System.out.println(((ReturnTestInterface) __instance).testMethod(true, "string"));
         }
     }
 
@@ -131,5 +147,10 @@ class Test
             System.out.println(f1 + ", " + f2 + ", " + f3);
             return -2;
         }
+    }
+
+    public interface ReturnTestInterface
+    {
+        float testMethod(boolean b, String s);
     }
 }
