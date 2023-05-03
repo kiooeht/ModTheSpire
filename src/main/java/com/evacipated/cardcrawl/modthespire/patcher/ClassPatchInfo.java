@@ -276,7 +276,6 @@ public class ClassPatchInfo extends PatchInfo
             try {
                 // Try to get the method...
                 newMethod = getMatchingMethod(ctClassToPatch, superMethod, false);
-                //newMethod = ctClassToPatch.getDeclaredMethod(methodName, realParamTypes);
                 makeSuperProxy(superMethod);
                 addToCallSuperBody(superMethod);
             } catch (NotFoundException ignored) {
