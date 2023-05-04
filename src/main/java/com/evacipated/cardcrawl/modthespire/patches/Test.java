@@ -32,8 +32,8 @@ class Test
     )
     static class Patch2
     {
-        @SpireMethod(from = TestInterface.class)
-        static int testMethod(SpireMethod.Helper<RunicDome, Integer> __helper, boolean b, String s)
+        @SpireMethod(from = TestInterface.class, methodName = "testMethod")
+        static int someOtherName(SpireMethod.Helper<RunicDome, Integer> __helper, boolean b, String s)
         {
             System.out.println("Patch2: " + __helper.hasResult() + ": " + __helper.result());
             System.out.println("super called: " + __helper.timesSuperCalled());

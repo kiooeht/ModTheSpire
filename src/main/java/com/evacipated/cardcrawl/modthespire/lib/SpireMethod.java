@@ -10,6 +10,7 @@ import java.lang.annotation.Target;
 public @interface SpireMethod
 {
     Class<?> from();
+    String methodName() default "";
 
     interface Helper<T, R>
     {

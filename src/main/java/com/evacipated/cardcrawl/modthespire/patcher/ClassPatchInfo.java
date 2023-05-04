@@ -239,7 +239,10 @@ public class ClassPatchInfo extends PatchInfo
 
             SpireMethod spireMethod = (SpireMethod) m.getAnnotation(SpireMethod.class);
             CtClass ctSpireMethodHelper = ctPatchClass.getClassPool().get(SpireMethod.Helper.class.getName());
-            String methodName = m.getName();
+            String methodName = spireMethod.methodName();
+            if ("".equals(methodName)) {
+                methodName = m.getName();
+            }
             boolean hasReturn = !m.getReturnType().equals(CtClass.voidType);
             CtClass[] patchParamTypes = m.getParameterTypes();
             if (patchParamTypes.length < 1 || !patchParamTypes[0].equals(ctSpireMethodHelper)) {
@@ -259,7 +262,7 @@ public class ClassPatchInfo extends PatchInfo
 
             CtMethod superMethod;
             try {
-                superMethod = getMatchingMethod(ctFromClass, m, true);
+                superMethod = getMatchingMethod(ctFromClass, spireMethod, m, true);
             } catch (NotFoundException e) {
                 StringBuilder params = new StringBuilder("(");
                 for (CtClass paramType : realParamTypes) {
@@ -275,7 +278,7 @@ public class ClassPatchInfo extends PatchInfo
             CtMethod newMethod;
             try {
                 // Try to get the method...
-                newMethod = getMatchingMethod(ctClassToPatch, superMethod, false);
+                newMethod = getMatchingMethod(ctClassToPatch, spireMethod, superMethod, false);
                 makeSuperProxy(superMethod);
                 addToCallSuperBody(superMethod);
             } catch (NotFoundException ignored) {
@@ -320,13 +323,17 @@ public class ClassPatchInfo extends PatchInfo
         }
     }
 
-    private static CtMethod getMatchingMethod(CtClass ctClass, CtMethod m, boolean removeHelperParam) throws NotFoundException
+    private static CtMethod getMatchingMethod(CtClass ctClass, SpireMethod spireMethod, CtMethod m, boolean removeHelperParam) throws NotFoundException
     {
         CtClass[] paramTypes = m.getParameterTypes();
         if (removeHelperParam) {
             paramTypes = Arrays.copyOfRange(paramTypes, 1, paramTypes.length);
         }
-        for (CtMethod foundMethod : ctClass.getDeclaredMethods(m.getName())) {
+        String methodName = spireMethod.methodName();
+        if ("".equals(methodName)) {
+            methodName = m.getName();
+        }
+        for (CtMethod foundMethod : ctClass.getDeclaredMethods(methodName)) {
             if (m.getReturnType().equals(foundMethod.getReturnType()) && Arrays.equals(paramTypes, foundMethod.getParameterTypes())) {
                 return foundMethod;
             }
