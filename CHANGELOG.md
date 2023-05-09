@@ -2,6 +2,7 @@
 #### dev ####
 * Add localization support for MTS strings
 * Track workshop mod playtimes
+* Fix lowercase mod names sorted after capitalized mod names
 
 #### v3.30.3 ####
 * Fix package information being lost for patched classes (Alchyr)

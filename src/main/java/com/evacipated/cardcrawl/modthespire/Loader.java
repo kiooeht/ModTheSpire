@@ -751,7 +751,7 @@ public class Loader
             }
         }
 
-        modInfos.sort(Comparator.comparing(m -> m.Name));
+        modInfos.sort(Comparator.comparing(m -> m.Name.toLowerCase()));
 
         return modInfos.toArray(new ModInfo[0]);
     }
