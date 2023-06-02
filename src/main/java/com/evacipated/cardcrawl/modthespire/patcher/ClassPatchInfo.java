@@ -525,7 +525,8 @@ public class ClassPatchInfo extends PatchInfo
 
         StringBuilder src = new StringBuilder();
         src.append("incrementTimesSuperCalled();\n");
-        src.append("if (_superType == ").append(superMethod.getDeclaringClass().getName()).append(".class) {\n");
+        src.append("if (_superType == ").append(superMethod.getDeclaringClass().getName()).append(".class && ")
+            .append(ClassPatchInfo.class.getName()).append(".paramCheck(\"").append(Descriptor.ofParameters(realParamTypes)).append("\", $1)) {\n");
         if (!Modifier.isAbstract(superMethod.getModifiers())) {
             if (hasReturn) {
                 src.append("return ($w) ");
@@ -576,6 +577,34 @@ public class ClassPatchInfo extends PatchInfo
         }
         code.getAttributes().removeIf(x -> x instanceof LocalVariableAttribute);
         code.getAttributes().add(newLocals);
+    }
+
+    @SuppressWarnings("unused")
+    public static boolean paramCheck(String signature, Object[] params) throws IllegalArgumentException
+    {
+        try {
+            CtClass[] paramTypes = Descriptor.getParameterTypes(signature, Loader.getClassPool());
+            if (params.length != paramTypes.length) {
+                throw new IllegalArgumentException("Incorrect argument count: expected " + paramTypes.length + ", got " + params.length);
+            }
+            for (int i = 0; i < params.length; ++i) {
+                Class<?> cls;
+                if (paramTypes[i].isPrimitive()) {
+                    if (params[i] == null) {
+                        throw new IllegalArgumentException("Argument " + (i+1) + ": Cannot pass null to primitive type (" + paramTypes[i].getName() + ")");
+                    }
+                    cls = Class.forName(((CtPrimitiveType) paramTypes[i]).getWrapperName());
+                } else {
+                    cls = Class.forName(paramTypes[i].getName());
+                }
+                if (params[i] != null && !cls.isInstance(params[i])) {
+                    throw new IllegalArgumentException("Argument " + (i+1) + ": Incorrect type, expected " + cls.getName() + ", got " + params[i].getClass().getName());
+                }
+            }
+        } catch (NotFoundException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return true;
     }
 
     private static class FindSpireFieldInitializers extends ExprEditor
