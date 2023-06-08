@@ -27,6 +27,7 @@ public class Patcher {
     public static Map<URL, AnnotationDB> annotationDBMap = new HashMap<>();
     private static Map<Class<?>, EnumBusterReflect> enumBusterMap = new HashMap<>();
     private static TreeSet<PatchInfo> patchInfos = new TreeSet<>(new PatchInfoComparator());
+    private static List<ByRef2Info> byRef2Infos = new ArrayList<>();
 
     public static void initializeMods(ClassLoader loader, ModInfo... modInfos) throws ClassNotFoundException, InvocationTargetException, IllegalAccessException
     {
@@ -328,6 +329,37 @@ public class Patcher {
             }
         }
         patchInfos.clear();
+        System.out.println("Done.");
+
+        patchByRef2();
+    }
+
+    public static void addByRef2(ByRef2Info info)
+    {
+        byRef2Infos.add(info);
+    }
+
+    public static void patchByRef2() throws CannotCompileException
+    {
+        System.out.print("Patching ByRef2...");
+        for (ByRef2Info info : byRef2Infos) {
+            String src = ByRef2.Internal.class.getName() + ".store[" + info.paramPosition + "] = ";
+            CtPrimitiveType ctPrimitive = null;
+            if (info.paramType.isPrimitive()) {
+                ctPrimitive = (CtPrimitiveType) info.paramType;
+            }
+            if (ctPrimitive != null) {
+                src += "new " + ctPrimitive.getWrapperName() + "(";
+            }
+            src += "$" + (info.paramPosition+1);
+            if (ctPrimitive != null) {
+                src += ")";
+            }
+            src += ";";
+            System.out.println(src);
+            info.patchMethod.insertAfter(src);
+        }
+        byRef2Infos.clear();
         System.out.println("Done.");
     }
 

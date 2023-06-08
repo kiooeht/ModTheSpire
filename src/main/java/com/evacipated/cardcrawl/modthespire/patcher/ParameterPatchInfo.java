@@ -1,7 +1,9 @@
 package com.evacipated.cardcrawl.modthespire.patcher;
 
 import com.evacipated.cardcrawl.modthespire.Loader;
+import com.evacipated.cardcrawl.modthespire.Patcher;
 import com.evacipated.cardcrawl.modthespire.lib.ByRef;
+import com.evacipated.cardcrawl.modthespire.lib.ByRef2;
 import com.evacipated.cardcrawl.modthespire.lib.SpireReturn;
 import javassist.*;
 
@@ -305,7 +307,31 @@ abstract class ParameterPatchInfo extends PatchInfo
             throws ClassNotFoundException, PatchingException, NotFoundException
         {
             Object[] paramAnnotations = info.getAnnotations();
-            if (canByRefParams && paramByRef(paramAnnotations)) {
+            if (canByRefParams && paramByRef2(paramAnnotations)) {
+                ByRef2Info byRef2Info = new ByRef2Info(info.patchMethod, info.getPatchParamPosition(), info.getPatchParamType());
+                Patcher.addByRef2(byRef2Info);
+
+                funccallargs += getParamName();
+
+                String tmp = getParamName() + " = (";
+                CtPrimitiveType ctPrimitive = null;
+                if (info.getPatchParamType().isPrimitive()) {
+                    ctPrimitive = (CtPrimitiveType) info.getPatchParamType();
+                }
+                if (ctPrimitive != null) {
+                    tmp += "(" + ctPrimitive.getWrapperName();
+                } else {
+                    tmp += info.getPatchParamType().getName();
+                }
+                tmp += ")" + ByRef2.Internal.class.getName() + ".store[" + info.getPatchParamPosition() + "]";
+                if (ctPrimitive != null) {
+                    tmp += ")." + ctPrimitive.getGetMethodName() + "()";
+                }
+                tmp += ";\n";
+                tmp += ByRef2.Internal.class.getName() + ".store[" + info.getPatchParamPosition() + "] = null;\n";
+                postcallsrc  += tmp;
+                postcallsrc2 += tmp;
+            } else if (canByRefParams && paramByRef(paramAnnotations)) {
                 if (!info.getPatchParamType().isArray()) {
                     throw new ByRefParameterNotArrayException(info.getName());
                 }
