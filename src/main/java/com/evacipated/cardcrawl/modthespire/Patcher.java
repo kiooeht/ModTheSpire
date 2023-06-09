@@ -342,22 +342,26 @@ public class Patcher {
     public static void patchByRef2() throws CannotCompileException
     {
         System.out.print("Patching ByRef2...");
+        if (Loader.DEBUG) {
+            System.out.println();
+            System.out.println();
+        }
         for (ByRef2Info info : byRef2Infos) {
-            String src = ByRef2.Internal.class.getName() + ".store[" + info.paramPosition + "] = ";
-            CtPrimitiveType ctPrimitive = null;
-            if (info.paramType.isPrimitive()) {
-                ctPrimitive = (CtPrimitiveType) info.paramType;
+            if (Loader.DEBUG) {
+                info.debugPrint();
             }
-            if (ctPrimitive != null) {
-                src += "new " + ctPrimitive.getWrapperName() + "(";
+            try {
+                info.doPatch();
+            } catch (Exception e) {
+                if (!Loader.DEBUG) {
+                    System.out.println();
+                    info.debugPrint();
+                }
+                throw e;
             }
-            src += "$" + (info.paramPosition+1);
-            if (ctPrimitive != null) {
-                src += ")";
+            if (Loader.DEBUG) {
+                System.out.println();
             }
-            src += ";";
-            System.out.println(src);
-            info.patchMethod.insertAfter(src);
         }
         byRef2Infos.clear();
         System.out.println("Done.");

@@ -20,9 +20,14 @@ public class ByRef2Info
         this.paramType = paramType;
     }
 
+    public void debugPrint()
+    {
+        System.out.println("Patch Method: [" + patchMethod.getLongName() + "]");
+    }
+
     public void doPatch() throws CannotCompileException
     {
-        String src = ByRef2.Internal.class.getName() + ".store[" + paramPosition + "] = ";
+        String src = "{\n" + ByRef2.Internal.class.getName() + ".store[" + paramPosition + "] = ";
         CtPrimitiveType ctPrimitive = null;
         if (paramType.isPrimitive()) {
             ctPrimitive = (CtPrimitiveType) paramType;
@@ -34,7 +39,7 @@ public class ByRef2Info
         if (ctPrimitive != null) {
             src += ")";
         }
-        src += ";";
+        src += ";\n}";
         if (Loader.DEBUG) {
             System.out.println(src);
         }
