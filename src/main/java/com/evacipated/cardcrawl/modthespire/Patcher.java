@@ -27,7 +27,7 @@ public class Patcher {
     public static Map<URL, AnnotationDB> annotationDBMap = new HashMap<>();
     private static Map<Class<?>, EnumBusterReflect> enumBusterMap = new HashMap<>();
     private static TreeSet<PatchInfo> patchInfos = new TreeSet<>(new PatchInfoComparator());
-    private static List<ByRef2Info> byRef2Infos = new ArrayList<>();
+    private static Map<CtMethod, ByRef2Info> byRef2Infos = new LinkedHashMap<>();
 
     public static void initializeMods(ClassLoader loader, ModInfo... modInfos) throws ClassNotFoundException, InvocationTargetException, IllegalAccessException
     {
@@ -336,7 +336,10 @@ public class Patcher {
 
     public static void addByRef2(ByRef2Info info)
     {
-        byRef2Infos.add(info);
+        ByRef2Info v = byRef2Infos.putIfAbsent(info.patchMethod, info);
+        if (v != null) {
+            v.add(info);
+        }
     }
 
     public static void patchByRef2() throws CannotCompileException
@@ -346,7 +349,7 @@ public class Patcher {
             System.out.println();
             System.out.println();
         }
-        for (ByRef2Info info : byRef2Infos) {
+        for (ByRef2Info info : byRef2Infos.values()) {
             if (Loader.DEBUG) {
                 info.debugPrint();
             }

@@ -7,17 +7,23 @@ import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.CtPrimitiveType;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ByRef2Info
 {
-    private final CtMethod patchMethod;
-    private final int paramPosition;
-    private final CtClass paramType;
+    public final CtMethod patchMethod;
+    private final List<Param> params = new ArrayList<>();
 
     public ByRef2Info(CtMethod patchMethod, int paramPosition, CtClass paramType)
     {
         this.patchMethod = patchMethod;
-        this.paramPosition = paramPosition;
-        this.paramType = paramType;
+        params.add(new Param(paramPosition, paramType));
+    }
+
+    public void add(ByRef2Info other)
+    {
+        params.addAll(other.params);
     }
 
     public void debugPrint()
@@ -27,22 +33,38 @@ public class ByRef2Info
 
     public void doPatch() throws CannotCompileException
     {
-        String src = "{\n" + ByRef2.Internal.class.getName() + ".store[" + paramPosition + "] = ";
-        CtPrimitiveType ctPrimitive = null;
-        if (paramType.isPrimitive()) {
-            ctPrimitive = (CtPrimitiveType) paramType;
+        StringBuilder src = new StringBuilder("{\n");
+        for (Param p : params) {
+            src.append(ByRef2.Internal.class.getName()).append(".store[").append(p.position).append("] = ");
+            CtPrimitiveType ctPrimitive = null;
+            if (p.type.isPrimitive()) {
+                ctPrimitive = (CtPrimitiveType) p.type;
+            }
+            if (ctPrimitive != null) {
+                src.append("new ").append(ctPrimitive.getWrapperName()).append("(");
+            }
+            src.append("$").append(p.position + 1);
+            if (ctPrimitive != null) {
+                src.append(")");
+            }
+            src.append(";\n");
         }
-        if (ctPrimitive != null) {
-            src += "new " + ctPrimitive.getWrapperName() + "(";
-        }
-        src += "$" + (paramPosition+1);
-        if (ctPrimitive != null) {
-            src += ")";
-        }
-        src += ";\n}";
+        src.append("}");
         if (Loader.DEBUG) {
             System.out.println(src);
         }
-        patchMethod.insertAfter(src);
+        patchMethod.insertAfter(src.toString());
+    }
+
+    private static class Param
+    {
+        final int position;
+        final CtClass type;
+
+        Param(int position, CtClass type)
+        {
+            this.position = position;
+            this.type = type;
+        }
     }
 }
