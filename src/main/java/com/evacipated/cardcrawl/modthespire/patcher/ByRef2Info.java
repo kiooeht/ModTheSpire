@@ -35,7 +35,7 @@ public class ByRef2Info
     {
         StringBuilder src = new StringBuilder("{\n");
         for (Param p : params) {
-            src.append(ByRef2.Internal.class.getName()).append(".store[").append(p.position).append("] = ");
+            src.append(ByRef2.class.getName()).append(".$Internal.$store[").append(p.position).append("] = ");
             CtPrimitiveType ctPrimitive = null;
             if (p.type.isPrimitive()) {
                 ctPrimitive = (CtPrimitiveType) p.type;

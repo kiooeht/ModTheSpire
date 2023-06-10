@@ -8,6 +8,7 @@ import javassist.*;
 import javassist.bytecode.AnnotationsAttribute;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.DuplicateMemberException;
+import javassist.bytecode.SyntheticAttribute;
 import javassist.bytecode.annotation.Annotation;
 import javassist.bytecode.annotation.AnnotationImpl;
 import javassist.expr.ExprEditor;
@@ -304,8 +305,10 @@ public class Patcher {
         }
     }
 
-    public static void finalizePatches(ClassLoader loader) throws Exception
+    public static void finalizePatches(ClassLoader loader, ClassPool pool) throws Exception
     {
+        createByRef2Storage(pool);
+
         System.out.printf("Injecting patches...");
         if (Loader.DEBUG) {
             System.out.println();
@@ -342,7 +345,21 @@ public class Patcher {
         }
     }
 
-    public static void patchByRef2() throws CannotCompileException
+    private static void createByRef2Storage(ClassPool pool) throws NotFoundException, CannotCompileException
+    {
+        CtClass ctByRef2 = pool.get(ByRef2.class.getName());
+        CtClass ctInternal = ctByRef2.makeNestedClass("$Internal", true);
+        ConstPool cp = ctInternal.getClassFile().getConstPool();
+
+        ctInternal.getClassFile().addAttribute(new SyntheticAttribute(cp));
+
+        CtField ctStore = new CtField(pool.get(Object[].class.getName()), "$store", ctInternal);
+        ctStore.setModifiers(Modifier.STATIC | Modifier.FINAL | Modifier.PUBLIC);
+        ctStore.getFieldInfo().addAttribute(new SyntheticAttribute(cp));
+        ctInternal.addField(ctStore, CtField.Initializer.byNewArray(pool.get(Object[].class.getName()), 256));
+    }
+
+    private static void patchByRef2() throws CannotCompileException
     {
         System.out.print("Patching ByRef2...");
         if (Loader.DEBUG) {

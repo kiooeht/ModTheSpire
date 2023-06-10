@@ -9,8 +9,4 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ByRef2
 {
-    class Internal
-    {
-        public static Object[] store = new Object[255];
-    }
 }

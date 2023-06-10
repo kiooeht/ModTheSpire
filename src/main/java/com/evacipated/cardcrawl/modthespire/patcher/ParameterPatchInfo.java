@@ -323,12 +323,12 @@ abstract class ParameterPatchInfo extends PatchInfo
                 } else {
                     tmp += info.getPatchParamType().getName();
                 }
-                tmp += ")" + ByRef2.Internal.class.getName() + ".store[" + info.getPatchParamPosition() + "]";
+                tmp += ")" + ByRef2.class.getName() + ".$Internal.$store[" + info.getPatchParamPosition() + "]";
                 if (ctPrimitive != null) {
                     tmp += ")." + ctPrimitive.getGetMethodName() + "()";
                 }
                 tmp += ";\n";
-                tmp += ByRef2.Internal.class.getName() + ".store[" + info.getPatchParamPosition() + "] = null;\n";
+                tmp += ByRef2.class.getName() + ".$Internal.$store[" + info.getPatchParamPosition() + "] = null;\n";
                 postcallsrc  += tmp;
                 postcallsrc2 += tmp;
             } else if (canByRefParams && paramByRef(paramAnnotations)) {
