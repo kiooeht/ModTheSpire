@@ -168,7 +168,7 @@ public class ModsScreen
                 }
             }
 
-            if (baseModBadges != null && selectedMod >= 0 && baseModBadges.get(Loader.MODINFOS[selectedMod].jarURL) != null) {
+            if (baseModBadges != null && selectedMod >= 0 && baseModBadgeExistsAndModPanelIsNotNull(baseModBadges.get(Loader.MODINFOS[selectedMod].jarURL))) {
                 configHb.update();
                 if (configHb.hovered && InputHelper.justClickedLeft) {
                     modBadge_onClick(baseModBadges.get(Loader.MODINFOS[selectedMod].jarURL));
@@ -362,7 +362,7 @@ public class ModsScreen
             if (baseModBadges != null) {
                 configHb.move(x - padding - 50 * Settings.scale, button.hb.y + (button.hb.height / 2.0f));
 
-                if (baseModBadges.get(Loader.MODINFOS[selectedMod].jarURL) != null) {
+                if (baseModBadgeExistsAndModPanelIsNotNull(baseModBadges.get(Loader.MODINFOS[selectedMod].jarURL))) {
                     configHb.render(sb);
 
                     Color c = Settings.CREAM_COLOR;
@@ -416,5 +416,19 @@ public class ModsScreen
                 e.printStackTrace();
             }
         }
+    }
+
+    private boolean baseModBadgeExistsAndModPanelIsNotNull(Object badge) {
+        if (badge != null) {
+            try {
+                Object modPanel = ModBadge_modPanel.get(badge);
+                if (modPanel != null) {
+                    return true;
+                }
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
+        return false;
     }
 }
