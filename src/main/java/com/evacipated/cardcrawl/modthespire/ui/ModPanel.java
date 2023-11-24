@@ -14,9 +14,9 @@ import java.util.ArrayList;
 @SuppressWarnings("serial")
 public class ModPanel extends JPanel
 {
-    private static final Color lightRed = new Color(229,115,115);
-    private static final Color lightOrange = new Color(255, 159, 0); // orange peel (https://en.wikipedia.org/wiki/Shades_of_orange#Orange_peel)
-    private static final Color lightYellow = new Color(255, 238, 88);
+    private static final Color lightRed = new Color(229,115,115, 63);
+    private static final Color lightOrange = new Color(255, 159, 0, 63); // orange peel (https://en.wikipedia.org/wiki/Shades_of_orange#Orange_peel)
+    private static final Color lightYellow = new Color(255, 238, 88, 63);
     public ModInfo info;
     public File modFile;
     public JCheckBox checkBox;
@@ -101,9 +101,6 @@ public class ModPanel extends JPanel
     public void recalcModWarnings(JModPanelCheckBoxList parent)
     {
         info.statusMsg = " ";
-        checkBox.setBackground(Color.WHITE);
-        infoPanel.setBackground(Color.WHITE);
-
         if (info.MTS_Version == null) {
             checkBox.setEnabled(false);
             checkBox.setBackground(lightRed);
@@ -218,14 +215,13 @@ public class ModPanel extends JPanel
 
         public InfoPanel()
         {
+            setOpaque(false);
             setLayout(new BorderLayout());
 
-            name.setOpaque(true);
             name.setText(info.Name);
             name.setFont(name.getFont().deriveFont(13.0f).deriveFont(Font.BOLD));
             add(name, BorderLayout.CENTER);
 
-            version.setOpaque(true);
             version.setFont(version.getFont().deriveFont(10.0f).deriveFont(Font.PLAIN));
             if (info.ModVersion != null) {
                 version.setText(info.ModVersion.toString());
@@ -233,14 +229,12 @@ public class ModPanel extends JPanel
                 version.setText("missing version");
             }
             add(version, BorderLayout.SOUTH);
-
-            checkBox.setBackground(Color.WHITE);
-            setBackground(Color.WHITE);
         }
 
         @Override
         public void setBackground(Color c)
         {
+            setOpaque(true);
             super.setBackground(c);
             if (name != null) {
                 name.setBackground(c);
