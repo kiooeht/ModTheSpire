@@ -339,8 +339,9 @@ public class Patcher {
         }
 
         SortedMap<String, CtClass> ctClasses = new TreeMap<>();
+        Map<CtClass, Integer> superClassesCountCache = new HashMap<>();
         for (CtClass cls : pool.getModifiedClasses()) {
-            ctClasses.put(countSuperClasses(cls) + cls.getName(), cls);
+            ctClasses.put(countSuperClasses(cls, superClassesCountCache) + cls.getName(), cls);
         }
 
         ByteArrayMapClassPath cp = new ByteArrayMapClassPath();
@@ -360,20 +361,31 @@ public class Patcher {
         return cp;
     }
 
-    private static int countSuperClasses(CtClass cls)
+    private static int countSuperClasses(CtClass cls, Map<CtClass, Integer> cache)
     {
-        String name = cls.getName();
-        int count = 0;
-
-        while (cls != null) {
-            try {
-                cls = cls.getSuperclass();
-            } catch (NotFoundException e) {
-                break;
-            }
-            ++count;
+        if (cls == null) {
+            return 0;
         }
 
+        Integer cached = cache.get(cls);
+        if (cached != null) {
+            return cached;
+        }
+
+        int count = 0;
+
+        try {
+            count = 1 + countSuperClasses(cls.getSuperclass(), cache);
+        } catch (NotFoundException ignored) {
+        }
+
+        try {
+            count = Math.max(count,
+                1 + Arrays.stream(cls.getInterfaces()).map(i -> countSuperClasses(i, cache)).max(Integer::compareTo).orElse(0));
+        } catch (NotFoundException ignored) {
+        }
+
+        cache.put(cls, count);
         return count;
     }
 
