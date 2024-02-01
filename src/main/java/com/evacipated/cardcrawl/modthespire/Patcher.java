@@ -362,24 +362,24 @@ public class Patcher {
     private static void patchByRef2() throws CannotCompileException
     {
         System.out.print("Patching ByRef2...");
-        if (Loader.DEBUG) {
+        if (ModTheSpire.DEBUG) {
             System.out.println();
             System.out.println();
         }
         for (ByRef2Info info : byRef2Infos.values()) {
-            if (Loader.DEBUG) {
+            if (ModTheSpire.DEBUG) {
                 info.debugPrint();
             }
             try {
                 info.doPatch();
             } catch (Exception e) {
-                if (!Loader.DEBUG) {
+                if (!ModTheSpire.DEBUG) {
                     System.out.println();
                     info.debugPrint();
                 }
                 throw e;
             }
-            if (Loader.DEBUG) {
+            if (ModTheSpire.DEBUG) {
                 System.out.println();
             }
         }

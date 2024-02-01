@@ -1,6 +1,6 @@
 package com.evacipated.cardcrawl.modthespire.patcher;
 
-import com.evacipated.cardcrawl.modthespire.Loader;
+import com.evacipated.cardcrawl.modthespire.ModTheSpire;
 import com.evacipated.cardcrawl.modthespire.lib.ByRef2;
 import javassist.CannotCompileException;
 import javassist.CtClass;
@@ -50,7 +50,7 @@ public class ByRef2Info
             src.append(";\n");
         }
         src.append("}");
-        if (Loader.DEBUG) {
+        if (ModTheSpire.DEBUG) {
             System.out.println(src);
         }
         patchMethod.insertAfter(src.toString());
