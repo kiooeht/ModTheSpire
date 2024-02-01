@@ -443,7 +443,7 @@ public class Loader
 
                 Patcher.patchOverrides(tmpPatchingLoader, pool, MODINFOS);
 
-                Patcher.finalizePatches(tmpPatchingLoader);
+                Patcher.finalizePatches(tmpPatchingLoader, pool);
 
                 ClassPath cp = Patcher.compilePatches(loader, pool);
 

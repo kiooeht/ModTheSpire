@@ -1,6 +1,7 @@
 package com.evacipated.cardcrawl.modthespire.patcher;
 
 import com.evacipated.cardcrawl.modthespire.lib.ByRef;
+import com.evacipated.cardcrawl.modthespire.lib.ByRef2;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch2;
 import javassist.*;
@@ -81,6 +82,15 @@ public abstract class PatchInfo
     {
         for (Object o : annotations) {
             if (o instanceof ByRef) {
+                return true;
+            }
+        }
+        return false;
+    }
+    protected static boolean paramByRef2(Object[] annotations)
+    {
+        for (Object o : annotations) {
+            if (o instanceof ByRef2) {
                 return true;
             }
         }
