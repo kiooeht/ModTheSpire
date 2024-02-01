@@ -1,6 +1,7 @@
 ## Changelog ##
 #### dev ####
 * ByRef2
+* SpireMethod
 * Add localization support for MTS strings
 * Track workshop mod playtimes
 * Fix lowercase mod names sorted after capitalized mod names
