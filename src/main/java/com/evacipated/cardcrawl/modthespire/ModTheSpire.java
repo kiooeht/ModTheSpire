@@ -359,6 +359,8 @@ public class ModTheSpire
 
         findGameVersion();
 
+        LauncherPatch.patch();
+
         final boolean finalSkipLauncher = skipLauncher;
         EventQueue.invokeLater(() -> {
             ALLMODINFOS = getAllMods(getWorkshopInfos());
