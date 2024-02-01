@@ -1,6 +1,6 @@
 package com.evacipated.cardcrawl.modthespire.steam;
 
-import com.evacipated.cardcrawl.modthespire.Loader;
+import com.evacipated.cardcrawl.modthespire.ModTheSpire;
 import org.apache.commons.lang3.SystemUtils;
 
 import java.io.BufferedReader;
@@ -26,7 +26,7 @@ public class SteamSearch
 
     public static String findJRE51()
     {
-        return findJRE(Loader.JRE_51_DIR);
+        return findJRE(ModTheSpire.JRE_51_DIR);
     }
 
     public static String findJRE(String jreBase)
@@ -64,7 +64,7 @@ public class SteamSearch
             return null;
         }
 
-        return Paths.get(installDir, Loader.STS_JAR).toString();
+        return Paths.get(installDir, ModTheSpire.STS_JAR).toString();
     }
 
     private static void prepare()

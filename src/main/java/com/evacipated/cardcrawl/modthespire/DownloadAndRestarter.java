@@ -37,7 +37,7 @@ public class DownloadAndRestarter
         command.add(javaBin);
         command.add("-jar");
         command.add(currentJar.getPath());
-        command.addAll(Arrays.asList(Loader.ARGS));
+        command.addAll(Arrays.asList(ModTheSpire.ARGS));
 
         final ProcessBuilder builder = new ProcessBuilder(command);
         builder.start();
@@ -48,7 +48,7 @@ public class DownloadAndRestarter
     {
         ReadableByteChannel rbc = Channels.newChannel(download.openStream());
         String fileName = fileNameFromURL(download);
-        FileOutputStream fos = new FileOutputStream(Loader.MOD_DIR + fileName, DO_APPEND);
+        FileOutputStream fos = new FileOutputStream(ModTheSpire.MOD_DIR + fileName, DO_APPEND);
         fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
         fos.close();
     }

@@ -1,7 +1,7 @@
 package com.evacipated.cardcrawl.modthespire.patches.modsscreen;
 
 import com.badlogic.gdx.graphics.Texture;
-import com.evacipated.cardcrawl.modthespire.Loader;
+import com.evacipated.cardcrawl.modthespire.ModTheSpire;
 import com.evacipated.cardcrawl.modthespire.lib.SpireInsertPatch;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
 import javassist.CannotCompileException;
@@ -39,7 +39,7 @@ public class SaveBaseModBadges
             URL location = cls.getProtectionDomain().getCodeSource().getLocation();
             if (location == null) {
                 try {
-                    ClassPool pool = Loader.getClassPool();
+                    ClassPool pool = ModTheSpire.getClassPool();
                     CtClass ctCls = pool.get(cls.getName());
                     String url = ctCls.getURL().getFile();
                     int i = url.lastIndexOf('!');

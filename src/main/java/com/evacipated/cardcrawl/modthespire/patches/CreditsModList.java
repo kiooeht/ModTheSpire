@@ -1,6 +1,6 @@
 package com.evacipated.cardcrawl.modthespire.patches;
 
-import com.evacipated.cardcrawl.modthespire.Loader;
+import com.evacipated.cardcrawl.modthespire.ModTheSpire;
 import com.evacipated.cardcrawl.modthespire.ModInfo;
 import com.evacipated.cardcrawl.modthespire.ReflectionHelper;
 import com.evacipated.cardcrawl.modthespire.lib.ByRef;
@@ -42,7 +42,7 @@ public class CreditsModList {
                 lines.add(new CreditLine(author, tmpY[0] -= 45.0F, false));
             }
             // Loaded mods
-            for (ModInfo info : Loader.MODINFOS) {
+            for (ModInfo info : ModTheSpire.MODINFOS) {
                 lines.add(new CreditLine(info.Name, tmpY[0] -= 150.0F, true));
                 for (String author : info.Authors) {
                     lines.add(new CreditLine(author, tmpY[0] -= 45.0F, false));

@@ -1,6 +1,6 @@
 package com.evacipated.cardcrawl.modthespire.ui;
 
-import com.evacipated.cardcrawl.modthespire.Loader;
+import com.evacipated.cardcrawl.modthespire.ModTheSpire;
 import com.evacipated.cardcrawl.modthespire.ModInfo;
 
 import javax.swing.*;
@@ -110,7 +110,7 @@ public class ModPanel extends JPanel
             info.statusMsg = "This mod is missing a valid ModTheSpire version number.";
             return;
         }
-        if (info.MTS_Version.compareTo(Loader.MTS_VERSION) > 0) {
+        if (info.MTS_Version.compareTo(ModTheSpire.MTS_VERSION) > 0) {
             checkBox.setEnabled(false);
             checkBox.setBackground(lightRed);
             infoPanel.setBackground(lightRed);
@@ -128,12 +128,12 @@ public class ModPanel extends JPanel
             tooltip.append("]");
             info.statusMsg = tooltip.toString();
         }
-        if (Loader.STS_VERSION != null && info.STS_Version != null && !Loader.STS_VERSION.equals(info.STS_Version)) {
+        if (ModTheSpire.STS_VERSION != null && info.STS_Version != null && !ModTheSpire.STS_VERSION.equals(info.STS_Version)) {
             //checkBox.setBackground(lightYellow);
             //infoPanel.setBackground(lightYellow);
             if (info.statusMsg == " ") {
                 info.statusMsg = "This mod explicitly supports StS " + info.STS_Version + ".\n" +
-                    "You are running StS " + Loader.STS_VERSION + ".\n" +
+                    "You are running StS " + ModTheSpire.STS_VERSION + ".\n" +
                     "You may encounter problems running it.";
             }
         }

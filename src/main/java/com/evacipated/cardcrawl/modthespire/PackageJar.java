@@ -100,7 +100,7 @@ class PackageJar
             this.path = path;
             this.b = b;
             try {
-                if (!Objects.equals(locationURL, new File(Loader.STS_JAR).toURI().toURL())) {
+                if (!Objects.equals(locationURL, new File(ModTheSpire.STS_JAR).toURI().toURL())) {
                     this.locationURL = locationURL;
                 }
             } catch (MalformedURLException ignored) {}
@@ -242,7 +242,7 @@ class PackageJar
             CtMethod ctMethod = ctClass.getDeclaredMethod("callInitializers");
             StringBuilder src = new StringBuilder("{\n");
 
-            for (ModInfo info : Loader.MODINFOS) {
+            for (ModInfo info : ModTheSpire.MODINFOS) {
                 if (Patcher.annotationDBMap.containsKey(info.jarURL)) {
                     Set<String> initializers = Patcher.annotationDBMap.get(info.jarURL).getAnnotationIndex().get(SpireInitializer.class.getName());
                     if (initializers != null) {
@@ -273,7 +273,7 @@ class PackageJar
             ctMethod = ctClass.getDeclaredMethod("getModInfos");
             src.setLength(0);
             src.append("{\n");
-            src.append(ModInfo.class.getName()).append("[] ret = new ").append(ModInfo.class.getName()).append("[").append(Loader.MODINFOS.length).append("];\n");
+            src.append(ModInfo.class.getName()).append("[] ret = new ").append(ModInfo.class.getName()).append("[").append(ModTheSpire.MODINFOS.length).append("];\n");
 
             src.append("Gson gson = new GsonBuilder()\n")
                 .append(".excludeFieldsWithModifiers(new int[] {java.lang.reflect.Modifier.STATIC})\n")
@@ -286,16 +286,16 @@ class PackageJar
                 .create();
 
             src.append("URL baseURL = ").append(PrepackagedLauncher.class.getName()).append(".class.getProtectionDomain().getCodeSource().getLocation();\n");
-            for (int i=0; i<Loader.MODINFOS.length; ++i) {
-                URL oldURL = Loader.MODINFOS[i].jarURL;
+            for (int i = 0; i< ModTheSpire.MODINFOS.length; ++i) {
+                URL oldURL = ModTheSpire.MODINFOS[i].jarURL;
                 try {
-                    Loader.MODINFOS[i].jarURL = Paths.get("package").resolve(Paths.get(oldURL.toURI()).getFileName()).toUri().toURL();
-                    Loader.MODINFOS[i].jarURL = new URL("file:package/" + Paths.get(oldURL.toURI()).getFileName().toString());
+                    ModTheSpire.MODINFOS[i].jarURL = Paths.get("package").resolve(Paths.get(oldURL.toURI()).getFileName()).toUri().toURL();
+                    ModTheSpire.MODINFOS[i].jarURL = new URL("file:package/" + Paths.get(oldURL.toURI()).getFileName().toString());
                 } catch (MalformedURLException | URISyntaxException e) {
                     e.printStackTrace();
                 }
-                String json = gson.toJson(Loader.MODINFOS[i]);
-                Loader.MODINFOS[i].jarURL = oldURL;
+                String json = gson.toJson(ModTheSpire.MODINFOS[i]);
+                ModTheSpire.MODINFOS[i].jarURL = oldURL;
                 src.append("ret[").append(i).append("] = gson.fromJson(").append("\"").append(json.replaceAll("\"", "\\\\\"")).append("\", ")
                     .append(ModInfo.class.getName()).append(".class);\n");
                 src.append("adjustJarURL(ret[").append(i).append("]);\n");
@@ -329,7 +329,7 @@ class PackageJar
     {
         StringBuilder sb = new StringBuilder();
 
-        for (ModInfo info : Loader.MODINFOS) {
+        for (ModInfo info : ModTheSpire.MODINFOS) {
             try {
                 String filename = Paths.get(info.jarURL.toURI()).getFileName().toString();
                 sb.append("package/")
@@ -374,13 +374,13 @@ class PackageJar
                 exceptions.add("com/codedisaster/steamworks");
                 exceptions.add("com/google/gson");
                 exceptions.add("com/megacrit/cardcrawl/desktop/DesktopLauncher");
-                findMTSEntries(entries, new FileInputStream(new File(Loader.class.getProtectionDomain().getCodeSource().getLocation().toURI())));
+                findMTSEntries(entries, new FileInputStream(new File(ModTheSpire.class.getProtectionDomain().getCodeSource().getLocation().toURI())));
                 exceptions.clear();
             } catch (URISyntaxException e) {
                 e.printStackTrace();
             }
             // Find kotlin
-            findKotlinEntries(entries, Loader.class.getResourceAsStream(Loader.KOTLIN_JAR));
+            findKotlinEntries(entries, ModTheSpire.class.getResourceAsStream(ModTheSpire.KOTLIN_JAR));
             // Find out-jar
             Set<CtClass> ctClasses = pool.getOutJarClasses();
             for (CtClass ctClass : ctClasses) {
@@ -407,9 +407,9 @@ class PackageJar
                 }
             }
             // Find core patches
-            findCorePatchEntries(entries, Loader.class.getResourceAsStream(Loader.COREPATCHES_JAR));
+            findCorePatchEntries(entries, ModTheSpire.class.getResourceAsStream(ModTheSpire.COREPATCHES_JAR));
             // Find mods
-            for (ModInfo modInfo : Loader.MODINFOS) {
+            for (ModInfo modInfo : ModTheSpire.MODINFOS) {
                 try {
                     findModEntries(entries, new File(modInfo.jarURL.toURI()), modInfo.ID);
                 } catch (URISyntaxException e) {
@@ -417,7 +417,7 @@ class PackageJar
                 }
             }
             // Find base game
-            findModEntries(entries, new File(Loader.STS_JAR), null);
+            findModEntries(entries, new File(ModTheSpire.STS_JAR), null);
 
             System.out.println("  " + entries.size() + " entries");
 
@@ -428,7 +428,7 @@ class PackageJar
                 exceptions.add("com/codedisaster/steamworks");
                 exceptions.add("com/google/gson");
                 exceptions.add("com/megacrit/cardcrawl/desktop/DesktopLauncher");
-                InputStream is = new FileInputStream(new File(Loader.class.getProtectionDomain().getCodeSource().getLocation().toURI()));
+                InputStream is = new FileInputStream(new File(ModTheSpire.class.getProtectionDomain().getCodeSource().getLocation().toURI()));
                 copyJarContents(outJar, entries, is, null, Entry.Type.MTS);
                 exceptions.clear();
             } catch (URISyntaxException e) {
@@ -436,7 +436,7 @@ class PackageJar
             }
             // Copy kotlin
             System.out.println("  Copying kotlin entries...");
-            copyJarContents(outJar, entries, Loader.class.getResourceAsStream(Loader.KOTLIN_JAR), null, Entry.Type.KOTLIN);
+            copyJarContents(outJar, entries, ModTheSpire.class.getResourceAsStream(ModTheSpire.KOTLIN_JAR), null, Entry.Type.KOTLIN);
             // Copy base game out-jar
             System.out.println("  Copying base game out-jar entries...");
             for (Entry entry : entries.getOutJarEntries()) {
@@ -447,16 +447,16 @@ class PackageJar
             }
             // Copy core patches
             System.out.println("  Copying core patch entries...");
-            copyJarContents(outJar, entries, Loader.class.getResourceAsStream(Loader.COREPATCHES_JAR), null, Entry.Type.COREPATCH);
+            copyJarContents(outJar, entries, ModTheSpire.class.getResourceAsStream(ModTheSpire.COREPATCHES_JAR), null, Entry.Type.COREPATCH);
             // Copy base game
             System.out.println("  Copying base game entries...");
-            copyJarContents(outJar, entries, new File(Loader.STS_JAR), null);
+            copyJarContents(outJar, entries, new File(ModTheSpire.STS_JAR), null);
 
             outJar.close();
 
             // Do mod jars
             new File("package").mkdirs();
-            for (ModInfo modInfo : Loader.MODINFOS) {
+            for (ModInfo modInfo : ModTheSpire.MODINFOS) {
                 String filename = Paths.get(modInfo.jarURL.toURI()).getFileName().toString();
                 outJar = new JarOutputStream(new FileOutputStream(Paths.get("package", createModdedJarName(filename)).toFile()));
                 System.out.println("  Copying " + modInfo.ID + "...");
@@ -488,14 +488,14 @@ class PackageJar
         public static void main(String[] args)
             throws IOException, ClassNotFoundException, InvocationTargetException, IllegalAccessException, NoSuchFieldException, URISyntaxException
         {
-            Loader.STS_JAR = new File(PrepackagedLauncher.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getAbsolutePath();
-            Loader.loadMTSVersion("p");
-            CardCrawlGame.VERSION_NUM += " [ModTheSpire " + Loader.MTS_VERSION + "]";
+            ModTheSpire.STS_JAR = new File(PrepackagedLauncher.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getAbsolutePath();
+            ModTheSpire.loadMTSVersion("p");
+            CardCrawlGame.VERSION_NUM += " [ModTheSpire " + ModTheSpire.MTS_VERSION + "]";
 
-            Loader.MODINFOS = getModInfos();
+            ModTheSpire.MODINFOS = getModInfos();
 
             try {
-                Field f = Loader.class.getDeclaredField("POOL");
+                Field f = ModTheSpire.class.getDeclaredField("POOL");
                 f.setAccessible(true);
                 f.set(null, ClassPool.getDefault());
             } catch (NoSuchFieldException e) {
@@ -516,7 +516,7 @@ class PackageJar
         private static void bustEnums()
             throws IOException, NoSuchFieldException, ClassNotFoundException, IllegalAccessException
         {
-            List<URL> urls = Arrays.stream(Loader.MODINFOS)
+            List<URL> urls = Arrays.stream(ModTheSpire.MODINFOS)
                 .map(x -> x.jarURL)
                 .collect(Collectors.toList());
             urls.add(0, PrepackagedLauncher.class.getProtectionDomain().getCodeSource().getLocation());

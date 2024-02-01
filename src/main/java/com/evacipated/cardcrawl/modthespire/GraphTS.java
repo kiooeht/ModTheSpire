@@ -47,6 +47,26 @@ public class GraphTS<T>
         matrix.get(start).set(end, true);
     }
 
+    public void addEdge(T start, T end)
+    {
+        int istart = indexOf(start);
+        int iend = indexOf(end);
+        if (istart == -1 || iend == -1) {
+            return;
+        }
+        addEdge(istart, iend);
+    }
+
+    public int indexOf(T v)
+    {
+        for (int i=0; i<vertexList.size(); ++i) {
+            if (Objects.equals(v, vertexList.get(i).value)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     public void displayVertex(int idx) {
         System.out.print(vertexList.get(idx).value);
     }

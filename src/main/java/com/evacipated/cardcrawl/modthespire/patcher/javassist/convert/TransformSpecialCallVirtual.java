@@ -1,6 +1,6 @@
 package com.evacipated.cardcrawl.modthespire.patcher.javassist.convert;
 
-import com.evacipated.cardcrawl.modthespire.Loader;
+import com.evacipated.cardcrawl.modthespire.ModTheSpire;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
@@ -89,7 +89,7 @@ public class TransformSpecialCallVirtual extends Transformer
             newIndex = cp.addInterfaceMethodrefInfo(ci, nt);
         } else {
             if (c == INVOKESPECIAL) {
-                if (Loader.DEBUG) {
+                if (ModTheSpire.DEBUG) {
                     System.out.println("        @ " + ainfo.toLineNumber(pos));
                 }
                 iterator.writeByte(INVOKEVIRTUAL, pos);

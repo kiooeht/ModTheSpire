@@ -68,7 +68,7 @@ public class Patcher {
     {
         List<String> sideloadList = new ArrayList<>();
         for (ModInfo modInfo : modInfos) {
-            if (modInfo.MTS_Version.compareTo(Loader.MTS_VERSION) <= 0) {
+            if (modInfo.MTS_Version.compareTo(ModTheSpire.MTS_VERSION) <= 0) {
                 AnnotationDB db;
                 if (annotationDBMap.containsKey(modInfo.jarURL)) {
                     db = annotationDBMap.get(modInfo.jarURL);
@@ -94,7 +94,7 @@ public class Patcher {
             SpireSideload sideload = (SpireSideload) ctSideloadClass.getAnnotation(SpireSideload.class);
             if (sideload != null) {
                 for (String modid : sideload.modIDs()) {
-                    if (!Loader.isModLoaded(modid)) {
+                    if (!ModTheSpire.isModLoaded(modid)) {
                         System.out.print("Sideloading " + modid + "...");
                         ModInfo info = null;
                         for (ModInfo allInfo : allModInfos) {
@@ -142,7 +142,7 @@ public class Patcher {
     {
         List<Iterable<String>> patchSetList = new ArrayList<>();
         for (int i = 0; i < urls.length; ++i) {
-            if (modInfos == null || modInfos[i].MTS_Version.compareTo(Loader.MTS_VERSION) <= 0) {
+            if (modInfos == null || modInfos[i].MTS_Version.compareTo(ModTheSpire.MTS_VERSION) <= 0) {
                 AnnotationDB db;
                 if (annotationDBMap.containsKey(urls[i])) {
                     db = annotationDBMap.get(urls[i]);
@@ -239,7 +239,7 @@ public class Patcher {
                         ctClass.addField(f);
                     } catch (DuplicateMemberException ignore) {
                         // Field already exists
-                        if (!Loader.DEBUG && !hasPrintedWarning) {
+                        if (!ModTheSpire.DEBUG && !hasPrintedWarning) {
                             hasPrintedWarning = true;
                             System.out.println();
                         }
@@ -310,24 +310,24 @@ public class Patcher {
         createByRef2Storage(pool);
 
         System.out.printf("Injecting patches...");
-        if (Loader.DEBUG) {
+        if (ModTheSpire.DEBUG) {
             System.out.println();
             System.out.println();
         }
         for (PatchInfo p : patchInfos) {
-            if (Loader.DEBUG) {
+            if (ModTheSpire.DEBUG) {
                 p.debugPrint();
             }
             try {
                 p.doPatch();
             } catch (Exception e) {
-                if (!Loader.DEBUG) {
+                if (!ModTheSpire.DEBUG) {
                     System.out.println();
                     p.debugPrint();
                 }
                 throw e;
             }
-            if (Loader.DEBUG) {
+            if (ModTheSpire.DEBUG) {
                 System.out.println();
             }
         }
@@ -390,47 +390,75 @@ public class Patcher {
     public static ClassPath compilePatches(MTSClassLoader loader, MTSClassPool pool) throws CannotCompileException
     {
         System.out.printf("Compiling patched classes...");
-        if (Loader.DEBUG) {
+        if (ModTheSpire.DEBUG) {
             System.out.println();
         }
 
-        SortedMap<String, CtClass> ctClasses = new TreeMap<>();
-        for (CtClass cls : pool.getModifiedClasses()) {
-            ctClasses.put(countSuperClasses(cls) + cls.getName(), cls);
+        // Use topological sort to compile classes in a good order
+        Map<String, CtClass> modifiedClasses = new HashMap<>();
+        for (CtClass ctClass : pool.getModifiedClasses()) {
+            modifiedClasses.put(ctClass.getName(), ctClass);
+        }
+        GraphTS<String> g = new GraphTS<>();
+        // Object is going to be referenced by everything, put it in first to make indexOf faster
+        g.addVertex(Object.class.getName());
+        for (final CtClass ctClass : modifiedClasses.values()) {
+            addInheritanceTree(g, ctClass);
+        }
+        try {
+            g.tsort();
+        } catch (CyclicDependencyException e) {
+            throw new RuntimeException(e);
         }
 
         ByteArrayMapClassPath cp = new ByteArrayMapClassPath();
-        for (Map.Entry<String, CtClass> cls : ctClasses.entrySet()) {
-            if (Loader.DEBUG) {
-                System.out.println("  " + cls.getValue().getName());
+        for (String clsName : g.sortedArray) {
+            CtClass cls = modifiedClasses.get(clsName);
+            if (cls == null) {
+                continue;
             }
-            cls.getValue().toClass(loader, null);
-            loader.registerPackage(cls.getValue()); //register missing package information
-            cp.addClass(cls.getValue());
-            cls.getValue().detach();
+            if (ModTheSpire.DEBUG) {
+                System.out.println("  " + cls.getName());
+            }
+            try {
+                cls.toClass(loader, null);
+            } catch (CannotCompileException ignore) {
+                System.out.println("    failed");
+            }
+            loader.registerPackage(cls); //register missing package information
+            cp.addClass(cls);
+            cls.detach();
         }
         System.out.println("Done.");
-        if (Loader.DEBUG) {
+        if (ModTheSpire.DEBUG) {
             cp.printDebugInfo();
         }
         return cp;
     }
 
-    private static int countSuperClasses(CtClass cls)
+    private static void addInheritanceTree(GraphTS<String> g, CtClass ctClass)
     {
-        String name = cls.getName();
-        int count = 0;
-
-        while (cls != null) {
-            try {
-                cls = cls.getSuperclass();
-            } catch (NotFoundException e) {
-                break;
+        try {
+            // vert: this class
+            if (g.indexOf(ctClass.getName()) == -1) {
+                g.addVertex(ctClass.getName());
             }
-            ++count;
-        }
-
-        return count;
+            if (!ctClass.isInterface()) {
+                // vert: super class
+                CtClass ctSuper = ctClass.getSuperclass();
+                if (ctSuper != null) {
+                    addInheritanceTree(g, ctSuper);
+                    // edge: this class -> super
+                    g.addEdge(ctSuper.getName(), ctClass.getName());
+                }
+            }
+            // verts: interfaces
+            for (CtClass ctInterface : ctClass.getInterfaces()) {
+                addInheritanceTree(g, ctInterface);
+                // edge: this class -> interface
+                g.addEdge(ctInterface.getName(), ctClass.getName());
+            }
+        } catch (NotFoundException ignore) {}
     }
 
     public static void injectPatches(ClassLoader loader, ClassPool pool, List<Iterable<String>> class_names) throws Exception
@@ -480,7 +508,7 @@ public class Patcher {
             while (iter.hasNext()) {
                 SpirePatch patch = iter.next();
                 String modId = patch.requiredModId();
-                if (!modId.isEmpty() && Arrays.stream(Loader.MODINFOS).noneMatch(x -> modId.equals(x.ID))) {
+                if (!modId.isEmpty() && Arrays.stream(ModTheSpire.MODINFOS).noneMatch(x -> modId.equals(x.ID))) {
                     iter.remove();
                 }
             }
@@ -721,7 +749,7 @@ public class Patcher {
             Set<String> classNames = db.getAnnotationIndex().get(SpireOverride.class.getName());
             if (classNames != null) {
                 for (String className : classNames) {
-                    if (Loader.DEBUG) {
+                    if (ModTheSpire.DEBUG) {
                         System.out.println("Class: [" + className + "]");
                     }
                     try {
@@ -734,7 +762,7 @@ public class Patcher {
                                     throw new PatchingException(ctMethod, "Has no matching method signature in any superclass");
                                 }
 
-                                if (Loader.DEBUG) {
+                                if (ModTheSpire.DEBUG) {
                                     System.out.println(" - Overriding [" + superMethod.getLongName() + "]");
                                     System.out.println("      Fixing invocations in superclass " + superMethod.getDeclaringClass().getSimpleName() + "...");
                                 }
@@ -743,7 +771,7 @@ public class Patcher {
                                 codeConverter.redirectSpecialMethodCall(superMethod);
                                 superMethod.getDeclaringClass().instrument(codeConverter);
 
-                                if (Loader.DEBUG) {
+                                if (ModTheSpire.DEBUG) {
                                     System.out.println("      Replacing SpireSuper calls...");
                                 }
                                 ExprEditor exprEditor = new ExprEditor() {
@@ -752,7 +780,7 @@ public class Patcher {
                                     {
                                         try {
                                             if (m.getClassName().equals(SpireSuper.class.getName())) {
-                                                if (Loader.DEBUG) {
+                                                if (ModTheSpire.DEBUG) {
                                                     System.out.println("        @ " + m.getLineNumber());
                                                 }
                                                 String src = " { ";
@@ -771,7 +799,7 @@ public class Patcher {
                                                     src += "$_ = null;";
                                                 }
                                                 src += " }";
-                                                if (Loader.DEBUG) {
+                                                if (ModTheSpire.DEBUG) {
                                                     System.out.println(src);
                                                 }
                                                 m.replace(src);

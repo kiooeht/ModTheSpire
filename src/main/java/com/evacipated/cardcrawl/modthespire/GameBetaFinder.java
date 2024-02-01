@@ -37,7 +37,7 @@ public class GameBetaFinder extends ClassVisitor
         {
             super.visitFieldInsn(opcode, owner, name, descriptor);
             if (name.equals("isBeta") && opcode == Opcodes.PUTSTATIC) {
-                Loader.STS_BETA = isBeta;
+                ModTheSpire.STS_BETA = isBeta;
             }
         }
 

@@ -1,9 +1,8 @@
 package com.evacipated.cardcrawl.modthespire.patches;
 
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.evacipated.cardcrawl.modthespire.Loader;
+import com.evacipated.cardcrawl.modthespire.ModTheSpire;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
-import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.helpers.FontHelper;
 import com.megacrit.cardcrawl.screens.mainMenu.MainMenuScreen;
 import javassist.CannotCompileException;
@@ -75,7 +74,7 @@ public class MainMenuModList
 
     public static String makeMTSVersionModCount(String version)
     {
-        return version + " - " + Loader.MODINFOS.length + " mod" + (Loader.MODINFOS.length > 1 ? "s" : "");
+        return version + " - " + ModTheSpire.MODINFOS.length + " mod" + (ModTheSpire.MODINFOS.length > 1 ? "s" : "");
     }
 
     public static float getSmartHeight(BitmapFont font, String msg, float lineWidth, float lineSpacing)

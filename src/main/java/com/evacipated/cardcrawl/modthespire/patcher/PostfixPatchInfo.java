@@ -1,6 +1,6 @@
 package com.evacipated.cardcrawl.modthespire.patcher;
 
-import com.evacipated.cardcrawl.modthespire.Loader;
+import com.evacipated.cardcrawl.modthespire.ModTheSpire;
 
 import javassist.*;
 
@@ -78,13 +78,13 @@ public class PostfixPatchInfo extends ParameterPatchInfo
 
                     if (!returnType.equals(CtPrimitiveType.voidType)) {
                         returnsValue = true;
-                        if (Loader.DEBUG) {
+                        if (ModTheSpire.DEBUG) {
                             System.out.println("      Return: " + returnType.getName());
                         }
                     }
                     if (destInfo.getType().equals(returnType)) {
                         takesResultParam = true;
-                        if (Loader.DEBUG) {
+                        if (ModTheSpire.DEBUG) {
                             System.out.println("      Result param: " + destInfo.getTypename());
                         }
                         return "$_";
@@ -112,13 +112,13 @@ public class PostfixPatchInfo extends ParameterPatchInfo
                     CtClass returnType = patchMethod.getReturnType();
                     if (!returnType.equals(CtPrimitiveType.voidType)) {
                         returnsValue = true;
-                        if (Loader.DEBUG) {
+                        if (ModTheSpire.DEBUG) {
                             System.out.println("      Return: " + returnType.getName());
                         }
                     }
 
                     takesResultParam = true;
-                    if (Loader.DEBUG) {
+                    if (ModTheSpire.DEBUG) {
                         System.out.println("      Result param: " + getPatchParamTypename());
                     }
                 } catch (NotFoundException e) {

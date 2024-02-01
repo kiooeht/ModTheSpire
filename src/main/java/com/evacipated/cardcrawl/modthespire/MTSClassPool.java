@@ -68,7 +68,7 @@ public class MTSClassPool extends ClassPool
                 ret.add(cls);
             }
         }
-        if (Loader.OUT_JAR || Loader.PACKAGE) {
+        if (ModTheSpire.OUT_JAR || ModTheSpire.PACKAGE) {
             outJar = ret;
         }
         return ret;

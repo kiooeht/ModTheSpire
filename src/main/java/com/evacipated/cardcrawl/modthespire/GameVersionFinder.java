@@ -111,7 +111,7 @@ public class GameVersionFinder extends ClassVisitor
                     String possibleVersion = (String)o;
                     Matcher m = pattern.matcher(possibleVersion);
                     if (m.matches()) {
-                        Loader.setGameVersion(m.group(1));
+                        ModTheSpire.setGameVersion(m.group(1));
                     }
                 }
             }
