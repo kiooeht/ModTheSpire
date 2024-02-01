@@ -1,10 +1,13 @@
 ## Changelog ##
 #### dev ####
+* `Loader` class has been renamed to `ModTheSpire`
 * ByRef2
 * SpireMethod
 * Add localization support for MTS strings
 * Track workshop mod playtimes
+* Patch mts-launcher to allow command line arguments to be passed to ModTheSpire
 * Fix lowercase mod names sorted after capitalized mod names
+* Fix crash from compile order not considering interfaces
 
 #### v3.30.3 ####
 * Fix package information being lost for patched classes (Alchyr)
