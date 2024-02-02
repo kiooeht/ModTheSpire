@@ -3,7 +3,7 @@ package com.evacipated.cardcrawl.modthespire;
 import javassist.*;
 import javassist.bytecode.Descriptor;
 import javassist.expr.ExprEditor;
-import javassist.expr.NewExpr;
+import javassist.expr.MethodCall;
 
 import java.io.DataOutputStream;
 import java.io.File;
@@ -68,14 +68,13 @@ class LauncherPatch
             System.out.println("Applying mts-launcher.jar patch v1...");
             main.instrument(new ExprEditor() {
                 @Override
-                public void edit(NewExpr e) throws CannotCompileException
+                public void edit(MethodCall m) throws CannotCompileException
                 {
-                    if (e.getClassName().equals(ProcessBuilder.class.getName())) {
-                        e.replace(
-                            "String[] arr = new String[$1.length + args.length];" +
-                                "System.arraycopy($1, 0, arr, 0, $1.length);" +
-                                "System.arraycopy(args, 0, arr, $1.length, args.length);" +
-                                "$_ = $proceed(arr);"
+                    if (m.getClassName().equals(ProcessBuilder.class.getName()) && m.getMethodName().equals("start")) {
+                        m.replace(
+                                "$0.command().addAll(java.util.Arrays.asList(args));" +
+                                "$_ = $proceed($$);" +
+                                "logger.info($0.command().toString());"
                         );
                     }
                 }
