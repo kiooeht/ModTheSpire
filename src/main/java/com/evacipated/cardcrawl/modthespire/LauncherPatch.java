@@ -6,9 +6,14 @@ import javassist.expr.ExprEditor;
 import javassist.expr.NewExpr;
 
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 class LauncherPatch
 {
@@ -25,39 +30,40 @@ class LauncherPatch
             return;
         }
 
-        boolean anyPatchesApplied = false;
+        Set<CtClass> patchedClasses = new HashSet<>();
         try {
-            anyPatchesApplied = v1(pool) || anyPatchesApplied;
+            patchedClasses.addAll(v1(pool));
             // Call new patches here
         } catch (Err e) {
             System.out.println(e.getMessage() + ", skipped.");
             return;
         }
 
-        if (!anyPatchesApplied) {
+        if (patchedClasses.isEmpty()) {
             return;
         }
 
         try (FileSystem fs = FileSystems.newFileSystem(mtsLauncherJar, null)) {
-            CtClass main = pool.get("com.megacrit.mtslauncher.Main");
-            Path path = fs.getPath("/com/megacrit/mtslauncher/Main.class");
-            OutputStream out = Files.newOutputStream(path, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
-            main.toBytecode(new DataOutputStream(out));
+            for (CtClass ctClass : patchedClasses) {
+                Path path = fs.getPath(ctClass.getName().replace('.', File.separatorChar) + ".class");
+                OutputStream out = Files.newOutputStream(path, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+                ctClass.toBytecode(new DataOutputStream(out));
+                out.close();
+            }
             // Necessary to close the jar opened by ClassPool so writing can happen
             pool.removeClassPath(classPath);
-            out.close();
-        } catch (IOException | NotFoundException | CannotCompileException e) {
+        } catch (IOException | CannotCompileException e) {
             e.printStackTrace();
         }
     }
 
     // Make mts-launcher pass arguments to ModTheSpire
-    private static boolean v1(ClassPool pool) throws Err
+    private static Collection<CtClass> v1(ClassPool pool) throws Err
     {
         try {
             CtClass main = pool.get("com.megacrit.mtslauncher.Main");
             if (hasPatchMarker(main, "v1")) {
-                return false;
+                return Collections.emptyList();
             }
             System.out.println("Applying mts-launcher.jar patch v1...");
             main.instrument(new ExprEditor() {
@@ -75,10 +81,10 @@ class LauncherPatch
                 }
             });
             makePatchMarker(main, "v1");
+            return Collections.singleton(main);
         } catch (NotFoundException | CannotCompileException e) {
             throw new Err("v1", e);
         }
-        return true;
     }
 
     private static boolean hasPatchMarker(CtClass ctClass, String patchName)
