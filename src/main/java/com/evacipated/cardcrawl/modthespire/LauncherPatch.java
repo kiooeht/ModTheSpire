@@ -33,6 +33,7 @@ class LauncherPatch
         Set<CtClass> patchedClasses = new HashSet<>();
         try {
             patchedClasses.addAll(v1(pool));
+            patchedClasses.addAll(v2(pool));
             // Call new patches here
         } catch (Err e) {
             System.out.println(e.getMessage() + ", skipped.");
@@ -83,6 +84,34 @@ class LauncherPatch
             return Collections.singleton(main);
         } catch (NotFoundException | CannotCompileException e) {
             throw new Err("v1", e);
+        }
+    }
+
+    // Make mts-launcher run ModTheSpire with -javaagent
+    private static Collection<CtClass> v2(ClassPool pool) throws Err
+    {
+        try {
+            CtClass main = pool.get("com.megacrit.mtslauncher.Main");
+            if (hasPatchMarker(main, "v2")) {
+                return Collections.emptyList();
+            }
+            System.out.println("Applying mts-launcher.jar patch v2...");
+            main.instrument(new ExprEditor() {
+                @Override
+                public void edit(MethodCall m) throws CannotCompileException
+                {
+                    if (m.getClassName().equals(ProcessBuilder.class.getName()) && m.getMethodName().equals("start")) {
+                        m.replace(
+                            "$0.command().add(1, \"-javaagent:\" + path);" +
+                                "$_ = $proceed($$);"
+                        );
+                    }
+                }
+            });
+            makePatchMarker(main, "v2");
+            return Collections.singleton(main);
+        } catch (NotFoundException | CannotCompileException e) {
+            throw new Err("v2", e);
         }
     }
 
