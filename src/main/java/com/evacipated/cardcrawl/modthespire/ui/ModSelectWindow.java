@@ -50,6 +50,7 @@ public class ModSelectWindow extends JFrame
 
     private ModInfo currentModInfo;
     private TitledBorder name;
+    private JLabel modID;
     private JTextArea authors;
     private JLabel modVersion;
     private JTextArea status;
@@ -459,29 +460,33 @@ public class ModSelectWindow extends JFrame
         authors = makeInfoTextAreaField("Author(s)", " ");
         infoPanel.add(authors, c);
 
-        c.gridy = 1;
+        ++c.gridy;
+        modID = makeInfoLabelField("ID", " ");
+        infoPanel.add(modID, c);
+
+        ++c.gridy;
         modVersion = makeInfoLabelField("Version", " ");
         infoPanel.add(modVersion, c);
 
-        c.gridy = 2;
+        ++c.gridy;
         mtsVersion = makeInfoLabelField("ModTheSpire Version", " ");
         infoPanel.add(mtsVersion, c);
 
-        c.gridy = 3;
+        ++c.gridy;
         stsVersion = makeInfoLabelField("Slay the Spire Version", " ");
         infoPanel.add(stsVersion, c);
 
-        c.gridy = 4;
+        ++c.gridy;
         credits = makeInfoTextAreaField("Additional Credits", " ");
         infoPanel.add(credits, c);
 
-        c.gridy = 5;
+        ++c.gridy;
         status = makeInfoTextAreaField("Status", " ");
         infoPanel.add(status, c);
 
+        c.gridheight = c.gridy + 1;
         c.gridx = 0;
         c.gridy = 0;
-        c.gridheight = 7;
         c.weightx = 1;
         c.weighty = 1;
         description = makeInfoTextAreaField("Description", " ");
@@ -695,6 +700,7 @@ public class ModSelectWindow extends JFrame
         currentModInfo = info;
 
         name.setTitle(info.Name);
+        modID.setText(info.ID);
         authors.setText(String.join(", ", info.Authors));
         if (info.ModVersion != null) {
             modVersion.setText(info.ModVersion.toString());
