@@ -460,7 +460,7 @@ public class ModSelectWindow extends JFrame
         infoPanel.add(authors, c);
 
         c.gridy = 1;
-        modVersion = makeInfoLabelField("ModVersion", " ");
+        modVersion = makeInfoLabelField("Version", " ");
         infoPanel.add(modVersion, c);
 
         c.gridy = 2;
