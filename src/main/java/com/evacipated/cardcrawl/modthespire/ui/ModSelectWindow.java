@@ -454,50 +454,59 @@ public class ModSelectWindow extends JFrame
         GridBagConstraints c = new GridBagConstraints();
         c.fill = GridBagConstraints.BOTH;
 
+        // Right panel
         c.gridx = 1;
         c.gridy = 0;
         c.anchor = GridBagConstraints.WEST;
-        c.weightx = 1;
+        c.weightx = 0.25;
 
-        authors = makeInfoTextAreaField("Author(s)", " ");
-        infoPanel.add(authors, c);
-
-        ++c.gridy;
         modID = makeInfoLabelField("ID", " ");
         infoPanel.add(modID, c);
-
         ++c.gridy;
+
         modVersion = makeInfoLabelField("Version", " ");
         infoPanel.add(modVersion, c);
-
         ++c.gridy;
+
         mtsVersion = makeInfoLabelField("ModTheSpire Version", " ");
         infoPanel.add(mtsVersion, c);
-
         ++c.gridy;
+
         stsVersion = makeInfoLabelField("Slay the Spire Version", " ");
         infoPanel.add(stsVersion, c);
-
         ++c.gridy;
+
         dependencies = makeInfoLabelField("Dependencies", " ");
         infoPanel.add(dependencies, c);
-
         ++c.gridy;
-        credits = makeInfoTextAreaField("Additional Credits", " ");
-        infoPanel.add(credits, c);
 
-        ++c.gridy;
         status = makeInfoTextAreaField("Status", " ");
         infoPanel.add(status, c);
 
+        // Left panel
         c.gridheight = c.gridy + 1;
         c.gridx = 0;
         c.gridy = 0;
-        c.weightx = 1;
+        c.weightx = 0.75;
         c.weighty = 1;
-        description = makeInfoTextAreaField("Description", " ");
-        infoPanel.add(description, c);
 
+        JPanel leftPanel = new JPanel();
+        leftPanel.setLayout(new BorderLayout());
+
+        description = makeInfoTextAreaField("Description", " ");
+        leftPanel.add(description, BorderLayout.CENTER);
+
+        JPanel leftCredits = new JPanel();
+        leftCredits.setLayout(new BoxLayout(leftCredits, BoxLayout.Y_AXIS));
+
+        authors = makeInfoTextAreaField("Author(s)", " ");
+        leftCredits.add(authors);
+
+        credits = makeInfoTextAreaField("Additional Credits", " ");
+        leftCredits.add(credits);
+
+        leftPanel.add(leftCredits, BorderLayout.SOUTH);
+        infoPanel.add(leftPanel, c);
         panel.add(infoPanel, BorderLayout.CENTER);
 
         return panel;

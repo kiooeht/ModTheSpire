@@ -11,6 +11,7 @@
 * Allow dependencies to specify required version number
 * Add mod ID to UI
 * Add dependencies to UI
+* Rearrange info in the UI
 * Fix status message being wiped when rearranging mod order
 
 #### v3.30.3 ####
