@@ -816,16 +816,16 @@ public class ModTheSpire
         }
 
         for (final ModInfo info : modinfos) {
-            for (String dependency : info.Dependencies) {
+            for (ModInfo.Dependency dependency : info.Dependencies) {
                 boolean has = false;
                 for (final ModInfo dependinfo : modinfos) {
-                    if (dependinfo.ID != null && dependinfo.ID.equals(dependency)) {
+                    if (dependinfo.ID != null && dependinfo.ID.equals(dependency.id)) {
                         has = true;
                         break;
                     }
                 }
                 if (!has) {
-                    throw new MissingDependencyException(info, dependency);
+                    throw new MissingDependencyException(info, dependency.id);
                 }
             }
         }
@@ -852,8 +852,8 @@ public class ModTheSpire
         }
 
         for (int i=0; i<modInfos.length; ++i) {
-            for (String dependency : modInfos[i].Dependencies) {
-                g.addEdge(findDependencyIndex(modInfos, dependency), i);
+            for (ModInfo.Dependency dependency : modInfos[i].Dependencies) {
+                g.addEdge(findDependencyIndex(modInfos, dependency.id), i);
             }
             for (String optionalDependency : modInfos[i].OptionalDependencies) {
                 int idx = findDependencyIndex(modInfos, optionalDependency);

@@ -24,12 +24,12 @@ public class ModPanel extends JPanel
     private boolean isFilteredOut = false;
     
     private static boolean dependenciesChecked(ModInfo info, JModPanelCheckBoxList parent) {
-        String[] dependencies = info.Dependencies;
+        ModInfo.Dependency[] dependencies = info.Dependencies;
         boolean[] checked = new boolean[dependencies.length]; // initializes to false
         for (int i = 0; i < parent.getModel().getSize(); i++) {
             ModPanel panel = parent.getModel().getElementAt(i);
             for (int j = 0; j < dependencies.length; j++) {
-                if (panel.info != null && panel.info.ID != null && panel.info.ID.equals(dependencies[j]) && panel.checkBox.isSelected()) {
+                if (panel.info != null && dependencies[j].compare(panel.info) && panel.checkBox.isSelected()) {
                     checked[j] = true;
                 }
             }
@@ -45,12 +45,12 @@ public class ModPanel extends JPanel
     }
     
     private static String[] missingDependencies(ModInfo info, JModPanelCheckBoxList parent) {
-        String[] dependencies = info.Dependencies;
+        ModInfo.Dependency[] dependencies = info.Dependencies;
         boolean[] checked = new boolean[dependencies.length]; // initializes to false
         for (int i = 0; i < parent.getModel().getSize(); i++) {
             ModPanel panel = parent.getModel().getElementAt(i);
             for (int j = 0; j < dependencies.length; j++) {
-                if (panel.info != null && panel.info.ID != null && panel.info.ID.equals(dependencies[j]) && panel.checkBox.isSelected()) {
+                if (panel.info != null && dependencies[j].compare(panel.info) && panel.checkBox.isSelected()) {
                     checked[j] = true;
                 }
             }
@@ -58,7 +58,7 @@ public class ModPanel extends JPanel
         java.util.List<String> missing = new ArrayList<String>();
         for (int i = 0; i < checked.length; i++) {
             if (!checked[i]) {
-                missing.add(dependencies[i]);
+                missing.add(dependencies[i].toString());
             }
         }
         String[] returnType = new String[missing.size()];

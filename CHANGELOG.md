@@ -8,6 +8,7 @@
 * Patch mts-launcher to allow command line arguments to be passed to ModTheSpire
 * Fix lowercase mod names sorted after capitalized mod names
 * Fix crash from compile order not considering interfaces
+* Allow dependencies to specify required version number
 * Add mod ID to UI
 
 #### v3.30.3 ####
