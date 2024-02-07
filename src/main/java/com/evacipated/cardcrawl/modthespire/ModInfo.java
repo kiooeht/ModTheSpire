@@ -210,6 +210,7 @@ public class ModInfo implements Serializable
         out.writeObject(Dependencies);
         out.writeObject(OptionalDependencies);
         out.writeObject(UpdateJSON);
+        out.writeObject(statusMsg);
     }
 
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException
@@ -225,6 +226,7 @@ public class ModInfo implements Serializable
         Dependencies = (Dependency[]) in.readObject();
         OptionalDependencies = (String[]) in.readObject();
         UpdateJSON = (String) in.readObject();
+        statusMsg = (String) in.readObject();
     }
 
     public static Semver safeVersion(String verString)

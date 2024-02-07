@@ -11,6 +11,7 @@
 * Allow dependencies to specify required version number
 * Add mod ID to UI
 * Add dependencies to UI
+* Fix status message being wiped when rearranging mod order
 
 #### v3.30.3 ####
 * Fix package information being lost for patched classes (Alchyr)
