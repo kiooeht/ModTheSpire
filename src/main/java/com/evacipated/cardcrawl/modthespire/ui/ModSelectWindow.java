@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
@@ -58,6 +59,7 @@ public class ModSelectWindow extends JFrame
     private JLabel stsVersion;
     private JTextArea description;
     private JTextArea credits;
+    private JLabel dependencies;
 
     private JPanel bannerNoticePanel;
     private JLabel mtsUpdateBanner;
@@ -477,6 +479,10 @@ public class ModSelectWindow extends JFrame
         infoPanel.add(stsVersion, c);
 
         ++c.gridy;
+        dependencies = makeInfoLabelField("Dependencies", " ");
+        infoPanel.add(dependencies, c);
+
+        ++c.gridy;
         credits = makeInfoTextAreaField("Additional Credits", " ");
         infoPanel.add(credits, c);
 
@@ -719,6 +725,17 @@ public class ModSelectWindow extends JFrame
         }
         description.setText(info.Description);
         credits.setText(info.Credits);
+        if (info.Dependencies.length == 0) {
+            dependencies.setText(" ");
+        } else {
+            String dependenciesStr = Arrays.toString(info.Dependencies);
+            try {
+                dependencies.setText(dependenciesStr.substring(1, dependenciesStr.length() - 1));
+            } catch (ArrayIndexOutOfBoundsException ignore) {
+                // Just in case, don't want to crash
+                dependencies.setText(dependenciesStr);
+            }
+        }
 
         status.setText(info.statusMsg);
 

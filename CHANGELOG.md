@@ -10,6 +10,7 @@
 * Fix crash from compile order not considering interfaces
 * Allow dependencies to specify required version number
 * Add mod ID to UI
+* Add dependencies to UI
 
 #### v3.30.3 ####
 * Fix package information being lost for patched classes (Alchyr)
