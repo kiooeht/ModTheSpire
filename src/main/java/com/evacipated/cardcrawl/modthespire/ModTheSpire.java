@@ -62,6 +62,7 @@ public class ModTheSpire
     public static String[] ARGS;
     public static boolean SKIP_INTRO = false;
     public static boolean LWJGL3_ENABLED = false;
+    public static boolean AGENT_ENABLED = false;
     private static ModSelectWindow ex;
 
     private static final List<URL> extraJars = new ArrayList<>();

@@ -18,12 +18,18 @@ class MTSAgent
     {
         System.out.println("ModTheSpire Premain");
         inst.addTransformer(new RenameLoader());
+        ModTheSpire.AGENT_ENABLED = true;
     }
 
     public static void agentmain(String agentArgs, Instrumentation inst)
     {
+        if (ModTheSpire.AGENT_ENABLED) {
+            System.out.println("MTSAgent already enabled.");
+            return;
+        }
         System.out.println("Done.");
         inst.addTransformer(new RenameLoader());
+        ModTheSpire.AGENT_ENABLED = true;
     }
 
     static class RenameLoader implements ClassFileTransformer

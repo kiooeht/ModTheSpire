@@ -30,6 +30,10 @@ class MTSAgentLoader
 
     static void loadAgent()
     {
+        if (ModTheSpire.AGENT_ENABLED) {
+            System.out.println("Premain agent enabled.");
+            return;
+        }
         System.out.print("Loading agent...");
         // Unpack attach library
         try {
