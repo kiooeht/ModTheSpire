@@ -13,6 +13,7 @@
 * Add dependencies to UI
 * Rearrange info in the UI
 * Fix status message being wiped when rearranging mod order
+* Divide mod list and info panels, allowing for resizing
 
 #### v3.30.3 ####
 * Fix package information being lost for patched classes (Alchyr)

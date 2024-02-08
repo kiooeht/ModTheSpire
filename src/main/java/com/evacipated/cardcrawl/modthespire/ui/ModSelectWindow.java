@@ -8,6 +8,8 @@ import javax.swing.border.MatteBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.plaf.basic.BasicSplitPaneDivider;
+import javax.swing.plaf.basic.BasicSplitPaneUI;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
@@ -204,8 +206,7 @@ public class ModSelectWindow extends JFrame
         setLayout(new BorderLayout());
         getContentPane().setPreferredSize(new Dimension(location.width, location.height));
 
-        getContentPane().add(makeModListPanel(), BorderLayout.WEST);
-        getContentPane().add(makeInfoPanel(), BorderLayout.CENTER);
+        getContentPane().add(makeSplitPanel(), BorderLayout.CENTER);
         getContentPane().add(makeTopPanel(), BorderLayout.NORTH);
 
         pack();
@@ -225,11 +226,59 @@ public class ModSelectWindow extends JFrame
         }
     }
 
+    private JSplitPane makeSplitPanel()
+    {
+        JSplitPane split = new JSplitPane(
+            JSplitPane.HORIZONTAL_SPLIT,
+            true,
+            makeModListPanel(),
+            makeInfoPanel()
+        );
+        // Remove annoying border around panels
+        split.setBorder(BorderFactory.createEmptyBorder());
+        // Remove annoying line/border on split handle
+        split.setUI(new BasicSplitPaneUI() {
+            @Override
+            public BasicSplitPaneDivider createDefaultDivider()
+            {
+                return new BasicSplitPaneDivider(this) {
+                    @Override
+                    public void paint(Graphics g) {}
+                };
+            }
+        });
+        // Load divider location
+        EventQueue.invokeLater(() -> {
+            if (ModTheSpire.MTS_CONFIG.has("split")) {
+                float splitLocation = ModTheSpire.MTS_CONFIG.getFloat("split");
+                split.setDividerLocation(splitLocation);
+            }
+        });
+        // Save divider location when it changes
+        split.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY, evt -> {
+            if (((Integer) evt.getOldValue()) == -1) {
+                return;
+            }
+
+            Integer v = (Integer) evt.getNewValue();
+            float percent = v / (float) (split.getWidth() - split.getDividerSize());
+            ModTheSpire.MTS_CONFIG.setFloat("split", percent);
+            try {
+                ModTheSpire.MTS_CONFIG.save();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
+        return split;
+    }
+
     private JPanel makeModListPanel()
     {
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
         panel.setPreferredSize(new Dimension(220, 300));
+        panel.setMinimumSize(new Dimension(180, 300));
 
         // Mod List
         DefaultListModel<ModPanel> model = new DefaultListModel<>();
@@ -435,6 +484,7 @@ public class ModSelectWindow extends JFrame
     {
         JPanel panel = new JPanel();
         panel.setLayout(new BorderLayout());
+        panel.setMinimumSize(new Dimension(400, 300));
 
         // Top mod banner panel
         panel.add(makeModBannerPanel(), BorderLayout.NORTH);
