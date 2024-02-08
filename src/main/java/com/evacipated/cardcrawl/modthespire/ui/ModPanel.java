@@ -8,6 +8,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
 import java.awt.*;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
 @SuppressWarnings("serial")
@@ -95,6 +96,8 @@ public class ModPanel extends JPanel
             parent.publishBoxChecked();
         });
         parent.publishBoxChecked();
+
+        setToolTipText("Double click to add an alias for this mod");
     }
     
     public void recalcModWarnings(JModPanelCheckBoxList parent)
@@ -186,7 +189,7 @@ public class ModPanel extends JPanel
             workshopInfoKey = String.format("%s %s", info.workshopInfo.getTitle(), String.join(" ", info.workshopInfo.getTags()));
         }
 
-        String modInfoKey = String.format("%s %s %s %s", info.ID, info.Name, String.join(" ", info.Authors), workshopInfoKey).toLowerCase();
+        String modInfoKey = String.format("%s %s %s %s %s", info.ID, info.Name, infoPanel.alias, String.join(" ", info.Authors), workshopInfoKey).toLowerCase();
         boolean isFilteredOut = false;
         for (String filterKey : filterKeys) {
             if (!modInfoKey.contains(filterKey)) {
@@ -201,8 +204,21 @@ public class ModPanel extends JPanel
         return isFilteredOut;
     }
 
+    // set the alias for this mod and save
+    public void setAlias(String alias) {
+        if (alias == null || alias.isEmpty()) return;
+        infoPanel.setNameText(alias);
+        Loader.MTS_CONFIG.setString(info.ID, alias);
+        try {
+            Loader.MTS_CONFIG.save();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
     public class InfoPanel extends JPanel
     {
+        String alias = "";
         JLabel name = new JLabel();
         JLabel version = new JLabel();
 
@@ -224,8 +240,21 @@ public class ModPanel extends JPanel
             }
             add(version, BorderLayout.SOUTH);
 
+            String alias = Loader.MTS_CONFIG.getString(info.ID);
+            setNameText(alias);
+
             checkBox.setBackground(Color.WHITE);
             setBackground(Color.WHITE);
+        }
+
+        public void setNameText(String alias) {
+            if (alias == null) return;
+            this.alias = alias;
+            if (alias.isEmpty()) {
+                name.setText(info.Name);
+            } else {
+                name.setText(String.format("<html>[%s]  <font color=#a0a0a0>%s</font></html>", alias, info.Name));
+            }
         }
 
         @Override

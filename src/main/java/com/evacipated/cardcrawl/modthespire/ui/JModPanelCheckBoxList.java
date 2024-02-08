@@ -45,7 +45,13 @@ public class JModPanelCheckBoxList extends JList<ModPanel> {
                         if (modPanel.checkBox.isEnabled()) {
                             modPanel.checkBox.setSelected(!modPanel.checkBox.isSelected());
                             repaint();
+                            return;
                         }
+                    }
+
+                    if (e.getClickCount() == 2) {
+                        String alias = JOptionPane.showInputDialog("Please enter an alias:");
+                        modPanel.setAlias(alias);
                     }
                 }
             }
