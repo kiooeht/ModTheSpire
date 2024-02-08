@@ -9,6 +9,7 @@ import javax.swing.border.MatteBorder;
 import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Objects;
 
 @SuppressWarnings("serial")
 public class ModPanel extends JPanel
@@ -131,7 +132,7 @@ public class ModPanel extends JPanel
         if (ModTheSpire.STS_VERSION != null && info.STS_Version != null && !ModTheSpire.STS_VERSION.equals(info.STS_Version)) {
             //checkBox.setBackground(lightYellow);
             //infoPanel.setBackground(lightYellow);
-            if (info.statusMsg == " ") {
+            if (Objects.equals(info.statusMsg, " ")) {
                 info.statusMsg = "This mod explicitly supports StS " + info.STS_Version + ".\n" +
                     "You are running StS " + ModTheSpire.STS_VERSION + ".\n" +
                     "You may encounter problems running it.";
