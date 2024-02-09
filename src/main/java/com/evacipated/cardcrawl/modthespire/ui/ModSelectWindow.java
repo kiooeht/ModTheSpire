@@ -35,6 +35,7 @@ public class ModSelectWindow extends JFrame
     private static final String PACKAGE_OPTION = "Package";
 
     static final Image APP_ICON = Toolkit.getDefaultToolkit().createImage(ModSelectWindow.class.getResource("/assets/icon.png"));
+    static final Icon ICON_SETTINGS = new ImageIcon(ModSelectWindow.class.getResource("/assets/settings.gif"));
     static final Icon ICON_UPDATE   = new ImageIcon(ModSelectWindow.class.getResource("/assets/update.gif"));
     static final Icon ICON_LOAD     = new ImageIcon(ModSelectWindow.class.getResource("/assets/ajax-loader.gif"));
     static final Icon ICON_GOOD     = new ImageIcon(ModSelectWindow.class.getResource("/assets/good.gif"));
@@ -357,9 +358,13 @@ public class ModSelectWindow extends JFrame
             startCheckingForModUpdates(updatesBtn);
         });
         // Settings button
-        JButton settingsBtn = new JButton("Settings");
+        JButton settingsBtn = new JButton(ICON_SETTINGS);
+        settingsBtn.setToolTipText("Open Settings");
         settingsBtn.addActionListener((ActionEvent event) -> {
-            // TODO
+            JDialog settingsWindow = new SettingsWindow();
+            settingsWindow.pack();
+            settingsWindow.setLocationRelativeTo(ModSelectWindow.this);
+            settingsWindow.setVisible(true);
         });
         // Toggle all button
         JButton toggleAllBtn = new JButton(UIManager.getIcon("Tree.collapsedIcon"));
@@ -370,7 +375,7 @@ public class ModSelectWindow extends JFrame
         });
 
         JPanel btnPanel = new JPanel(new GridLayout(1, 0));
-        //btnPanel.add(settingsBtn);
+        btnPanel.add(settingsBtn);
         btnPanel.add(updatesBtn);
         btnPanel.add(openFolderBtn);
 
@@ -629,22 +634,6 @@ public class ModSelectWindow extends JFrame
         }
         sts_version.setHorizontalAlignment(SwingConstants.RIGHT);
         panel.add(sts_version, BorderLayout.EAST);
-
-        // Debug checkbox
-        JCheckBox debugCheck = new JCheckBox(DEBUG_OPTION);
-        if (ModTheSpire.DEBUG) {
-            debugCheck.setSelected(true);
-        }
-        debugCheck.addActionListener((ActionEvent event) -> {
-            ModTheSpire.DEBUG = debugCheck.isSelected();
-            ModTheSpire.MTS_CONFIG.setBool("debug", ModTheSpire.DEBUG);
-            try {
-                ModTheSpire.MTS_CONFIG.save();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
-        panel.add(debugCheck, BorderLayout.WEST);
 
         return panel;
     }
