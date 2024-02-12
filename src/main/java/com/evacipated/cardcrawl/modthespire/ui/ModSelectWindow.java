@@ -8,6 +8,7 @@ import javax.swing.border.MatteBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.plaf.FontUIResource;
 import javax.swing.plaf.basic.BasicSplitPaneDivider;
 import javax.swing.plaf.basic.BasicSplitPaneUI;
 import java.awt.*;
@@ -95,6 +96,15 @@ public class ModSelectWindow extends JFrame
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (ClassNotFoundException | InstantiationException | UnsupportedLookAndFeelException | IllegalAccessException e) {
             e.printStackTrace();
+        }
+
+        Object f = UIManager.get("TitledBorder.font");
+        if (f instanceof FontUIResource) {
+            UIManager.put("TitledBorder.font", new FontUIResource(((FontUIResource) f).deriveFont(Font.BOLD)));
+        }
+        f = UIManager.get("Label.font");
+        if (f instanceof FontUIResource) {
+            UIManager.put("TextArea.font", new FontUIResource(((FontUIResource) f).deriveFont(Font.PLAIN)));
         }
 
         setIconImage(APP_ICON);
@@ -500,7 +510,6 @@ public class ModSelectWindow extends JFrame
         // Main info panel
         JPanel infoPanel = new JPanel();
         name = BorderFactory.createTitledBorder("Mod Info");
-        name.setTitleFont(name.getTitleFont().deriveFont(Font.BOLD));
         infoPanel.setBorder(BorderFactory.createCompoundBorder(
             name,
             BorderFactory.createEmptyBorder(5, 5, 5, 5)
@@ -572,8 +581,6 @@ public class ModSelectWindow extends JFrame
         JLabel label = new JLabel(value);
 
         TitledBorder border = BorderFactory.createTitledBorder(title);
-        border.setTitleFont(border.getTitleFont().deriveFont(Font.BOLD));
-        label.setFont(label.getFont().deriveFont(Font.PLAIN));
         label.setBorder(BorderFactory.createCompoundBorder(
             border,
             BorderFactory.createEmptyBorder(5, 5, 5, 5)
@@ -587,7 +594,6 @@ public class ModSelectWindow extends JFrame
         JTextArea label = new JTextArea(value);
 
         TitledBorder border = BorderFactory.createTitledBorder(title);
-        border.setTitleFont(border.getTitleFont().deriveFont(Font.BOLD));
         label.setBorder(BorderFactory.createCompoundBorder(
             border,
             BorderFactory.createEmptyBorder(5, 5, 5, 5)
@@ -597,7 +603,6 @@ public class ModSelectWindow extends JFrame
         label.setLineWrap(true);
         label.setWrapStyleWord(true);
         label.setOpaque(false);
-        label.setFont(border.getTitleFont().deriveFont(Font.PLAIN).deriveFont(11.0f));
 
         return label;
     }
