@@ -1,7 +1,7 @@
 package com.evacipated.cardcrawl.modthespire.ui;
 
-import com.evacipated.cardcrawl.modthespire.ModTheSpire;
 import com.evacipated.cardcrawl.modthespire.ModInfo;
+import com.evacipated.cardcrawl.modthespire.ModTheSpire;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -17,6 +17,7 @@ public class ModPanel extends JPanel
     private static final Color lightRed = new Color(229,115,115);
     private static final Color lightOrange = new Color(255, 159, 0); // orange peel (https://en.wikipedia.org/wiki/Shades_of_orange#Orange_peel)
     private static final Color lightYellow = new Color(255, 238, 88);
+
     public ModInfo info;
     public File modFile;
     public JCheckBox checkBox;
@@ -213,11 +214,12 @@ public class ModPanel extends JPanel
 
             name.setOpaque(true);
             name.setText(info.Name);
-            name.setFont(name.getFont().deriveFont(13.0f).deriveFont(Font.BOLD));
+            Font f = name.getFont();
+            name.setFont(name.getFont().deriveFont((float) name.getFont().getSize() + 2).deriveFont(Font.BOLD));
             add(name, BorderLayout.CENTER);
 
             version.setOpaque(true);
-            version.setFont(version.getFont().deriveFont(10.0f).deriveFont(Font.PLAIN));
+            version.setFont(version.getFont().deriveFont((float) version.getFont().getSize() - 1).deriveFont(Font.PLAIN));
             if (info.ModVersion != null) {
                 version.setText(info.ModVersion.toString());
             } else {

@@ -1,6 +1,7 @@
 package com.evacipated.cardcrawl.modthespire.ui;
 
 import com.evacipated.cardcrawl.modthespire.ModTheSpire;
+import ru.krlvm.swingdpi.SwingDPI;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -21,13 +22,14 @@ public class SettingsWindow extends JDialog
     private JCheckBox checkDebug;
     private JCheckBox checkImGui;
     private JCheckBox checkSkipIntro;
+    private JComboBox<UIScale> comboUIScale;
 
-    public SettingsWindow()
+    public SettingsWindow(Frame owner)
     {
+        super(owner, true);
         setTitle("Settings");
         setIconImage(ModSelectWindow.APP_ICON);
         setContentPane(contentPane);
-        setModal(true);
         getRootPane().setDefaultButton(buttonClose);
 
         buttonClose.addActionListener(e -> onClose());
@@ -67,12 +69,25 @@ public class SettingsWindow extends JDialog
             SettingsWindow::getSkipIntro,
             SettingsWindow::setSkipIntro
         );
+
+        for (float f = 1f; f <= 3f; f += 0.25f) {
+            comboUIScale.addItem(new UIScale(f));
+        }
+        comboUIScale.setSelectedItem(new UIScale(ModSelectWindow.UI_SCALE));
+        comboUIScale.addItemListener(e -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                UIScale selected = (UIScale) comboUIScale.getSelectedItem();
+                if (selected != null) {
+                    saveSetting("uiScale", selected.getScale());
+                }
+            }
+        });
     }
 
     @Override
     public Dimension getPreferredSize()
     {
-        return new Dimension(prefSize);
+        return SwingDPI.getScaledDimension(prefSize);
     }
 
     private void registerCheckBox(JCheckBox checkBox, String saveKey, BooleanSupplier getter, Consumer<Boolean> setter)
@@ -89,6 +104,16 @@ public class SettingsWindow extends JDialog
             }
             saveSetting(saveKey, getter.getAsBoolean());
         });
+    }
+
+    private void saveSetting(String setting, float value)
+    {
+        ModTheSpire.MTS_CONFIG.setFloat(setting, value);
+        try {
+            ModTheSpire.MTS_CONFIG.save();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void saveSetting(String setting, boolean value)
@@ -203,7 +228,7 @@ public class SettingsWindow extends JDialog
         panel4.setLayout(new GridBagLayout());
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 0;
+        gbc.gridy = 1;
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         gbc.anchor = GridBagConstraints.NORTH;
@@ -235,7 +260,7 @@ public class SettingsWindow extends JDialog
         panel6.setLayout(new GridBagLayout());
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 1;
+        gbc.gridy = 2;
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         gbc.anchor = GridBagConstraints.NORTH;
@@ -269,6 +294,47 @@ public class SettingsWindow extends JDialog
         gbc.gridy = 1;
         gbc.anchor = GridBagConstraints.WEST;
         panel7.add(checkImGui, gbc);
+        final JPanel panel8 = new JPanel();
+        panel8.setLayout(new GridBagLayout());
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        gbc.anchor = GridBagConstraints.NORTH;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel3.add(panel8, gbc);
+        panel8.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "ModTheSpire Settings", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
+        final JPanel panel9 = new JPanel();
+        panel9.setLayout(new GridBagLayout());
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        gbc.anchor = GridBagConstraints.NORTHWEST;
+        panel8.add(panel9, gbc);
+        comboUIScale = new JComboBox();
+        comboUIScale.setEnabled(true);
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        gbc.anchor = GridBagConstraints.WEST;
+        panel9.add(comboUIScale, gbc);
+        final JLabel label1 = new JLabel();
+        label1.setText("UI Scale (requires restart)");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 2;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        panel9.add(label1, gbc);
+        final JPanel spacer1 = new JPanel();
+        gbc = new GridBagConstraints();
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel9.add(spacer1, gbc);
     }
 
     /**

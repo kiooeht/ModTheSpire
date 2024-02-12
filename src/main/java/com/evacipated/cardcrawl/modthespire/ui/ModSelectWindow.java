@@ -1,6 +1,7 @@
 package com.evacipated.cardcrawl.modthespire.ui;
 
 import com.evacipated.cardcrawl.modthespire.*;
+import ru.krlvm.swingdpi.SwingDPI;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -74,6 +75,8 @@ public class ModSelectWindow extends JFrame
 
     static List<ModUpdate> MODUPDATES;
 
+    static float UI_SCALE = 1f;
+
     public enum UpdateIconType
     {
         NONE, CAN_CHECK, CHECKING, UPDATE_AVAILABLE, UPTODATE, WORKSHOP
@@ -96,6 +99,14 @@ public class ModSelectWindow extends JFrame
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (ClassNotFoundException | InstantiationException | UnsupportedLookAndFeelException | IllegalAccessException e) {
             e.printStackTrace();
+        }
+
+        if (ModTheSpire.MTS_CONFIG.has("uiScale")) {
+            UI_SCALE = ModTheSpire.MTS_CONFIG.getFloat("uiScale");
+            if (UI_SCALE != 1f) {
+                SwingDPI.setScaleFactor(UI_SCALE);
+                SwingDPI.setScaleApplied(true);
+            }
         }
 
         Object f = UIManager.get("TitledBorder.font");
@@ -371,7 +382,7 @@ public class ModSelectWindow extends JFrame
         JButton settingsBtn = new JButton(ICON_SETTINGS);
         settingsBtn.setToolTipText("Open Settings");
         settingsBtn.addActionListener((ActionEvent event) -> {
-            JDialog settingsWindow = new SettingsWindow();
+            JDialog settingsWindow = new SettingsWindow(ModSelectWindow.this);
             settingsWindow.pack();
             settingsWindow.setLocationRelativeTo(ModSelectWindow.this);
             settingsWindow.setVisible(true);
