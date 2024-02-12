@@ -344,7 +344,7 @@ public class ModsScreen
         if (selectedMod >= 0) {
             ModInfo info = ModTheSpire.MODINFOS[selectedMod];
             String text = info.Name;
-            text += " NL ModVersion: " + (info.ModVersion != null ? info.ModVersion : "<MISSING>");
+            text += " NL Version: " + (info.ModVersion != null ? info.ModVersion : "<MISSING>");
             text += " NL Mod ID: " + (info.ID != null ? info.ID : "<MISSING>");
             text += " NL Author" + (info.Authors.length > 1 ? "s" : "") + ": " + StringUtils.join(info.Authors, ", ");
             if (info.Credits != null && !info.Credits.isEmpty()) {
