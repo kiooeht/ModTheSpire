@@ -8,6 +8,7 @@ import com.megacrit.cardcrawl.core.Settings;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 public class MTSLocalization
@@ -21,7 +22,7 @@ public class MTSLocalization
 
         InputStream is = ModTheSpire.class.getResourceAsStream("/mtsLocalization.json");
         if (is != null) {
-            strings = gson.fromJson(new InputStreamReader(is), type);
+            strings = gson.fromJson(new InputStreamReader(is, StandardCharsets.UTF_8), type);
         } else {
             System.out.println("FAILED TO READ MTS LOCALIZATION");
             strings = null;
