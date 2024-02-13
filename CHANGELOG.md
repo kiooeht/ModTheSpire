@@ -16,6 +16,7 @@
 * Divide mod list and info panels, allowing for resizing
 * Add settings menu
 * Add UI scale setting
+* Update in-game Mod Settings menu, make Config button more prominent
 
 #### v3.30.3 ####
 * Fix package information being lost for patched classes (Alchyr)

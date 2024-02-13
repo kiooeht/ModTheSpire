@@ -2,7 +2,8 @@
   "ENG": {
     "ModMenuButton": "Mod Settings",
     "ModList": "Mod List",
-    "ModConfig": "Config"
+    "ModConfig": "Config",
+    "Close": "Close"
   },
   "ZHS": {
     "ModMenuButton": "Mod设置",

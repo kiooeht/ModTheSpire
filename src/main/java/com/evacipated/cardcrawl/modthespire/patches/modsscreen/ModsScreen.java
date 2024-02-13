@@ -6,13 +6,16 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.utils.ScissorStack;
-import com.evacipated.cardcrawl.modthespire.ModTheSpire;
 import com.evacipated.cardcrawl.modthespire.ModInfo;
+import com.evacipated.cardcrawl.modthespire.ModTheSpire;
 import com.evacipated.cardcrawl.modthespire.lib.SpireEnum;
 import com.evacipated.cardcrawl.modthespire.patches.MTSLocalization;
 import com.megacrit.cardcrawl.core.CardCrawlGame;
 import com.megacrit.cardcrawl.core.Settings;
-import com.megacrit.cardcrawl.helpers.*;
+import com.megacrit.cardcrawl.helpers.FontHelper;
+import com.megacrit.cardcrawl.helpers.Hitbox;
+import com.megacrit.cardcrawl.helpers.ImageMaster;
+import com.megacrit.cardcrawl.helpers.MathHelper;
 import com.megacrit.cardcrawl.helpers.input.InputHelper;
 import com.megacrit.cardcrawl.screens.mainMenu.MainMenuScreen;
 import com.megacrit.cardcrawl.screens.mainMenu.MenuCancelButton;
@@ -39,13 +42,13 @@ public class ModsScreen
     private float targetY = scrollY;
     private float scrollLowerBound;
     private float scrollUpperBound;
-    private MenuCancelButton button = new MenuCancelButton();
+    private MenuCancelButton closeButton = new MenuCancelButton();
+    private ModConfigButton configButton = new ModConfigButton();
     private boolean grabbedScreen = false;
     private float grabStartY = 0;
 
     private ArrayList<Hitbox> hitboxes = new ArrayList<>();
     private int selectedMod = -1;
-    private Hitbox configHb;
 
     static Map<URL, Object> baseModBadges;
     private static boolean justClosedModPanel = false;
@@ -92,20 +95,18 @@ public class ModsScreen
         for (int i = 0; i< ModTheSpire.MODINFOS.length; ++i) {
             hitboxes.add(new Hitbox(430.0f * Settings.scale, 40.0f * Settings.scale));
         }
-
-        configHb = new Hitbox(100 * Settings.scale, 40 * Settings.scale);
     }
 
     public void open()
     {
-        button.show(PatchNotesScreen.TEXT[0]);
+        closeButton.show(PatchNotesScreen.TEXT[0]);
         scrollY = targetY = Settings.HEIGHT - 150.0F * Settings.scale;
         CardCrawlGame.mainMenuScreen.darken();
         CardCrawlGame.mainMenuScreen.screen = Enum.MODS_LIST;
 
         selectedMod = -1;
 
-        scrollUpperBound = targetY + Math.max(0, ModTheSpire.MODINFOS.length - 15) * 45.0f * Settings.scale;
+        scrollUpperBound = targetY + Math.max(0, ModTheSpire.MODINFOS.length - 12) * 45.0f * Settings.scale;
         scrollLowerBound = targetY;
     }
 
@@ -120,14 +121,15 @@ public class ModsScreen
             }
         }
 
-        button.update();
-        if (button.hb.clicked || InputHelper.pressedEscape) {
-            button.hb.clicked = false;
+        closeButton.update();
+        if (closeButton.hb.clicked || InputHelper.pressedEscape) {
+            closeButton.hb.clicked = false;
             InputHelper.pressedEscape = false;
             try {
                 if (!baseModSettingsUp) {
                     CardCrawlGame.mainMenuScreen.screen = MainMenuScreen.CurScreen.MAIN_MENU;
-                    button.hide();
+                    closeButton.hide();
+                    configButton.hideInstantly();
                     CardCrawlGame.mainMenuScreen.lighten();
                 } else {
                     BaseMod_modSettingsUp.set(null, false);
@@ -136,6 +138,11 @@ public class ModsScreen
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
+        }
+        configButton.update();
+        if (configButton.hb.clicked) {
+            configButton.hb.clicked = false;
+            modBadge_onClick(baseModBadges.get(ModTheSpire.MODINFOS[selectedMod].jarURL));
         }
 
         if (baseModBadges != null) {
@@ -146,7 +153,10 @@ public class ModsScreen
                 justClosedModPanel = false;
                 CardCrawlGame.mainMenuScreen.darken();
                 CardCrawlGame.mainMenuScreen.screen = Enum.MODS_LIST;
-                button.show(PatchNotesScreen.TEXT[0]);
+                closeButton.show(PatchNotesScreen.TEXT[0]);
+                if (baseModBadges != null && baseModBadges.get(ModTheSpire.MODINFOS[selectedMod].jarURL) != null) {
+                    showConfigButton();
+                }
             }
         }
 
@@ -165,13 +175,13 @@ public class ModsScreen
                 if (hitboxes.get(i).clicked) {
                     hitboxes.get(i).clicked = false;
                     selectedMod = i;
-                }
-            }
-
-            if (baseModBadges != null && selectedMod >= 0 && baseModBadges.get(ModTheSpire.MODINFOS[selectedMod].jarURL) != null) {
-                configHb.update();
-                if (configHb.hovered && InputHelper.justClickedLeft) {
-                    modBadge_onClick(baseModBadges.get(ModTheSpire.MODINFOS[selectedMod].jarURL));
+                    if (baseModBadges != null && baseModBadges.get(ModTheSpire.MODINFOS[selectedMod].jarURL) != null) {
+                        if (configButton.isHidden) {
+                            showConfigButton();
+                        }
+                    } else {
+                        configButton.hide();
+                    }
                 }
             }
         }
@@ -181,7 +191,7 @@ public class ModsScreen
 
     private void updateScrolling()
     {
-        if (hitboxes.size() > 16) {
+        if (hitboxes.size() > 13) {
             int y = InputHelper.mY;
             if (!grabbedScreen) {
                 if (InputHelper.scrolledDown) {
@@ -244,7 +254,8 @@ public class ModsScreen
             hitbox.render(sb);
         }
 
-        button.render(sb);
+        configButton.render(sb);
+        closeButton.render(sb);
     }
 
     private void renderModList(SpriteBatch sb)
@@ -263,7 +274,7 @@ public class ModsScreen
             Rectangle scissors = new Rectangle();
             float y = Settings.HEIGHT - 110 * Settings.scale;
             Rectangle clipBounds = new Rectangle(50 * Settings.scale, y,
-                500 * Settings.scale, button.hb.y - y + button.hb.height);
+                500 * Settings.scale, closeButton.hb.y - y + (closeButton.hb.height * 2));
             ScissorStack.calculateScissors(camera, sb.getTransformMatrix(), clipBounds, scissors);
             ScissorStack.pushScissors(scissors);
         }
@@ -358,23 +369,6 @@ public class ModsScreen
                 Settings.WIDTH - x - screenPadding,
                 26 * Settings.scale,
                 Settings.CREAM_COLOR);
-
-            if (baseModBadges != null) {
-                configHb.move(x - padding - 50 * Settings.scale, button.hb.y + (button.hb.height / 2.0f));
-
-                if (baseModBadges.get(ModTheSpire.MODINFOS[selectedMod].jarURL) != null) {
-                    configHb.render(sb);
-
-                    Color c = Settings.CREAM_COLOR;
-                    if (configHb.hovered) {
-                        c = Settings.GOLD_COLOR;
-                    }
-                    FontHelper.renderFontCentered(sb, FontHelper.buttonLabelFont,
-                        MTSLocalization.getString("ModConfig"),
-                        configHb.cX, configHb.cY,
-                        c);
-                }
-            }
         }
     }
 
@@ -389,6 +383,18 @@ public class ModsScreen
         sb.draw(ImageMaster.WHITE_SQUARE_IMG, x, y, thickness, height);
         sb.draw(ImageMaster.WHITE_SQUARE_IMG, x, y+height-thickness, width, thickness);
         sb.draw(ImageMaster.WHITE_SQUARE_IMG, x+width-thickness, y, thickness, height);
+    }
+
+    private void showConfigButton()
+    {
+        float closeGlowAlpha = 0f;
+        try {
+            // Ensure buttons flash in-sync
+            Field f = MenuCancelButton.class.getDeclaredField("glowAlpha");
+            f.setAccessible(true);
+            closeGlowAlpha = f.getFloat(closeButton);
+        } catch (NoSuchFieldException | IllegalAccessException ignore) {}
+        configButton.show(MTSLocalization.getString("ModConfig"), closeGlowAlpha);
     }
 
     private void modPanel_update(Object badge)
@@ -409,7 +415,8 @@ public class ModsScreen
     {
         if (badge != null) {
             try {
-                button.show("Close");
+                configButton.hide();
+                closeButton.show(MTSLocalization.getString("Close"));
                 ModBadge_onClick.invoke(badge);
                 CardCrawlGame.mainMenuScreen.screen = Enum.MODS_LIST;
             } catch (IllegalAccessException | InvocationTargetException e) {
