@@ -326,7 +326,7 @@ public class ModSelectWindow extends JFrame
 
             JTextArea textArea = new JTextArea();
             textArea.setLineWrap(true);
-            textArea.setFont(new Font("monospaced", Font.PLAIN, 12));
+            textArea.setFont(new Font("monospaced", Font.PLAIN, SwingDPI.scale(12)));
             JScrollPane logScroller = new JScrollPane(textArea);
             this.getContentPane().add(logScroller, BorderLayout.CENTER);
             MessageConsole mc = new MessageConsole(textArea);
