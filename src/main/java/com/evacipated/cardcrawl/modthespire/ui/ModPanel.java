@@ -214,7 +214,6 @@ public class ModPanel extends JPanel
 
             name.setOpaque(true);
             name.setText(info.Name);
-            Font f = name.getFont();
             name.setFont(name.getFont().deriveFont((float) name.getFont().getSize() + 2).deriveFont(Font.BOLD));
             add(name, BorderLayout.CENTER);
 
