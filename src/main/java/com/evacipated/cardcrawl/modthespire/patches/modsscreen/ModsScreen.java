@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.utils.ScissorStack;
 import com.evacipated.cardcrawl.modthespire.ModInfo;
 import com.evacipated.cardcrawl.modthespire.ModTheSpire;
@@ -163,10 +164,16 @@ public class ModsScreen
         if (!baseModSettingsUp) {
             updateScrolling();
             float tmpY = 0;
+            Rectangle bounds = getModListBounds();
+            Vector2 mouse = new Vector2(InputHelper.mX, InputHelper.mY);
             for (int i = 0; i < hitboxes.size(); ++i) {
                 hitboxes.get(i).x = 90.0f * Settings.scale;
                 hitboxes.get(i).y = tmpY + scrollY - 30.0f * Settings.scale;
-                hitboxes.get(i).update();
+                if (bounds.contains(mouse) && bounds.overlaps(hitboxToRect(hitboxes.get(i)))) {
+                    hitboxes.get(i).update();
+                } else {
+                    hitboxes.get(i).hovered = false;
+                }
                 if (hitboxes.get(i).hovered && InputHelper.isMouseDown) {
                     hitboxes.get(i).clickStarted = true;
                 }
@@ -187,6 +194,11 @@ public class ModsScreen
         }
 
         InputHelper.justClickedLeft = false;
+    }
+
+    private static Rectangle hitboxToRect(Hitbox hb)
+    {
+        return new Rectangle(hb.x, hb.y, hb.width, hb.height);
     }
 
     private void updateScrolling()
@@ -272,9 +284,7 @@ public class ModsScreen
         if (camera != null) {
             sb.flush();
             Rectangle scissors = new Rectangle();
-            float y = Settings.HEIGHT - 110 * Settings.scale;
-            Rectangle clipBounds = new Rectangle(50 * Settings.scale, y,
-                500 * Settings.scale, closeButton.hb.y - y + (closeButton.hb.height * 2));
+            Rectangle clipBounds = getModListBounds();
             ScissorStack.calculateScissors(camera, sb.getTransformMatrix(), clipBounds, scissors);
             ScissorStack.pushScissors(scissors);
         }
@@ -337,6 +347,22 @@ public class ModsScreen
             sb.flush();
             ScissorStack.popScissors();
         }
+    }
+
+    private Rectangle getModListBounds()
+    {
+        float y = Settings.HEIGHT - 110 * Settings.scale;
+        Rectangle ret = new Rectangle(
+            50 * Settings.scale,
+            y,
+            500 * Settings.scale,
+            closeButton.hb.y - y + (closeButton.hb.height * 2)
+        );
+        if (ret.height < 0) {
+            ret.y += ret.height;
+            ret.height *= -1;
+        }
+        return ret;
     }
 
     private void renderModInfo(SpriteBatch sb)

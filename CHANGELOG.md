@@ -17,6 +17,7 @@
 * Add settings menu
 * Add UI scale setting
 * Update in-game Mod Settings menu, make Config button more prominent
+* Fix being able to click on non-visble mod entries in the Mod Settings menu
 
 #### v3.30.3 ####
 * Fix package information being lost for patched classes (Alchyr)
