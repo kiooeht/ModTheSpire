@@ -39,6 +39,7 @@ public class ModsScreen
     }
 
     private static final float START_Y = Settings.HEIGHT - 200.0F * Settings.scale;
+    private static final float SCROLLBAR_WIDTH = 15f * Settings.scale;
     private float scrollY = START_Y;
     private float targetY = scrollY;
     private float scrollLowerBound;
@@ -341,6 +342,23 @@ public class ModsScreen
             }
 
             tmpY -= 45.0f * Settings.scale;
+        }
+
+        // Render scrollbar
+        if (hitboxes.size() > 13) {
+            Rectangle bounds = getModListBounds();
+            float scrollbarHeight = bounds.height / ((45f * Settings.scale * hitboxes.size()) / bounds.height);
+            float scrollbarOffset = ((scrollY - scrollLowerBound) / (scrollUpperBound - scrollLowerBound)) * (bounds.height - scrollbarHeight);
+            Color c = sb.getColor();
+            sb.setColor(1, 1, 1, 0.5f);
+            sb.draw(
+                ImageMaster.WHITE_SQUARE_IMG,
+                bounds.x + bounds.width - SCROLLBAR_WIDTH,
+                bounds.y + bounds.height - scrollbarHeight - scrollbarOffset,
+                SCROLLBAR_WIDTH,
+                scrollbarHeight
+            );
+            sb.setColor(c);
         }
 
         if (camera != null) {

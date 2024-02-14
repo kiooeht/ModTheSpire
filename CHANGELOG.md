@@ -16,7 +16,9 @@
 * Divide mod list and info panels, allowing for resizing
 * Add settings menu
 * Add UI scale setting
-* Update in-game Mod Settings menu, make Config button more prominent
+* Update in-game Mod Settings menu
+  * Make Config button more prominent
+  * Add scrollbar when mod list is long
 * Fix being able to click on non-visble mod entries in the Mod Settings menu
 
 #### v3.30.3 ####
