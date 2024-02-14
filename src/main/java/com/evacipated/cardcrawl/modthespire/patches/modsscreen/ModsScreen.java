@@ -107,7 +107,7 @@ public class ModsScreen
 
         selectedMod = -1;
 
-        scrollUpperBound = targetY + Math.max(0, ModTheSpire.MODINFOS.length - 12) * 45.0f * Settings.scale;
+        scrollUpperBound = targetY + Math.max(0, ModTheSpire.MODINFOS.length - 13) * 45.0f * Settings.scale;
         scrollLowerBound = targetY;
     }
 
