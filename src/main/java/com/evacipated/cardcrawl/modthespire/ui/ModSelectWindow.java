@@ -1,10 +1,8 @@
 package com.evacipated.cardcrawl.modthespire.ui;
 
 import com.evacipated.cardcrawl.modthespire.*;
-import com.formdev.flatlaf.FlatDarculaLaf;
-import com.formdev.flatlaf.FlatDarkLaf;
-import com.formdev.flatlaf.FlatLaf;
-import com.formdev.flatlaf.FlatLightLaf;
+import com.formdev.flatlaf.*;
+import com.formdev.flatlaf.icons.FlatSearchIcon;
 import ru.krlvm.swingdpi.SwingDPI;
 
 import javax.swing.*;
@@ -418,8 +416,9 @@ public class ModSelectWindow extends JFrame
         JButton addProfile = new JButton("+");
         JButton delProfile = new JButton("-");
 
-        TextFieldWithPlaceholder filter = new TextFieldWithPlaceholder();
-        filter.setPlaceholder("Filter...");
+        JTextField filter = new JTextField();
+        filter.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Search");
+        filter.putClientProperty(FlatClientProperties.TEXT_FIELD_LEADING_ICON, new FlatSearchIcon());
 
         profilesList.addActionListener((ActionEvent event) -> {
             String profileName = (String) profilesList.getSelectedItem();
