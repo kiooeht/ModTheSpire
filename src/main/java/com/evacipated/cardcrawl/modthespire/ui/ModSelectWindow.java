@@ -1,6 +1,10 @@
 package com.evacipated.cardcrawl.modthespire.ui;
 
 import com.evacipated.cardcrawl.modthespire.*;
+import com.formdev.flatlaf.FlatDarculaLaf;
+import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.FlatLaf;
+import com.formdev.flatlaf.FlatLightLaf;
 import ru.krlvm.swingdpi.SwingDPI;
 
 import javax.swing.*;
@@ -10,8 +14,6 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.plaf.FontUIResource;
-import javax.swing.plaf.basic.BasicSplitPaneDivider;
-import javax.swing.plaf.basic.BasicSplitPaneUI;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
@@ -95,12 +97,12 @@ public class ModSelectWindow extends JFrame
     
     public ModSelectWindow(ModInfo[] modInfos, boolean skipLauncher)
     {
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (ClassNotFoundException | InstantiationException | UnsupportedLookAndFeelException | IllegalAccessException e) {
-            e.printStackTrace();
+        if (ModTheSpire.MTS_CONFIG.has("uiTheme")) {
+            String theme = ModTheSpire.MTS_CONFIG.getString("uiTheme");
+            setTheme(theme);
+        } else {
+            setTheme("Light");
         }
-
         if (ModTheSpire.MTS_CONFIG.has("uiScale")) {
             UI_SCALE = ModTheSpire.MTS_CONFIG.getFloat("uiScale");
             if (UI_SCALE != 1f) {
@@ -127,6 +129,30 @@ public class ModSelectWindow extends JFrame
         if (ModTheSpire.MTS_CONFIG.getBool("maximize")) {
             isMaximized = true;
             this.setExtendedState(this.getExtendedState() | JFrame.MAXIMIZED_BOTH);
+        }
+    }
+
+    static void setTheme(String theme)
+    {
+        LookAndFeel laf;
+        switch (theme) {
+            case "Light":
+                laf = new FlatLightLaf();
+                break;
+            case "Dark":
+                laf = new FlatDarkLaf();
+                break;
+            case "Darcula":
+                laf = new FlatDarculaLaf();
+                break;
+            default:
+                laf = null;
+                break;
+        }
+        if (laf != null) {
+            if (FlatLaf.setup(laf)) {
+                FlatLaf.updateUI();
+            }
         }
     }
 
@@ -256,19 +282,6 @@ public class ModSelectWindow extends JFrame
             makeModListPanel(),
             makeInfoPanel()
         );
-        // Remove annoying border around panels
-        split.setBorder(BorderFactory.createEmptyBorder());
-        // Remove annoying line/border on split handle
-        split.setUI(new BasicSplitPaneUI() {
-            @Override
-            public BasicSplitPaneDivider createDefaultDivider()
-            {
-                return new BasicSplitPaneDivider(this) {
-                    @Override
-                    public void paint(Graphics g) {}
-                };
-            }
-        });
         // Load divider location
         EventQueue.invokeLater(() -> {
             if (ModTheSpire.MTS_CONFIG.has("split")) {

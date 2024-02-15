@@ -214,11 +214,11 @@ public class ModPanel extends JPanel
 
             name.setOpaque(true);
             name.setText(info.Name);
-            name.setFont(name.getFont().deriveFont((float) name.getFont().getSize() + 2).deriveFont(Font.BOLD));
+            name.putClientProperty("FlatLaf.styleClass", "h3");
             add(name, BorderLayout.CENTER);
 
             version.setOpaque(true);
-            version.setFont(version.getFont().deriveFont((float) version.getFont().getSize() - 1).deriveFont(Font.PLAIN));
+            version.putClientProperty("FlatLaf.styleClass", "small");
             if (info.ModVersion != null) {
                 version.setText(info.ModVersion.toString());
             } else {

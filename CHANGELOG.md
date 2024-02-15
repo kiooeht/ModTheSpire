@@ -20,6 +20,8 @@
   * Make Config button more prominent
   * Add scrollbar when mod list is long
 * Fix being able to click on non-visble mod entries in the Mod Settings menu
+* FlatLaf UI theme
+* Add theme setting
 
 #### v3.30.3 ####
 * Fix package information being lost for patched classes (Alchyr)

@@ -28,6 +28,12 @@
         </dependency>
 
         <dependency>
+            <groupId>com.formdev</groupId>
+            <artifactId>flatlaf</artifactId>
+            <version>3.3</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.ea.agentloader</groupId>
             <artifactId>ea-agent-loader</artifactId>
             <version>1.0.3</version>
@@ -447,6 +453,12 @@
                                     <excludes>
                                         <exclude>**</exclude>
                                     </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>com.formdev:flatlaf</artifact>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
                                 </filter>
                                 <filter>
                                     <artifact>com.ea.agentloader:ea-agent-loader</artifact>

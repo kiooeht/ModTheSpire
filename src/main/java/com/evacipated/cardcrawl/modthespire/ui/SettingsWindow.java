@@ -1,6 +1,7 @@
 package com.evacipated.cardcrawl.modthespire.ui;
 
 import com.evacipated.cardcrawl.modthespire.ModTheSpire;
+import com.formdev.flatlaf.FlatLaf;
 import ru.krlvm.swingdpi.SwingDPI;
 
 import javax.swing.*;
@@ -23,6 +24,7 @@ public class SettingsWindow extends JDialog
     private JCheckBox checkImGui;
     private JCheckBox checkSkipIntro;
     private JComboBox<UIScale> comboUIScale;
+    private JComboBox comboTheme;
 
     public SettingsWindow(Frame owner)
     {
@@ -79,6 +81,22 @@ public class SettingsWindow extends JDialog
                 UIScale selected = (UIScale) comboUIScale.getSelectedItem();
                 if (selected != null) {
                     saveSetting("uiScale", selected.getScale());
+                    System.setProperty("flatlaf.uiScale", selected.toString());
+                    FlatLaf.updateUI();
+                }
+            }
+        });
+
+
+        if (ModTheSpire.MTS_CONFIG.has("uiTheme")) {
+            comboTheme.setSelectedItem(ModTheSpire.MTS_CONFIG.getString("uiTheme"));
+        }
+        comboTheme.addItemListener(e -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                String themeName = (String) comboTheme.getSelectedItem();
+                if (themeName != null) {
+                    saveSetting("uiTheme", themeName);
+                    ModSelectWindow.setTheme(themeName);
                 }
             }
         });
@@ -104,6 +122,16 @@ public class SettingsWindow extends JDialog
             }
             saveSetting(saveKey, getter.getAsBoolean());
         });
+    }
+
+    private void saveSetting(String setting, String value)
+    {
+        ModTheSpire.MTS_CONFIG.setString(setting, value);
+        try {
+            ModTheSpire.MTS_CONFIG.save();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void saveSetting(String setting, float value)
@@ -318,23 +346,42 @@ public class SettingsWindow extends JDialog
         comboUIScale.setEnabled(true);
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 0;
+        gbc.gridy = 1;
         gbc.weightx = 1.0;
-        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         panel9.add(comboUIScale, gbc);
         final JLabel label1 = new JLabel();
         label1.setText("UI Scale (requires restart)");
         gbc = new GridBagConstraints();
         gbc.gridx = 2;
-        gbc.gridy = 0;
+        gbc.gridy = 1;
         gbc.anchor = GridBagConstraints.WEST;
         panel9.add(label1, gbc);
         final JPanel spacer1 = new JPanel();
         gbc = new GridBagConstraints();
         gbc.gridx = 1;
-        gbc.gridy = 0;
+        gbc.gridy = 1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         panel9.add(spacer1, gbc);
+        comboTheme = new JComboBox();
+        final DefaultComboBoxModel defaultComboBoxModel1 = new DefaultComboBoxModel();
+        defaultComboBoxModel1.addElement("Light");
+        defaultComboBoxModel1.addElement("Dark");
+        defaultComboBoxModel1.addElement("Darcula");
+        comboTheme.setModel(defaultComboBoxModel1);
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        panel9.add(comboTheme, gbc);
+        final JLabel label2 = new JLabel();
+        label2.setText("Theme");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 2;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        panel9.add(label2, gbc);
     }
 
     /**
