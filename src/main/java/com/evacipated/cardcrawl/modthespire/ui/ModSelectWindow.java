@@ -96,6 +96,7 @@ public class ModSelectWindow extends JFrame
     
     public ModSelectWindow(ModInfo[] modInfos, boolean skipLauncher)
     {
+        System.setProperty("flatlaf.useWindowDecorations", "true");
         if (ModTheSpire.MTS_CONFIG.has("uiTheme")) {
             String theme = ModTheSpire.MTS_CONFIG.getString("uiTheme");
             setTheme(theme);

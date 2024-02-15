@@ -364,7 +364,6 @@ public class ModTheSpire
 
         final boolean finalSkipLauncher = skipLauncher;
         EventQueue.invokeLater(() -> {
-            System.setProperty("flatlaf.useWindowDecorations", "true");
             ALLMODINFOS = getAllMods(getWorkshopInfos());
             ex = new ModSelectWindow(ALLMODINFOS, finalSkipLauncher);
             ex.setVisible(true);
