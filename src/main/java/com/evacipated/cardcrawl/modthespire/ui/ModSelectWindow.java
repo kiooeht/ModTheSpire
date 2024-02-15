@@ -2,6 +2,7 @@ package com.evacipated.cardcrawl.modthespire.ui;
 
 import com.evacipated.cardcrawl.modthespire.*;
 import com.formdev.flatlaf.*;
+import com.formdev.flatlaf.icons.FlatCheckBoxIcon;
 import com.formdev.flatlaf.icons.FlatSearchIcon;
 import ru.krlvm.swingdpi.SwingDPI;
 
@@ -401,7 +402,7 @@ public class ModSelectWindow extends JFrame
             settingsWindow.setVisible(true);
         });
         // Toggle all button
-        JButton toggleAllBtn = new JButton(UIManager.getIcon("Tree.collapsedIcon"));
+        JButton toggleAllBtn = new JButton(new FlatCheckBoxIcon());
         toggleAllBtn.setToolTipText("Toggle all mods On/Off");
         toggleAllBtn.addActionListener((ActionEvent event) -> {
             modList.toggleAllMods();
