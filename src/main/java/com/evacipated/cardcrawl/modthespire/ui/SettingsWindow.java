@@ -1,7 +1,6 @@
 package com.evacipated.cardcrawl.modthespire.ui;
 
 import com.evacipated.cardcrawl.modthespire.ModTheSpire;
-import com.formdev.flatlaf.FlatLaf;
 import ru.krlvm.swingdpi.SwingDPI;
 
 import javax.swing.*;
@@ -81,8 +80,6 @@ public class SettingsWindow extends JDialog
                 UIScale selected = (UIScale) comboUIScale.getSelectedItem();
                 if (selected != null) {
                     saveSetting("uiScale", selected.getScale());
-                    System.setProperty("flatlaf.uiScale", selected.toString());
-                    FlatLaf.updateUI();
                 }
             }
         });
