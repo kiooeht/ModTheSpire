@@ -41,6 +41,7 @@ public class ModSelectWindow extends JFrame
     static final Image APP_ICON = Toolkit.getDefaultToolkit().createImage(ModSelectWindow.class.getResource("/assets/icon.png"));
     static final Icon ICON_SETTINGS = new ImageIcon(ModSelectWindow.class.getResource("/assets/settings.gif"));
     static final Icon ICON_UPDATE   = new ImageIcon(ModSelectWindow.class.getResource("/assets/update.gif"));
+    static final Icon ICON_FILE     = new ImageIcon(ModSelectWindow.class.getResource("/assets/file.gif"));
     static final Icon ICON_LOAD     = new ImageIcon(ModSelectWindow.class.getResource("/assets/ajax-loader.gif"));
     static final Icon ICON_GOOD     = new ImageIcon(ModSelectWindow.class.getResource("/assets/good.gif"));
     static final Icon ICON_WARNING  = new ImageIcon(ModSelectWindow.class.getResource("/assets/warning.gif"));
@@ -372,7 +373,7 @@ public class ModSelectWindow extends JFrame
         panel.add(playBtn, BorderLayout.SOUTH);
 
         // Open mod directory
-        JButton openFolderBtn = new JButton(UIManager.getIcon("FileView.directoryIcon"));
+        JButton openFolderBtn = new JButton(ICON_FILE);
         openFolderBtn.setToolTipText("Open Mods Directory");
         openFolderBtn.addActionListener((ActionEvent event) -> {
             try {
