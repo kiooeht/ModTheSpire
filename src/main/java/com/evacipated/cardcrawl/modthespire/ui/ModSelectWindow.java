@@ -143,9 +143,6 @@ public class ModSelectWindow extends JFrame
             case "Dark":
                 laf = new FlatDarkLaf();
                 break;
-            case "Darcula":
-                laf = new FlatDarculaLaf();
-                break;
             default:
                 laf = null;
                 break;

@@ -170,7 +170,6 @@
                       <model>
                         <item value="Light"/>
                         <item value="Dark"/>
-                        <item value="Darcula"/>
                       </model>
                     </properties>
                   </component>

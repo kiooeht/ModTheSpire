@@ -364,7 +364,6 @@ public class SettingsWindow extends JDialog
         final DefaultComboBoxModel defaultComboBoxModel1 = new DefaultComboBoxModel();
         defaultComboBoxModel1.addElement("Light");
         defaultComboBoxModel1.addElement("Dark");
-        defaultComboBoxModel1.addElement("Darcula");
         comboTheme.setModel(defaultComboBoxModel1);
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
