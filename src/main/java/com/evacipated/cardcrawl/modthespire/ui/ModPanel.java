@@ -102,8 +102,8 @@ public class ModPanel extends JPanel
     public void recalcModWarnings(JModPanelCheckBoxList parent)
     {
         info.statusMsg = " ";
-        checkBox.setBackground(Color.WHITE);
-        infoPanel.setBackground(Color.WHITE);
+        checkBox.setBackground(null);
+        infoPanel.setBackground(null);
 
         if (info.MTS_Version == null) {
             checkBox.setEnabled(false);
@@ -212,12 +212,10 @@ public class ModPanel extends JPanel
         {
             setLayout(new BorderLayout());
 
-            name.setOpaque(true);
             name.setText(info.Name);
             name.putClientProperty("FlatLaf.styleClass", "h3");
             add(name, BorderLayout.CENTER);
 
-            version.setOpaque(true);
             version.putClientProperty("FlatLaf.styleClass", "small");
             if (info.ModVersion != null) {
                 version.setText(info.ModVersion.toString());
@@ -225,9 +223,6 @@ public class ModPanel extends JPanel
                 version.setText("missing version");
             }
             add(version, BorderLayout.SOUTH);
-
-            checkBox.setBackground(Color.WHITE);
-            setBackground(Color.WHITE);
         }
 
         @Override

@@ -148,6 +148,18 @@ public class JModPanelCheckBoxList extends JList<ModPanel> {
         repaint();
     }
 
+    @Override
+    public void updateUI()
+    {
+        super.updateUI();
+        for (int i=0; i<getModel().getSize(); ++i) {
+            ModPanel panel = getModel().getElementAt(i);
+            panel.updateUI();
+            SwingUtilities.updateComponentTreeUI(panel);
+            panel.recalcModWarnings(this);
+        }
+    }
+
     protected class CellRenderer implements ListCellRenderer<ModPanel> {
         private final JPanel hiddenItem = new JPanel();
 
@@ -267,6 +279,7 @@ class ListItemTransferHandler extends TransferHandler {
                     ((JModPanelCheckBoxList)target).publishBoxChecked();
                 });
                 listModel.add(idx, values[i]);
+                ((ModPanel) values[i]).recalcModWarnings((JModPanelCheckBoxList) target);
                 target.addSelectionInterval(idx, idx);
             }
             addCount = values.length;
