@@ -98,7 +98,7 @@ public class ModPanel extends JPanel
         });
         parent.publishBoxChecked();
     }
-    
+
     public void recalcModWarnings(JModPanelCheckBoxList parent)
     {
         info.statusMsg = " ";
@@ -236,6 +236,13 @@ public class ModPanel extends JPanel
                 version.setText("missing version");
             }
             add(version, BorderLayout.SOUTH);
+        }
+
+        @Override
+        public Dimension getPreferredSize()
+        {
+            Dimension d = super.getPreferredSize();
+            return new Dimension(0, d.height);
         }
 
         @Override

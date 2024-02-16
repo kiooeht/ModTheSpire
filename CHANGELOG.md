@@ -22,6 +22,7 @@
 * Fix being able to click on non-visble mod entries in the Mod Settings menu
 * FlatLaf UI theme
 * Add theme setting
+* Make mod list clip long mod names instead of scrolling horizontally
 
 #### v3.30.3 ####
 * Fix package information being lost for patched classes (Alchyr)
