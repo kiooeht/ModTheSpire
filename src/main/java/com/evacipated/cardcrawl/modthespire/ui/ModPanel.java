@@ -107,22 +107,35 @@ public class ModPanel extends JPanel
 
         if (info.MTS_Version == null) {
             checkBox.setEnabled(false);
-            checkBox.setBackground(lightRed);
-            infoPanel.setBackground(lightRed);
+            Color error = UIManager.getColor("Component.error.focusedBorderColor");
+            if (error == null) {
+                error = lightRed;
+            }
+            checkBox.setBackground(error);
+            infoPanel.setBackground(error);
+            this.putClientProperty("JComponent.outline", "error");
             info.statusMsg = "This mod is missing a valid ModTheSpire version number.";
             return;
         }
         if (info.MTS_Version.compareTo(ModTheSpire.MTS_VERSION) > 0) {
             checkBox.setEnabled(false);
-            checkBox.setBackground(lightRed);
-            infoPanel.setBackground(lightRed);
+            Color error = UIManager.getColor("Component.error.focusedBorderColor");
+            if (error == null) {
+                error = lightRed;
+            }
+            checkBox.setBackground(error);
+            infoPanel.setBackground(error);
             info.statusMsg = "This mod requires ModTheSpire v" + info.MTS_Version + " or higher.";
             return;
         }
 
         if (checkBox.isSelected() && !dependenciesChecked(info, parent)) {
-            checkBox.setBackground(lightOrange);
-            infoPanel.setBackground(lightOrange);
+            Color warning = UIManager.getColor("Component.warning.focusedBorderColor");
+            if (warning == null) {
+                warning = lightOrange;
+            }
+            checkBox.setBackground(warning);
+            infoPanel.setBackground(warning);
             String[] missingDependencies = missingDependencies(info, parent);
             StringBuilder tooltip = new StringBuilder();
             tooltip.append("Missing dependencies: [");
