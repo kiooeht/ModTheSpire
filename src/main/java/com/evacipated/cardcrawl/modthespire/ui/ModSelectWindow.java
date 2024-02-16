@@ -402,7 +402,14 @@ public class ModSelectWindow extends JFrame
             settingsWindow.setVisible(true);
         });
         // Toggle all button
-        JButton toggleAllBtn = new JButton(new FlatCheckBoxIcon());
+        JButton toggleAllBtn = new JButton(new FlatCheckBoxIcon()) {
+            @Override
+            public void updateUI()
+            {
+                super.updateUI();
+                setIcon(new FlatCheckBoxIcon());
+            }
+        };
         toggleAllBtn.setToolTipText("Toggle all mods On/Off");
         toggleAllBtn.addActionListener((ActionEvent event) -> {
             modList.toggleAllMods();
