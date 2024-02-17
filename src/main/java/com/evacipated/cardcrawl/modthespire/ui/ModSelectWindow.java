@@ -36,7 +36,6 @@ public class ModSelectWindow extends JFrame
     private static final long serialVersionUID = -8232997068791248057L;
     private static final int DEFAULT_WIDTH = 800;
     private static final int DEFAULT_HEIGHT = 500;
-    private static final String DEBUG_OPTION = "Debug";
     private static final String PLAY_OPTION = "Play";
     private static final String JAR_DUMP_OPTION = "Dump Patched Jar";
     private static final String PACKAGE_OPTION = "Package";
