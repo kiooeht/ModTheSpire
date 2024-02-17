@@ -32,6 +32,11 @@
             <artifactId>flatlaf</artifactId>
             <version>3.3</version>
         </dependency>
+        <dependency>
+            <groupId>com.alexandriasoftware.swing</groupId>
+            <artifactId>jsplitbutton</artifactId>
+            <version>1.3.1</version>
+        </dependency>
 
         <dependency>
             <groupId>com.ea.agentloader</groupId>

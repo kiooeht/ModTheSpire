@@ -1,7 +1,11 @@
 package com.evacipated.cardcrawl.modthespire.ui;
 
+import com.alexandriasoftware.swing.JSplitButton;
 import com.evacipated.cardcrawl.modthespire.*;
-import com.formdev.flatlaf.*;
+import com.formdev.flatlaf.FlatClientProperties;
+import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.FlatLaf;
+import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.icons.FlatCheckBoxIcon;
 import com.formdev.flatlaf.icons.FlatSearchIcon;
 import ru.krlvm.swingdpi.SwingDPI;
@@ -52,7 +56,7 @@ public class ModSelectWindow extends JFrame
     private boolean isMaximized = false;
     private boolean isCentered = false;
     private Rectangle location;
-    private JButton playBtn;
+    private JSplitButton playBtn;
 
     private JModPanelCheckBoxList modList;
 
@@ -324,12 +328,75 @@ public class ModSelectWindow extends JFrame
         panel.add(modScroller, BorderLayout.CENTER);
 
         // Play button
-        playBtn = new JButton(
-            ModTheSpire.PACKAGE ? PACKAGE_OPTION :
-                ModTheSpire.OUT_JAR ? JAR_DUMP_OPTION :
-                PLAY_OPTION
-        );
-        playBtn.addActionListener((ActionEvent event) -> {
+        playBtn = new JSplitButton() {
+            @Override
+            public void updateUI()
+            {
+                super.updateUI();
+
+                setArrowColor(UIManager.getColor("ComboBox.buttonArrowColor"));
+                setDisabledArrowColor(UIManager.getColor("ComboBox.buttonDisabledArrowColor"));
+
+                JPopupMenu popupMenu = getPopupMenu();
+                if (popupMenu != null) {
+                    popupMenu.updateUI();
+                    for (Component component : popupMenu.getComponents()) {
+                        if (component instanceof JComponent) {
+                            ((JComponent) component).updateUI();
+                        }
+                    }
+                }
+            }
+        };
+        playBtn.updateUI(); // forces arrow color update
+        setPlayButtonLabel();
+        JPopupMenu playBtnPopup = new JPopupMenu();
+        {
+            ButtonGroup group = new ButtonGroup();
+            JMenuItem play = playBtnPopup.add(new JRadioButtonMenuItem(new AbstractAction(PLAY_OPTION)
+            {
+                @Override
+                public void actionPerformed(ActionEvent e)
+                {
+                    ModTheSpire.OUT_JAR = false;
+                    ModTheSpire.PACKAGE = false;
+                    setPlayButtonLabel();
+                }
+            }));
+            group.add(play);
+            JMenuItem outJar = playBtnPopup.add(new JRadioButtonMenuItem(new AbstractAction(JAR_DUMP_OPTION)
+            {
+                @Override
+                public void actionPerformed(ActionEvent e)
+                {
+                    ModTheSpire.OUT_JAR = true;
+                    ModTheSpire.PACKAGE = false;
+                    setPlayButtonLabel();
+                }
+            }));
+            group.add(outJar);
+            JMenuItem packageJar = playBtnPopup.add(new JRadioButtonMenuItem(new AbstractAction(PACKAGE_OPTION)
+            {
+                @Override
+                public void actionPerformed(ActionEvent e)
+                {
+                    ModTheSpire.OUT_JAR = false;
+                    ModTheSpire.PACKAGE = true;
+                    setPlayButtonLabel();
+                }
+            }));
+            group.add(packageJar);
+
+            if (ModTheSpire.PACKAGE) {
+                packageJar.setSelected(true);
+            } else if (ModTheSpire.OUT_JAR) {
+                outJar.setSelected(true);
+            } else {
+                play.setSelected(true);
+            }
+        }
+        playBtn.setPopupMenu(playBtnPopup);
+        playBtn.addButtonClickedActionListener((ActionEvent e) -> {
             showingLog = true;
             playBtn.setEnabled(false);
 
@@ -523,6 +590,15 @@ public class ModSelectWindow extends JFrame
         panel.add(topPanel, BorderLayout.NORTH);
 
         return panel;
+    }
+
+    private void setPlayButtonLabel()
+    {
+        playBtn.setText(
+            ModTheSpire.PACKAGE ? PACKAGE_OPTION :
+                ModTheSpire.OUT_JAR ? JAR_DUMP_OPTION :
+                    PLAY_OPTION
+        );
     }
 
     private JPanel makeInfoPanel()
