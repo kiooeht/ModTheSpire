@@ -62,7 +62,7 @@ public class SettingsWindow extends JDialog
             checkImGui,
             "imgui",
             SettingsWindow::getImGui,
-            SettingsWindow::setDebug
+            SettingsWindow::setImGui
         );
         registerCheckBox(
             checkSkipIntro,
