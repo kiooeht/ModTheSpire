@@ -16,7 +16,6 @@ import java.util.function.Consumer;
 
 public class SettingsWindow extends JDialog
 {
-    private final Dimension prefSize = new Dimension(300, 250);
     private JPanel contentPane;
     private JButton buttonClose;
     private JCheckBox checkDebug;
@@ -102,7 +101,8 @@ public class SettingsWindow extends JDialog
     @Override
     public Dimension getPreferredSize()
     {
-        return SwingDPI.getScaledDimension(prefSize);
+        Dimension d = super.getPreferredSize();
+        return SwingDPI.getScaledDimension(new Dimension(Math.max(d.width, 300), d.height));
     }
 
     private void registerCheckBox(JCheckBox checkBox, String saveKey, BooleanSupplier getter, Consumer<Boolean> setter)
