@@ -304,7 +304,7 @@ public class SettingsWindow extends JDialog
         panel6.add(panel7, gbc);
         checkDebug = new JCheckBox();
         checkDebug.setSelected(false);
-        checkDebug.setText("Debug");
+        checkDebug.setText("Debug Patching");
         checkDebug.setToolTipText("ModTheSpire will output a lot more information during the patching process.");
         gbc = new GridBagConstraints();
         gbc.gridx = 0;

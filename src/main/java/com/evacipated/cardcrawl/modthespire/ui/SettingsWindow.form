@@ -103,7 +103,7 @@
                     </constraints>
                     <properties>
                       <selected value="false"/>
-                      <text value="Debug"/>
+                      <text value="Debug Patching"/>
                       <toolTipText value="ModTheSpire will output a lot more information during the patching process."/>
                     </properties>
                   </component>
