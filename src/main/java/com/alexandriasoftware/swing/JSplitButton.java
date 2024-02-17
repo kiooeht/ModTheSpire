@@ -361,7 +361,9 @@ public class JSplitButton extends JButton {
         g.translate(splitRectangle.x, splitRectangle.y);
         int mh = getHeight() / 2;
         int mw = splitWidth / 2;
-        g.drawImage((isEnabled() ? getImage() : getDisabledImage()), mw - arrowSize / 2, mh + 2 - arrowSize / 2, null);
+        if (popupMenu != null) {
+            g.drawImage((isEnabled() ? getImage() : getDisabledImage()), mw - arrowSize / 2, mh + 2 - arrowSize / 2, null);
+        }
         if (onSplit && !alwaysPopup && popupMenu != null) {
             g.setColor(UIManager.getDefaults().getColor("ComboBox.buttonArrowColor"));
             g.drawLine(1, separatorSpacing + 2, 1, getHeight() - separatorSpacing - 2);

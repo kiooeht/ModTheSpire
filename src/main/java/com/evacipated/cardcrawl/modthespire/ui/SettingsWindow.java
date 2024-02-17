@@ -23,6 +23,7 @@ public class SettingsWindow extends JDialog
     private JCheckBox checkSkipIntro;
     private JComboBox<UIScale> comboUIScale;
     private JComboBox comboTheme;
+    private JCheckBox checkModderMode;
 
     public SettingsWindow(Frame owner)
     {
@@ -52,17 +53,37 @@ public class SettingsWindow extends JDialog
         );
 
         registerCheckBox(
+            checkModderMode,
+            "modder",
+            SettingsWindow::getModderMode,
+            v -> {
+                setModderMode(v);
+                ((ModSelectWindow) owner).setPlayButtonOptions(v);
+            }
+        );
+        checkModderMode.addItemListener(e -> {
+            switch (e.getStateChange()) {
+                case ItemEvent.SELECTED:
+                case ItemEvent.DESELECTED:
+                    checkDebug.setEnabled(checkModderMode.isSelected());
+                    checkImGui.setEnabled(checkModderMode.isSelected());
+                    break;
+            }
+        });
+        registerCheckBox(
             checkDebug,
             "debug",
             SettingsWindow::getDebug,
             SettingsWindow::setDebug
         );
+        checkDebug.setEnabled(checkModderMode.isSelected());
         registerCheckBox(
             checkImGui,
             "imgui",
             SettingsWindow::getImGui,
             SettingsWindow::setImGui
         );
+        checkImGui.setEnabled(checkModderMode.isSelected());
         registerCheckBox(
             checkSkipIntro,
             "skip-intro",
@@ -121,7 +142,7 @@ public class SettingsWindow extends JDialog
         });
     }
 
-    private void saveSetting(String setting, String value)
+    private static void saveSetting(String setting, String value)
     {
         ModTheSpire.MTS_CONFIG.setString(setting, value);
         try {
@@ -131,7 +152,7 @@ public class SettingsWindow extends JDialog
         }
     }
 
-    private void saveSetting(String setting, float value)
+    private static void saveSetting(String setting, float value)
     {
         ModTheSpire.MTS_CONFIG.setFloat(setting, value);
         try {
@@ -141,7 +162,7 @@ public class SettingsWindow extends JDialog
         }
     }
 
-    private void saveSetting(String setting, boolean value)
+    private static void saveSetting(String setting, boolean value)
     {
         ModTheSpire.MTS_CONFIG.setBool(setting, value);
         try {
@@ -152,6 +173,16 @@ public class SettingsWindow extends JDialog
     }
 
     // Getters and setters for config options
+    private static boolean getModderMode()
+    {
+        return ModSelectWindow.MODDER_MODE;
+    }
+
+    private static void setModderMode(boolean value)
+    {
+        ModSelectWindow.MODDER_MODE = value;
+    }
+
     private static boolean getDebug()
     {
         return ModTheSpire.DEBUG;
@@ -303,22 +334,31 @@ public class SettingsWindow extends JDialog
         gbc.anchor = GridBagConstraints.NORTHWEST;
         panel6.add(panel7, gbc);
         checkDebug = new JCheckBox();
+        checkDebug.setEnabled(false);
         checkDebug.setSelected(false);
         checkDebug.setText("Debug Patching");
         checkDebug.setToolTipText("ModTheSpire will output a lot more information during the patching process.");
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 0;
+        gbc.gridy = 1;
         gbc.anchor = GridBagConstraints.WEST;
         panel7.add(checkDebug, gbc);
         checkImGui = new JCheckBox();
+        checkImGui.setEnabled(false);
         checkImGui.setText("ImGui Mode");
         checkImGui.setToolTipText("Game will launch using LWJGL3, allowing BaseMod to use Dear ImGui.");
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 1;
+        gbc.gridy = 2;
         gbc.anchor = GridBagConstraints.WEST;
         panel7.add(checkImGui, gbc);
+        checkModderMode = new JCheckBox();
+        checkModderMode.setText("Modder Mode");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        panel7.add(checkModderMode, gbc);
         final JPanel panel8 = new JPanel();
         panel8.setLayout(new GridBagLayout());
         gbc = new GridBagConstraints();

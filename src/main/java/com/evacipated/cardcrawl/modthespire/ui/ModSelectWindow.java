@@ -56,6 +56,7 @@ public class ModSelectWindow extends JFrame
     private boolean isCentered = false;
     private Rectangle location;
     private JSplitButton playBtn;
+    private JPopupMenu playBtnPopup;
 
     private JModPanelCheckBoxList modList;
 
@@ -81,6 +82,7 @@ public class ModSelectWindow extends JFrame
     static List<ModUpdate> MODUPDATES;
 
     static float UI_SCALE = 1f;
+    static boolean MODDER_MODE = false;
 
     public enum UpdateIconType
     {
@@ -113,6 +115,9 @@ public class ModSelectWindow extends JFrame
                 SwingDPI.setScaleFactor(UI_SCALE);
                 SwingDPI.setScaleApplied(true);
             }
+        }
+        if (ModTheSpire.MTS_CONFIG.has("modder")) {
+            MODDER_MODE = ModTheSpire.MTS_CONFIG.getBool("modder");
         }
 
         Object f = UIManager.get("TitledBorder.font");
@@ -349,7 +354,7 @@ public class ModSelectWindow extends JFrame
         };
         playBtn.updateUI(); // forces arrow color update
         setPlayButtonLabel();
-        JPopupMenu playBtnPopup = new JPopupMenu();
+        playBtnPopup = new JPopupMenu();
         {
             ButtonGroup group = new ButtonGroup();
             JMenuItem play = playBtnPopup.add(new JRadioButtonMenuItem(new AbstractAction(PLAY_OPTION)
@@ -394,7 +399,7 @@ public class ModSelectWindow extends JFrame
                 play.setSelected(true);
             }
         }
-        playBtn.setPopupMenu(playBtnPopup);
+        setPlayButtonOptions(MODDER_MODE);
         playBtn.addButtonClickedActionListener((ActionEvent e) -> {
             showingLog = true;
             playBtn.setEnabled(false);
@@ -598,6 +603,16 @@ public class ModSelectWindow extends JFrame
                 ModTheSpire.OUT_JAR ? JAR_DUMP_OPTION :
                     PLAY_OPTION
         );
+    }
+
+    void setPlayButtonOptions(boolean enabled)
+    {
+        if (enabled) {
+            playBtn.setPopupMenu(playBtnPopup);
+        } else {
+            playBtn.setPopupMenu(null);
+        }
+        playBtn.repaint();
     }
 
     private JPanel makeInfoPanel()
