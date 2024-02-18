@@ -22,7 +22,7 @@ public class SettingsWindow extends JDialog
     private JCheckBox checkImGui;
     private JCheckBox checkSkipIntro;
     private JComboBox<UIScale> comboUIScale;
-    private JComboBox comboTheme;
+    private JComboBox<String> comboTheme;
     private JCheckBox checkModderMode;
 
     public SettingsWindow(Frame owner)
@@ -113,7 +113,7 @@ public class SettingsWindow extends JDialog
                 String themeName = (String) comboTheme.getSelectedItem();
                 if (themeName != null) {
                     saveSetting("uiTheme", themeName);
-                    ModSelectWindow.setTheme(themeName);
+                    EventQueue.invokeLater(() -> ModSelectWindow.setTheme(themeName));
                 }
             }
         });
