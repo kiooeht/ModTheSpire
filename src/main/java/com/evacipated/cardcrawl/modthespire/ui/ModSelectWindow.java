@@ -497,6 +497,7 @@ public class ModSelectWindow extends JFrame
         JTextField filter = new JTextField();
         filter.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Search");
         filter.putClientProperty(FlatClientProperties.TEXT_FIELD_LEADING_ICON, new FlatSearchIcon());
+        filter.putClientProperty(FlatClientProperties.TEXT_FIELD_SHOW_CLEAR_BUTTON, true);
 
         profilesList.addActionListener((ActionEvent event) -> {
             String profileName = (String) profilesList.getSelectedItem();
