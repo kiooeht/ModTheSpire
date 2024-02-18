@@ -38,7 +38,7 @@ public class ModSelectWindow extends JFrame
     private static final int DEFAULT_HEIGHT = 500;
     private static final String PLAY_OPTION = "Play";
     private static final String JAR_DUMP_OPTION = "Dump Patched Jar";
-    private static final String PACKAGE_OPTION = "Package";
+    private static final String PACKAGE_OPTION = "Create Prepackaged Jar";
 
     static final Image APP_ICON = Toolkit.getDefaultToolkit().createImage(ModSelectWindow.class.getResource("/assets/icon.png"));
     static final Icon ICON_SETTINGS = new ImageIcon(ModSelectWindow.class.getResource("/assets/settings.gif"));
