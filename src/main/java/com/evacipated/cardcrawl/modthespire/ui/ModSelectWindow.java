@@ -11,6 +11,7 @@ import com.formdev.flatlaf.icons.FlatSearchIcon;
 import ru.krlvm.swingdpi.SwingDPI;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
 import javax.swing.border.TitledBorder;
@@ -678,7 +679,7 @@ public class ModSelectWindow extends JFrame
         leftPanel.setLayout(new BorderLayout());
 
         description = makeInfoTextAreaField("Description", " ");
-        leftPanel.add(description, BorderLayout.CENTER);
+        leftPanel.add(makeTextAreaScrollable(description), BorderLayout.CENTER);
 
         JPanel leftCredits = new JPanel();
         leftCredits.setLayout(new BoxLayout(leftCredits, BoxLayout.Y_AXIS));
@@ -725,6 +726,15 @@ public class ModSelectWindow extends JFrame
         label.setOpaque(false);
 
         return label;
+    }
+
+    private JScrollPane makeTextAreaScrollable(JTextArea textArea)
+    {
+        Border border = textArea.getBorder();
+        textArea.setBorder(null);
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.setBorder(border);
+        return scrollPane;
     }
 
     private JPanel makeModBannerPanel()
@@ -897,6 +907,7 @@ public class ModSelectWindow extends JFrame
             stsVersion.setText(" ");
         }
         description.setText(info.Description);
+        description.setCaretPosition(0);
         credits.setText(info.Credits);
         if (info.Dependencies.length == 0) {
             dependencies.setText(" ");

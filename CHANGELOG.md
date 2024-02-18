@@ -24,6 +24,7 @@
 * Add theme setting
 * Make mod list clip long mod names instead of scrolling horizontally
 * Add UI to switch between play, out-jar, and package
+* Make mod description box scrollable for long text
 
 #### v3.30.3 ####
 * Fix package information being lost for patched classes (Alchyr)
