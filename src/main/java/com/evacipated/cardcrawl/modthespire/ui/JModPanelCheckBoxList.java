@@ -34,8 +34,12 @@ public class JModPanelCheckBoxList extends JList<ModPanel> {
 
         setCellRenderer(new CellRenderer());
 
-        addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent e) {
+        MouseAdapter mouseAdapter = new MouseAdapter() {
+            private int hovered = -1;
+
+            @Override
+            public void mouseClicked(MouseEvent e)
+            {
                 int index = locationToIndex(e.getPoint());
                 if (index != -1) {
                     ModPanel modPanel = getModel().getElementAt(index);
@@ -46,11 +50,52 @@ public class JModPanelCheckBoxList extends JList<ModPanel> {
                             modPanel.checkBox.setSelected(!modPanel.checkBox.isSelected());
                             repaint();
                         }
+                    } else if (e.getX() >= modPanel.update.getX() && e.getX() <= modPanel.update.getX() + modPanel.update.getWidth()) {
+                        modPanel.update.doClick();
                     }
                 }
             }
-        });
-        
+
+            @Override
+            public void mouseMoved(MouseEvent e)
+            {
+                int prevHovered = hovered;
+                int index = locationToIndex(e.getPoint());
+                if (index != -1) {
+                    ModPanel modPanel = getModel().getElementAt(index);
+                    if (e.getX() >= modPanel.update.getX() && e.getX() <= modPanel.update.getX() + modPanel.update.getWidth()) {
+                        if (modPanel.isWorkshopMod()) {
+                            modPanel.update.getModel().setRollover(true);
+                        }
+                        hovered = index;
+                    } else {
+                        hovered = -1;
+                    }
+                }
+
+                if (hovered != prevHovered) {
+                    if (prevHovered != -1) {
+                        ModPanel prev = getModel().getElementAt(prevHovered);
+                        prev.update.getModel().setRollover(false);
+                    }
+                    JModPanelCheckBoxList.this.repaint();
+                }
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e)
+            {
+                if (hovered != -1) {
+                    ModPanel prev = getModel().getElementAt(hovered);
+                    prev.update.getModel().setRollover(false);
+                }
+                hovered = -1;
+                JModPanelCheckBoxList.this.repaint();
+            }
+        };
+        addMouseListener(mouseAdapter);
+        addMouseMotionListener(mouseAdapter);
+
         // force mods to calc their backgrounds
         publishBoxChecked();
     }

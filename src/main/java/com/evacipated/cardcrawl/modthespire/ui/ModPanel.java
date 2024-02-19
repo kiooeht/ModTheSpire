@@ -8,6 +8,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
 import java.awt.*;
 import java.io.File;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -22,7 +23,7 @@ public class ModPanel extends JPanel
     public File modFile;
     public JCheckBox checkBox;
     private InfoPanel infoPanel;
-    private JLabel update = new JLabel();
+    JButton update;
     private boolean isFilteredOut = false;
     
     private static boolean dependenciesChecked(ModInfo info, JModPanelCheckBoxList parent) {
@@ -78,10 +79,17 @@ public class ModPanel extends JPanel
         add(infoPanel, BorderLayout.CENTER);
 
         // Update icon
+        update = new JButton() {
+            @Override
+            protected void paintComponent(Graphics g)
+            {
+                super.paintComponent(g);
+            }
+        };
         update.setHorizontalAlignment(JLabel.CENTER);
         update.setVerticalAlignment(JLabel.CENTER);
         update.setOpaque(true);
-        update.setBorder(new EmptyBorder(0, 0, 0, 4));
+        update.setBorder(new EmptyBorder(0, 4, 0, 4));
         if (info.isWorkshop) {
             setUpdateIcon(ModSelectWindow.UpdateIconType.WORKSHOP);
         } else if (info.UpdateJSON != null && !info.UpdateJSON.isEmpty()) {
@@ -89,6 +97,18 @@ public class ModPanel extends JPanel
         } else {
             setUpdateIcon(ModSelectWindow.UpdateIconType.NONE);
         }
+        update.addActionListener(event -> {
+            if (isWorkshopMod()) {
+                try {
+                    Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
+                    if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
+                        desktop.browse(new URI("steam://url/CommunityFilePage/" + info.workshopInfo.getID()));
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
         add(update, BorderLayout.EAST);
 
         setBorder(new MatteBorder(0, 0, 1, 0, Color.darkGray));
@@ -187,6 +207,11 @@ public class ModPanel extends JPanel
             case WORKSHOP:
                 update.setIcon(ModSelectWindow.ICON_WORKSHOP);
         }
+    }
+
+    boolean isWorkshopMod()
+    {
+        return info.isWorkshop;
     }
 
     public void filter(String[] filterKeys) {
