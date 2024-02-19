@@ -79,13 +79,8 @@ public class ModPanel extends JPanel
         add(infoPanel, BorderLayout.CENTER);
 
         // Update icon
-        update = new JButton() {
-            @Override
-            protected void paintComponent(Graphics g)
-            {
-                super.paintComponent(g);
-            }
-        };
+        update = new JButton();
+        update.setRolloverIcon(ModSelectWindow.ICON_WORKSHOP);
         update.setHorizontalAlignment(JLabel.CENTER);
         update.setVerticalAlignment(JLabel.CENTER);
         update.setOpaque(true);
@@ -211,7 +206,7 @@ public class ModPanel extends JPanel
 
     boolean isWorkshopMod()
     {
-        return info.isWorkshop;
+        return info.workshopInfo != null;
     }
 
     public void filter(String[] filterKeys) {
