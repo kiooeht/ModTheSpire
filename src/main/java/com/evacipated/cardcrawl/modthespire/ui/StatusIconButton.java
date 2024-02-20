@@ -32,4 +32,9 @@ class StatusIconButton extends JButton
             isHovered = hovered;
         }
     }
+
+    public boolean isHovered()
+    {
+        return isHovered;
+    }
 }

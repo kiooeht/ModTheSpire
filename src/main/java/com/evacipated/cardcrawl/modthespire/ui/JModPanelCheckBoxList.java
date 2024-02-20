@@ -47,6 +47,12 @@ public class JModPanelCheckBoxList extends JList<ModPanel> {
                         next.setHovered(true);
                     }
                     hovered = next;
+
+                    if (hovered != null && hovered.isHovered()) {
+                        JModPanelCheckBoxList.this.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                    } else {
+                        JModPanelCheckBoxList.this.setCursor(null);
+                    }
                     JModPanelCheckBoxList.this.repaint();
                 }
             }
