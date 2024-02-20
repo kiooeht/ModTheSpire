@@ -50,6 +50,7 @@ public class ModSelectWindow extends JFrame
     static final Icon ICON_WARNING  = new ImageIcon(ModSelectWindow.class.getResource("/assets/warning.gif"));
     static final Icon ICON_ERROR    = new ImageIcon(ModSelectWindow.class.getResource("/assets/error.gif"));
     static final Icon ICON_WORKSHOP = new ImageIcon(ModSelectWindow.class.getResource("/assets/workshop.gif"));
+    static final Icon ICON_WORKSHOP_HOVER = new ImageIcon(ModSelectWindow.class.getResource("/assets/workshop_hover.gif"));
 
     private ModInfo[] info;
     private boolean showingLog = false;

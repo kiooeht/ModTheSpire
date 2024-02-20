@@ -10,6 +10,7 @@ import java.awt.*;
 import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @SuppressWarnings("serial")
@@ -18,12 +19,15 @@ public class ModPanel extends JPanel
     private static final Color lightRed = new Color(229,115,115);
     private static final Color lightOrange = new Color(255, 159, 0); // orange peel (https://en.wikipedia.org/wiki/Shades_of_orange#Orange_peel)
     private static final Color lightYellow = new Color(255, 238, 88);
+    private static final Icon ICON_BLANK = new BlankIcon(ModSelectWindow.ICON_WORKSHOP.getIconWidth(), ModSelectWindow.ICON_WORKSHOP.getIconHeight());
 
     public ModInfo info;
     public File modFile;
     public JCheckBox checkBox;
     private InfoPanel infoPanel;
-    JButton update;
+    private JPanel iconsPanel;
+    List<StatusIconButton> icons = new ArrayList<>();
+    private JButton update;
     private boolean isFilteredOut = false;
     
     private static boolean dependenciesChecked(ModInfo info, JModPanelCheckBoxList parent) {
@@ -78,13 +82,18 @@ public class ModPanel extends JPanel
         add(checkBox, BorderLayout.WEST);
         add(infoPanel, BorderLayout.CENTER);
 
+        // TODO display all applicable icons:
+        // - FILE (local mod)
+        // - WORKSHOP (workshop mod)
+        // Icons
+        iconsPanel = new JPanel();
+        iconsPanel.setLayout(new BoxLayout(iconsPanel, BoxLayout.X_AXIS));
+        iconsPanel.setOpaque(false);
+        iconsPanel.setBackground(null);
+        iconsPanel.setBorder(new EmptyBorder(0, 0, 0, 0));
         // Update icon
         update = new JButton();
-        update.setRolloverIcon(ModSelectWindow.ICON_WORKSHOP);
-        update.setHorizontalAlignment(JLabel.CENTER);
-        update.setVerticalAlignment(JLabel.CENTER);
-        update.setOpaque(true);
-        update.setBorder(new EmptyBorder(0, 4, 0, 4));
+        update.setRolloverIcon(ModSelectWindow.ICON_WARNING);
         if (info.isWorkshop) {
             setUpdateIcon(ModSelectWindow.UpdateIconType.WORKSHOP);
         } else if (info.UpdateJSON != null && !info.UpdateJSON.isEmpty()) {
@@ -93,7 +102,18 @@ public class ModPanel extends JPanel
             setUpdateIcon(ModSelectWindow.UpdateIconType.NONE);
         }
         update.addActionListener(event -> {
-            if (isWorkshopMod()) {
+            // TODO
+        });
+//        icons.add(update);
+        // Local icon
+        if (isLocalMod()) {
+            StatusIconButton local = new StatusIconButton(ModSelectWindow.ICON_FILE);
+            icons.add(local);
+        }
+        // Workshop icon
+        if (isWorkshopMod()) {
+            StatusIconButton workshop = new StatusIconButton(ModSelectWindow.ICON_WORKSHOP, ModSelectWindow.ICON_WORKSHOP_HOVER);
+            workshop.addActionListener(event -> {
                 try {
                     Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
                     if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
@@ -102,9 +122,20 @@ public class ModPanel extends JPanel
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }
-        });
-        add(update, BorderLayout.EAST);
+            });
+            icons.add(workshop);
+        }
+
+        for (JButton icon : icons) {
+            icon.setHorizontalAlignment(JLabel.CENTER);
+            icon.setVerticalAlignment(JLabel.CENTER);
+            icon.setOpaque(false);
+            icon.setBackground(null);
+            icon.setBorder(new EmptyBorder(0, 0, 0, 0));
+            iconsPanel.add(icon);
+            iconsPanel.add(Box.createRigidArea(new Dimension(4, 0)));
+        }
+        add(iconsPanel, BorderLayout.EAST);
 
         setBorder(new MatteBorder(0, 0, 1, 0, Color.darkGray));
 
@@ -185,7 +216,7 @@ public class ModPanel extends JPanel
     {
         switch (type) {
             case NONE:
-                update.setIcon(null);
+                update.setIcon(ModSelectWindow.ICON_FILE);
                 break;
             case CAN_CHECK:
                 update.setIcon(ModSelectWindow.ICON_UPDATE);
@@ -204,7 +235,12 @@ public class ModPanel extends JPanel
         }
     }
 
-    boolean isWorkshopMod()
+    private boolean isLocalMod()
+    {
+        return !info.isWorkshop;
+    }
+
+    private boolean isWorkshopMod()
     {
         return info.workshopInfo != null;
     }
@@ -275,10 +311,33 @@ public class ModPanel extends JPanel
             if (version != null) {
                 version.setBackground(c);
             }
-            if (update != null) {
-                update.setBackground(c);
-            }
         }
     }
-    
+
+    private static class BlankIcon implements Icon
+    {
+        private final int width;
+        private final int height;
+
+        BlankIcon(int w, int h)
+        {
+            width = w;
+            height = h;
+        }
+
+        @Override
+        public void paintIcon(Component c, Graphics g, int x, int y) {}
+
+        @Override
+        public int getIconWidth()
+        {
+            return width;
+        }
+
+        @Override
+        public int getIconHeight()
+        {
+            return height;
+        }
+    }
 }

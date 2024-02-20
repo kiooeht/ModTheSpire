@@ -35,7 +35,21 @@ public class JModPanelCheckBoxList extends JList<ModPanel> {
         setCellRenderer(new CellRenderer());
 
         MouseAdapter mouseAdapter = new MouseAdapter() {
-            private int hovered = -1;
+            private StatusIconButton hovered = null;
+
+            private void setHovered(StatusIconButton next)
+            {
+                if (hovered != next) {
+                    if (hovered != null) {
+                        hovered.setHovered(false);
+                    }
+                    if (next != null) {
+                        next.setHovered(true);
+                    }
+                    hovered = next;
+                    JModPanelCheckBoxList.this.repaint();
+                }
+            }
 
             @Override
             public void mouseClicked(MouseEvent e)
@@ -50,8 +64,8 @@ public class JModPanelCheckBoxList extends JList<ModPanel> {
                             modPanel.checkBox.setSelected(!modPanel.checkBox.isSelected());
                             repaint();
                         }
-                    } else if (e.getX() >= modPanel.update.getX() && e.getX() <= modPanel.update.getX() + modPanel.update.getWidth()) {
-                        modPanel.update.doClick();
+                    } else if (hovered != null) {
+                        hovered.doClick();
                     }
                 }
             }
@@ -59,38 +73,25 @@ public class JModPanelCheckBoxList extends JList<ModPanel> {
             @Override
             public void mouseMoved(MouseEvent e)
             {
-                int prevHovered = hovered;
                 int index = locationToIndex(e.getPoint());
                 if (index != -1) {
                     ModPanel modPanel = getModel().getElementAt(index);
-                    if (e.getX() >= modPanel.update.getX() && e.getX() <= modPanel.update.getX() + modPanel.update.getWidth()) {
-                        if (modPanel.isWorkshopMod()) {
-                            modPanel.update.getModel().setRollover(true);
+                    StatusIconButton nextHovered = null;
+                    for (StatusIconButton icon : modPanel.icons) {
+                        int x = icon.getX() + icon.getParent().getX();
+                        if (e.getX() >= x && e.getX() <= x + icon.getWidth()) {
+                            nextHovered = icon;
+                            break;
                         }
-                        hovered = index;
-                    } else {
-                        hovered = -1;
                     }
-                }
-
-                if (hovered != prevHovered) {
-                    if (prevHovered != -1) {
-                        ModPanel prev = getModel().getElementAt(prevHovered);
-                        prev.update.getModel().setRollover(false);
-                    }
-                    JModPanelCheckBoxList.this.repaint();
+                    setHovered(nextHovered);
                 }
             }
 
             @Override
             public void mouseExited(MouseEvent e)
             {
-                if (hovered != -1) {
-                    ModPanel prev = getModel().getElementAt(hovered);
-                    prev.update.getModel().setRollover(false);
-                }
-                hovered = -1;
-                JModPanelCheckBoxList.this.repaint();
+                setHovered(null);
             }
         };
         addMouseListener(mouseAdapter);
