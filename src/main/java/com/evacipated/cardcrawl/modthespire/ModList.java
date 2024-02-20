@@ -26,7 +26,7 @@ public class ModList
     private static String OLD_CFG_FILE = ConfigUtils.CONFIG_DIR + File.separator + "mod_order.xml";
     private static String CFG_FILE = ConfigUtils.CONFIG_DIR + File.separator + "mod_lists.json";
 
-    public static String DEFAULT_LIST = "<Default>";
+    public static final String DEFAULT_LIST = "<Default>";
 
     private static ModListSaveData saveData = null;
 
