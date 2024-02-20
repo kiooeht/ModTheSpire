@@ -28,6 +28,7 @@
 * Make Steam icon on mod open the mod's workshop page when clicked
 * Display multiple icons for mods that have local and workshop versions
 * Add button to open logs folder
+* Add ability to edit profile names
 
 #### v3.30.3 ####
 * Fix package information being lost for patched classes (Alchyr)

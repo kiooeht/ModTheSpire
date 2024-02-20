@@ -223,4 +223,14 @@ public class ModList
         saveData.lists.remove(list);
         save();
     }
+
+    public static void rename(String list, String newName)
+    {
+        List<String> mods = saveData.lists.remove(list);
+        if (mods != null) {
+            saveData.lists.put(newName, mods);
+            saveData.defaultList = newName;
+        }
+        save();
+    }
 }

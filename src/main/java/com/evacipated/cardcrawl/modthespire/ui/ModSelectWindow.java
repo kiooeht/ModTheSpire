@@ -513,6 +513,7 @@ public class ModSelectWindow extends JFrame
         JComboBox<String> profilesList = new JComboBox<>(ModList.getAllModListNames().toArray(new String[0]));
         JButton addProfile = new JButton("+");
         JButton delProfile = new JButton("-");
+        JButton editProfile = new JButton("E"); // TODO
 
         JTextField filter = new JTextField();
         filter.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Search");
@@ -521,6 +522,7 @@ public class ModSelectWindow extends JFrame
 
         profilesList.addActionListener((ActionEvent event) -> {
             String profileName = (String) profilesList.getSelectedItem();
+            editProfile.setEnabled(!ModList.DEFAULT_LIST.equals(profileName));
             delProfile.setEnabled(!ModList.DEFAULT_LIST.equals(profileName));
             ModList newList = new ModList(profileName);
             DefaultListModel<ModPanel> newModel = (DefaultListModel<ModPanel>) modList.getModel();
@@ -549,6 +551,28 @@ public class ModSelectWindow extends JFrame
         profilesPanel.add(profilesList, c);
         c.weightx = 0;
         c.ipady = 2;
+        // Edit profile name button
+        editProfile.setToolTipText("Edit profile name");
+        editProfile.addActionListener((ActionEvent event) -> {
+            int index = profilesList.getSelectedIndex();
+            String profileName = (String) profilesList.getSelectedItem();
+            String s = (String) JOptionPane.showInputDialog(
+                this,
+                "Profile Name:",
+                "Edit Profile Name",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                null,
+                profileName
+            );
+            if (s != null && !s.isEmpty() && !s.equals(profileName)) {
+                ModList.rename(profileName, s);
+                profilesList.removeItem(profileName);
+                profilesList.insertItemAt(s, index);
+                profilesList.setSelectedItem(s);
+            }
+        });
+        profilesPanel.add(editProfile, c);
         // Add profile button
         addProfile.setToolTipText("Add new profile");
         addProfile.addActionListener((ActionEvent event) -> {
