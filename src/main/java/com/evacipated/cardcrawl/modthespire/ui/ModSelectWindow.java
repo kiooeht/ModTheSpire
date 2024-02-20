@@ -44,6 +44,7 @@ public class ModSelectWindow extends JFrame
     static final Image APP_ICON = Toolkit.getDefaultToolkit().createImage(ModSelectWindow.class.getResource("/assets/icon.png"));
     static final Icon ICON_SETTINGS = new ImageIcon(ModSelectWindow.class.getResource("/assets/settings.gif"));
     static final Icon ICON_UPDATE   = new ImageIcon(ModSelectWindow.class.getResource("/assets/update.gif"));
+    static final Icon ICON_FOLDER   = new ImageIcon(ModSelectWindow.class.getResource("/assets/folder.gif"));
     static final Icon ICON_FILE     = new ImageIcon(ModSelectWindow.class.getResource("/assets/file.gif"));
     static final Icon ICON_LOAD     = new ImageIcon(ModSelectWindow.class.getResource("/assets/ajax-loader.gif"));
     static final Icon ICON_GOOD     = new ImageIcon(ModSelectWindow.class.getResource("/assets/good.gif"));
@@ -442,8 +443,25 @@ public class ModSelectWindow extends JFrame
         }
         panel.add(playBtn, BorderLayout.SOUTH);
 
+        // Open logs directory
+        JButton openLogsBtn = new JButton(ICON_FILE);
+        openLogsBtn.setToolTipText("Open Logs Directory");
+        openLogsBtn.addActionListener((ActionEvent event) -> {
+            try {
+                File file = new File("sendToDevs/");
+                if (!file.exists()) {
+                    return;
+                }
+                Desktop.getDesktop().open(file);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        if (!new File("sendToDevs/").exists()) {
+            openLogsBtn.setEnabled(false);
+        }
         // Open mod directory
-        JButton openFolderBtn = new JButton(ICON_FILE);
+        JButton openFolderBtn = new JButton(ICON_FOLDER);
         openFolderBtn.setToolTipText("Open Mods Directory");
         openFolderBtn.addActionListener((ActionEvent event) -> {
             try {
@@ -490,6 +508,7 @@ public class ModSelectWindow extends JFrame
         btnPanel.add(settingsBtn);
         btnPanel.add(updatesBtn);
         btnPanel.add(openFolderBtn);
+        btnPanel.add(openLogsBtn);
 
         JComboBox<String> profilesList = new JComboBox<>(ModList.getAllModListNames().toArray(new String[0]));
         JButton addProfile = new JButton("+");

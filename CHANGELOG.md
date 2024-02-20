@@ -27,6 +27,7 @@
 * Make mod description box scrollable for long text
 * Make Steam icon on mod open the mod's workshop page when clicked
 * Display multiple icons for mods that have local and workshop versions
+* Add button to open logs folder
 
 #### v3.30.3 ####
 * Fix package information being lost for patched classes (Alchyr)

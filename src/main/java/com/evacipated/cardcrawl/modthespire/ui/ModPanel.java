@@ -107,7 +107,7 @@ public class ModPanel extends JPanel
 //        icons.add(update);
         // Local icon
         if (isLocalMod()) {
-            StatusIconButton local = new StatusIconButton(ModSelectWindow.ICON_FILE);
+            StatusIconButton local = new StatusIconButton(ModSelectWindow.ICON_FOLDER);
             icons.add(local);
         }
         // Workshop icon
