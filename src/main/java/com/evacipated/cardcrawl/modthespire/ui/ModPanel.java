@@ -212,6 +212,21 @@ public class ModPanel extends JPanel
         }
     }
 
+    @Override
+    public void setBackground(Color bg)
+    {
+        super.setBackground(bg);
+
+        if (iconsPanel != null) {
+            iconsPanel.setBackground(null);
+        }
+        if (icons != null) {
+            for (StatusIconButton icon : icons) {
+                icon.setBackground(null);
+            }
+        }
+    }
+
     public synchronized void setUpdateIcon(ModSelectWindow.UpdateIconType type)
     {
         switch (type) {
