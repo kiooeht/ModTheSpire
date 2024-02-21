@@ -2,6 +2,7 @@ package com.evacipated.cardcrawl.modthespire.ui;
 
 import com.formdev.flatlaf.icons.FlatAbstractIcon;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Path2D;
 
@@ -38,6 +39,16 @@ class FlatRenameIcon extends FlatAbstractIcon
         path.closePath();
 
         g.setStroke(new BasicStroke(0.8f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        if (isEnabled(c)) {
+            g.setColor(UIManager.getColor("Button.foreground"));
+        } else {
+            g.setColor(UIManager.getColor("Button.disabledText"));
+        }
         g.draw(path);
+    }
+
+    private boolean isEnabled(Component c)
+    {
+        return c instanceof AbstractButton && ((AbstractButton) c).isEnabled();
     }
 }
