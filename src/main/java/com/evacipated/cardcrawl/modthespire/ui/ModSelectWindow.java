@@ -513,7 +513,7 @@ public class ModSelectWindow extends JFrame
         JComboBox<String> profilesList = new JComboBox<>(ModList.getAllModListNames().toArray(new String[0]));
         JButton addProfile = new JButton("+");
         JButton delProfile = new JButton("-");
-        JButton renameProfile = new JButton("E"); // TODO
+        JButton renameProfile = new JButton(new FlatRenameIcon());
 
         JTextField filter = new JTextField();
         filter.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Search");
