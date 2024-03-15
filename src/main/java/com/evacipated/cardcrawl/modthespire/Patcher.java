@@ -208,6 +208,11 @@ public class Patcher {
             for (CtField field : cls.getDeclaredFields()) {
                 SpireEnum spireEnum = (SpireEnum) field.getAnnotation(SpireEnum.class);
                 if (spireEnum != null) {
+                    String modId = spireEnum.requiredModId();
+                    if (!modId.isEmpty() && !ModTheSpire.isModLoadedOrSideloaded(modId)) {
+                        cls.removeField(field);
+                        continue;
+                    }
                     String enumName = field.getName();
                     if (!spireEnum.name().isEmpty()) {
                         enumName = spireEnum.name();

@@ -9,4 +9,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface SpireEnum {
     String name() default "";
+    String requiredModId() default "";
 }
