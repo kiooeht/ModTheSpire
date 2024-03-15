@@ -30,6 +30,7 @@
 * Add button to open logs folder
 * Add ability to edit profile names
 * Add requiredModId to SpireEnum
+* Fix SpirePatch requiredModId not accounting for sideloading
 
 #### v3.30.3 ####
 * Fix package information being lost for patched classes (Alchyr)

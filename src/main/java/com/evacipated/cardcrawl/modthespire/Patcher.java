@@ -513,7 +513,7 @@ public class Patcher {
             while (iter.hasNext()) {
                 SpirePatch patch = iter.next();
                 String modId = patch.requiredModId();
-                if (!modId.isEmpty() && Arrays.stream(ModTheSpire.MODINFOS).noneMatch(x -> modId.equals(x.ID))) {
+                if (!modId.isEmpty() && !ModTheSpire.isModLoadedOrSideloaded(modId)) {
                     iter.remove();
                 }
             }
