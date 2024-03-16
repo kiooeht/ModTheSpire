@@ -519,6 +519,8 @@ public class Patcher {
             }
 
             for (SpirePatch patch : patchArr) {
+                if (!patch.condition()) continue;
+
                 CtClass ctClsToPatch = null;
                 try {
                     if (!patch.clz().equals(void.class)) {
