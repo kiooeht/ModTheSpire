@@ -6,6 +6,7 @@ import com.evacipated.cardcrawl.modthespire.ui.ModPanel;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
+import com.sun.org.apache.xpath.internal.operations.Mod;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -143,19 +144,7 @@ public class ModList
     {
         model.clear();
 
-        File[] modFiles = new File[info.length];
-        for (int i = 0; i < info.length; ++i) {
-            if (info[i].jarURL == null) {
-                System.out.println("ERROR: jarURL is null?: " + info[i].Name);
-                continue;
-            }
-            try {
-                modFiles[i] = new File(info[i].jarURL.toURI());
-            } catch (URISyntaxException e) {
-                System.out.println("Problem with: " + info[i].jarURL);
-                e.printStackTrace();
-            }
-        }
+        File[] modFiles = ModTheSpire.getModFiles();
 
         List<ModDescriptor> loadOrder = new ArrayList<>();
         List<Integer> foundMods = new ArrayList<>();
@@ -198,6 +187,25 @@ public class ModList
             }
             model.addElement(toAdd);
         }
+    }
+
+    public List<ModInfo> toModInfos(){
+        ModInfo[] infos = ModTheSpire.ALLMODINFOS;
+
+        // Find all mod files.
+        File[] modFiles = ModTheSpire.getModFiles();
+
+        // Get all mods and add checked ones to the list
+        List<ModInfo> modInfos = new ArrayList<>();
+        for (int i = 0; i < mods.size(); ++i) {
+            for (int j = 0; j < modFiles.length; ++j) {
+                if (mods.get(i).equals(modFiles[j].getName())) {
+                    modInfos.add(infos[j]);
+                }
+            }
+        }
+
+        return modInfos;
     }
 
     public static void save(String list, File[] modFiles)

@@ -128,6 +128,14 @@ public class ModSelectWindow extends JFrame
         }
     }
 
+    public void setModInfos(ModInfo[] modInfos){
+        info = modInfos;
+
+        //Refresh the modlist panel
+        ModList mods = ModList.loadModLists();
+        mods.loadModsInOrder((DefaultListModel<ModPanel>) modList.getModel(), info, modList);
+    }
+
     static void setTheme(String theme)
     {
         LookAndFeel laf;
@@ -678,6 +686,15 @@ public class ModSelectWindow extends JFrame
         } else {
             profilesList.setSelectedIndex(0);
         }
+    }
+
+    public void swapModList(String listToLoad){
+        // Sanity check
+        if (listToLoad == null){
+            return;
+        }
+
+        profilesList.setSelectedItem(listToLoad);
     }
 
     private void setPlayButtonLabel()

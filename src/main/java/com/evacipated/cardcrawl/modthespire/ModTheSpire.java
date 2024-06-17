@@ -258,6 +258,58 @@ public class ModTheSpire
             }
         }
 
+        refreshWorkshopInfos();
+
+        findGameVersion();
+
+        LauncherPatch.patch();
+
+        final boolean finalSkipLauncher = skipLauncher;
+        EventQueue.invokeLater(() -> {
+            refreshModInfos();
+            ex = new ModSelectWindow(ALLMODINFOS, finalSkipLauncher);
+            ex.setVisible(true);
+
+            ex.warnAboutMissingVersions();
+
+            String java_version = System.getProperty("java.version");
+            if (!java_version.startsWith("1.8")) {
+                String msg = "ModTheSpire requires Java version 8 to run properly.\nYou are currently using Java " + java_version;
+                JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE);
+            }
+
+            ex.startCheckingForMTSUpdate();
+        });
+    }
+
+    public static void refreshMods(){
+        //Refreshing when it was already opened, add a waiting window
+        JDialog dialog = new JDialog(ex, "Refreshing", true);
+
+        dialog.setLayout(new BorderLayout());
+        dialog.setPreferredSize(new Dimension(500, 75));
+        dialog.setLocationRelativeTo(ex);
+
+        JLabel label = new JLabel("Refreshing mod list...");
+        label.setHorizontalAlignment(SwingConstants.CENTER);
+
+        dialog.add(label, BorderLayout.NORTH);
+
+        dialog.pack();
+
+        SwingUtilities.invokeLater(() -> {
+            refreshWorkshopInfos();
+            refreshModInfos();
+
+            dialog.dispose();
+        });
+
+        dialog.setVisible(true);
+
+        ex.setModInfos(ALLMODINFOS);
+    }
+
+    private static void refreshWorkshopInfos(){
         List<SteamSearch.WorkshopInfo> workshopInfos = SteamWorkshopRunner.findWorkshopInfos();
         System.out.println("Got " + workshopInfos.size() + " workshop items");
 
@@ -310,27 +362,10 @@ public class ModTheSpire
         }
 
         WORKSHOP_INFOS = workshopInfos;
+    }
 
-        findGameVersion();
-
-        LauncherPatch.patch();
-
-        final boolean finalSkipLauncher = skipLauncher;
-        EventQueue.invokeLater(() -> {
-            ALLMODINFOS = getAllMods(getWorkshopInfos());
-            ex = new ModSelectWindow(ALLMODINFOS, finalSkipLauncher);
-            ex.setVisible(true);
-
-            ex.warnAboutMissingVersions();
-
-            String java_version = System.getProperty("java.version");
-            if (!java_version.startsWith("1.8")) {
-                String msg = "ModTheSpire requires Java version 8 to run properly.\nYou are currently using Java " + java_version;
-                JOptionPane.showMessageDialog(null, msg, "Warning", JOptionPane.WARNING_MESSAGE);
-            }
-
-            ex.startCheckingForMTSUpdate();
-        });
+    private static void refreshModInfos(){
+        ALLMODINFOS = getAllMods(getWorkshopInfos());
     }
 
     public static void closeWindow()
@@ -890,5 +925,23 @@ public class ModTheSpire
             // TODO
             e.printStackTrace();
         }
+    }
+
+    public static File[] getModFiles(){
+        File[] modFiles = new File[ALLMODINFOS.length];
+        for (int i = 0; i < ALLMODINFOS.length; ++i) {
+            if (ALLMODINFOS[i].jarURL == null) {
+                System.err.println("ERROR: jarURL is null?: " + ALLMODINFOS[i].Name);
+                continue;
+            }
+            try {
+                modFiles[i] = new File(ALLMODINFOS[i].jarURL.toURI());
+            } catch (URISyntaxException e) {
+                System.err.println("Problem with: " + ALLMODINFOS[i].jarURL);
+                e.printStackTrace();
+            }
+        }
+
+        return modFiles;
     }
 }

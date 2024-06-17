@@ -1,13 +1,23 @@
 package com.evacipated.cardcrawl.modthespire.ui;
 
+import com.evacipated.cardcrawl.modthespire.MinimalModInfo;
+import com.evacipated.cardcrawl.modthespire.ModInfo;
 import com.evacipated.cardcrawl.modthespire.ModList;
+import com.evacipated.cardcrawl.modthespire.util.CompressionUtils;
+import com.evacipated.cardcrawl.modthespire.ImportUtils;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import javafx.util.Pair;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.util.List;
 
 public class ModListEditorWindow extends JDialog
 {
@@ -21,11 +31,15 @@ public class ModListEditorWindow extends JDialog
     private JButton importButton;
     private JButton exportButton;
 
+    private ModSelectWindow owner;
+
     private final DefaultListModel<String> listModel;
 
     public ModListEditorWindow(ModSelectWindow owner)
     {
         super(owner, "Mod Lists", true);
+        this.owner = owner;
+
         setContentPane(contentPane);
         setModal(true);
 
@@ -98,10 +112,7 @@ public class ModListEditorWindow extends JDialog
                         prevName = s;
                         continue;
                     } else {
-                        listModel.addElement(s);
-                        listList.setSelectedValue(s, true);
-                        ModList.save(s, new File[0]);
-                        owner.updateProfilesList();
+                        createNewModList(s);
                     }
                 }
                 break;
@@ -160,12 +171,77 @@ public class ModListEditorWindow extends JDialog
         });
         // Import
         importButton.addActionListener(e -> {
-            // TODO
+            String importedModKey = ImportExportUI.openImportWindow(owner);
+            if(importedModKey == null){
+                return;
+            }
+
+            Pair<String, List<MinimalModInfo>> modsToImport = new Gson().fromJson(CompressionUtils.decompress(importedModKey), new TypeToken<Pair<String, List<MinimalModInfo>>>(){}.getType());
+            if(modsToImport.getValue().isEmpty()){
+                JOptionPane.showMessageDialog(owner, "Failed to import modlist, modlist was empty.", "Failure", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            String modlistName = findUniqueModlistName(modsToImport.getKey());
+            createNewModList(modlistName);
+
+            List<File> mods = ImportUtils.reconcileMods(this, modsToImport.getValue());
+            ModList.save(modlistName, mods.toArray(new File[0]));
+
+            owner.swapModList(modlistName);
         });
         // Export
         exportButton.addActionListener(e -> {
-            // TODO
+            // Get mods to export
+            ModList modlistToExport = new ModList(listList.getSelectedValue());
+            List<ModInfo> modsToExport = modlistToExport.toModInfos();
+            if(modsToExport.isEmpty()){
+                JOptionPane.showMessageDialog(owner, "Failed to export modlist, no mods were selected.", "Failure", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Convert them to their minimal data structure and serialize
+            Pair<String, List<MinimalModInfo>> minimalModsToExport = new Pair<>(modlistToExport.getName(), MinimalModInfo.fromList(modsToExport));
+            String serializedList = CompressionUtils.compress(new Gson().toJson(minimalModsToExport));
+            if(serializedList == null){
+                JOptionPane.showMessageDialog(owner, "Failed to export modlist, could not serialize the modlist.", "Failure", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Copy modlist key to clipboard, show success window and ask to export to file.
+            StringSelection selection = new StringSelection(serializedList);
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard.setContents(selection, selection);
+
+            ImportExportUI.openSuccessfulExportWindow(this, serializedList);
         });
+    }
+
+    private String findUniqueModlistName(String modlistName){
+        if(!listModel.contains(modlistName)){
+            return modlistName;
+        }
+
+        int currentDuplicationIndex = 1;
+        while(true){
+            String modlistNameCopy = modlistName + "_" + currentDuplicationIndex;
+            if(!listModel.contains(modlistNameCopy)){
+                return modlistNameCopy;
+            }
+            currentDuplicationIndex++;
+        }
+    }
+
+    private void createNewModList(String modlistName){
+        // Sanity check
+        if(listModel.contains(modlistName)){
+            return;
+        }
+
+        listModel.addElement(modlistName);
+        listList.setSelectedValue(modlistName, true);
+        ModList.save(modlistName, new File[0]);
+        owner.updateProfilesList();
     }
 
     private void onClose()

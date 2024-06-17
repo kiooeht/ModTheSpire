@@ -13,6 +13,6 @@ public class StopSteamSubprocess
 {
     public static void Postfix()
     {
-        SteamWorkshopRunner.stop();
+        SteamWorkshopRunner.stopAPI();
     }
 }

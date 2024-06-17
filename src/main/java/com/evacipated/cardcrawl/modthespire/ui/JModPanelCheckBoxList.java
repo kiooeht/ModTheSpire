@@ -155,6 +155,16 @@ public class JModPanelCheckBoxList extends JList<ModPanel> {
         return ret;
     }
 
+    public List<ModInfo> getCheckedModInfos() {
+        List<ModInfo> ret = new ArrayList<>();
+        for (int i = 0; i < getModel().getSize(); ++i) {
+            if (getModel().getElementAt(i).isSelected()) {
+                ret.add(getModel().getElementAt(i).info);
+            }
+        }
+        return ret;
+    }
+
     public void toggleAllMods()
     {
         int on = 0;
