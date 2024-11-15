@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.utils.ScissorStack;
+import com.evacipated.cardcrawl.modthespire.Loader;
 import com.evacipated.cardcrawl.modthespire.ModInfo;
 import com.evacipated.cardcrawl.modthespire.ModTheSpire;
 import com.evacipated.cardcrawl.modthespire.lib.SpireEnum;
@@ -156,7 +157,7 @@ public class ModsScreen
                 CardCrawlGame.mainMenuScreen.darken();
                 CardCrawlGame.mainMenuScreen.screen = Enum.MODS_LIST;
                 closeButton.show(PatchNotesScreen.TEXT[0]);
-                if (baseModBadges != null && baseModBadges.get(ModTheSpire.MODINFOS[selectedMod].jarURL) != null) {
+                if (baseModBadges != null && baseModBadgeExistsAndModPanelIsNotNull(baseModBadges.get(ModTheSpire.MODINFOS[selectedMod].jarURL))) {
                     showConfigButton();
                 }
             }
@@ -183,7 +184,7 @@ public class ModsScreen
                 if (hitboxes.get(i).clicked) {
                     hitboxes.get(i).clicked = false;
                     selectedMod = i;
-                    if (baseModBadges != null && baseModBadges.get(ModTheSpire.MODINFOS[selectedMod].jarURL) != null) {
+                    if (baseModBadges != null && baseModBadgeExistsAndModPanelIsNotNull(baseModBadges.get(ModTheSpire.MODINFOS[selectedMod].jarURL))) {
                         if (configButton.isHidden) {
                             showConfigButton();
                         }
@@ -467,5 +468,19 @@ public class ModsScreen
                 e.printStackTrace();
             }
         }
+    }
+
+    private boolean baseModBadgeExistsAndModPanelIsNotNull(Object badge) {
+        if (badge != null) {
+            try {
+                Object modPanel = ModBadge_modPanel.get(badge);
+                if (modPanel != null) {
+                    return true;
+                }
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
+        return false;
     }
 }
