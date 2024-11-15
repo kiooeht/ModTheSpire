@@ -14,6 +14,7 @@ public @interface SpirePatch
     String[] paramtypes() default {"DEFAULT"};
     String requiredModId() default "";
     boolean optional() default false;
+    boolean condition() default true;
 
     String CONSTRUCTOR = "<ctor>";
     String STATICINITIALIZER = "<staticinit>";
