@@ -20,9 +20,15 @@ public class ConfigUtils
             }
             basedir = appdata;
         } else if (SystemUtils.IS_OS_LINUX) {
-            // /home/x/.config/APP_NAME/
-            basedir = SystemUtils.USER_HOME + File.separator
-                + ".config" + File.separator;
+            // $XDG_CONFIG_HOME/APP_NAME/
+            // Fallback to /home/x/.config/APP_NAME/
+            String xdgConfigHome = System.getenv("XDG_CONFIG_HOME");
+            if (xdgConfigHome == null || xdgConfigHome.isEmpty()) {
+                basedir = SystemUtils.USER_HOME + File.separator
+                    + ".config" + File.separator;
+            } else {
+                basedir = xdgConfigHome;
+            }
         } else if (SystemUtils.IS_OS_MAC) {
             // /Users/x/Library/Preferences/APP_NAME/
             basedir = SystemUtils.USER_HOME + File.separator
